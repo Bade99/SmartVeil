@@ -133,6 +133,7 @@ double TargetMs = 1000.0 / TargetFPS;//TODO(fran): do we leave this as a global?
 //·IMPORTANT: the fact that we update our veil means there is a new frame that windows has to present, therefore we are always generating more
 // and more frames non stop, can we fix this somehow? ie skip one frame update each time
 //LOOKs:
+//·Make minimize animation go towards tray when tray icon is enabled
 //·When the user changes to another window we could slightly change the color to indicate that we are not the focused window anymore
 //·I like how the settings icon looks without the white border, we could also make light-blue only inside the icon
 //·Make the icon have a hidden design that can only be viewed in the tray when the threshold & opacity are at some point x
