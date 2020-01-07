@@ -7,6 +7,7 @@ Main problems: TODO
 
 Everything has been done on C++ with the Windows API, Desktop Duplication API and DirectX, any pc with windows 8 o above should be able to run this program (the limitation of OS is due to desktop duplication api).
 Feel free to try it, change it, etc. and if you're interested in helping please let me know!
+
 Franco Badenas Abal
 
 Contact info
