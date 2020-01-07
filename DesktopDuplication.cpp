@@ -838,12 +838,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	height /= WINDOW_REDUCTION;
 #else //use the suspect checkbox technique
 	//TODO(fran): what we can do is in case this values are bigger than the screen then we use the other method
-	DirectX::XMFLOAT2 aspect_ratio; 
-	aspect_ratio.x = 16.f;
-	aspect_ratio.y = 9.f;
-	int mgr_window_width = (((float)GetSystemMetrics(SM_CXMENUCHECK))*.8f) * (SETTINGS_NUMBER_OF_CHECKBOXES*aspect_ratio.x / aspect_ratio.y);
+	int mgr_window_width = (((float)GetSystemMetrics(SM_CXMENUCHECK))*.8f) * (SETTINGS_NUMBER_OF_CHECKBOXES*16.f/9.f);
 	width = mgr_window_width;
-	height = ((float)width) * aspect_ratio.y / aspect_ratio.x;
+	height = ((float)width) * 8.f / 16.f;
 	//we first make it smaller to account for the fact that text will be shorter in x axis
 #endif
 	
@@ -1786,19 +1783,17 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 	float height = RECTHEIGHT(windowRect);
 
 	float paddingX = windowRect.left + width * .1f; //at .1 objects will start 10% to the side of the window
-	float paddingY = height*.1f; //at .1 there will be less than 10 objects for sure
+	float paddingY = height*.114f; //at .1 there will be less than 10 objects for sure
 	float addPaddingY = paddingY;
 	paddingY += windowRect.top;
 
 	float ThreeQuarterWindowX = width*.5f + windowRect.left;
 
 	float ThresholdTextX = width * .225f;
-	float TextY = height * .11f;
+	float TextY = height * .125f;
 	HWND ThresholdText = CreateWindowW(L"Static",NULL, WS_VISIBLE | WS_CHILD
 		, paddingX, paddingY, ThresholdTextX, TextY,hWnd,(HMENU)SCV_THRESHOLD_TITLE,NULL,NULL);
 	AWT(ThresholdText, SCV_LANG_MGR_THRESHOLD);
-
-	float top_centering_y = paddingY;
 
 	TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, ThresholdText, SCV_LANG_MGR_THRESHOLD_TIP);
 
@@ -1817,7 +1812,7 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 	TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, ThresholdPercentText, SCV_LANG_MGR_THRESHOLD_TIP);
 
 	float SliderX = width * .3f;
-	float SliderY = height * .08f;
+	float SliderY = height * .091f;
 	ThresholdSlider = CreateWindowExW(0, TRACKBAR_CLASS, 0, WS_CHILD| WS_VISIBLE | TBS_NOTICKS
 		, paddingX, paddingY, SliderX, SliderY, hWnd, (HMENU)SCV_TOOLTIP_THRESHOLD_SLIDER, NULL, NULL);
 
@@ -1857,8 +1852,6 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 
 	TOOLTIP_REPO::Instance().CreateToolTip(SCV_TOOLTIP_OPACITY_SLIDER, hWnd, SCV_LANG_MGR_OPACITY_TIP);
 
-	float bottom_centering_y = paddingY + SliderY;
-
 	paddingY += addPaddingY + SliderY;
 
 	SendMessage(OpacitySlider, TBM_SETRANGE, TRUE, (LPARAM)MAKELONG(0, 99));
@@ -1886,12 +1879,9 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 	//InitCommonControlsEx(&comctl);
 
 	float SettingX = width * .33f;
-	float SettingY = height * .18f;
-
-	float centered_between_sliders = top_centering_y + (bottom_centering_y - top_centering_y) / 2 - SettingY/2;
-
+	float SettingY = height * .205f;
 	TurnOnOff = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD //| BS_OWNERDRAW //| BS_NOTIFY
-		, ThreeQuarterWindowX, centered_between_sliders, SettingX, SettingY, hWnd, (HMENU)SCV_TURN_ON_OFF, NULL, NULL);
+		, ThreeQuarterWindowX, paddingY, SettingX, SettingY, hWnd, (HMENU)SCV_TURN_ON_OFF, NULL, NULL);
 	SetWindowSubclass(TurnOnOff, ControlProcedures::Instance().ButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
 	paddingY += addPaddingY + SettingY;
@@ -1905,14 +1895,16 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 	//paddingY += addPaddingY + SettingY;
 
 
+
+//Manual hotkey management
+#define OLD_HOTKEY_POS 0
+#if OLD_HOTKEY_POS
+
 	float HotkeyValueTextX = width * .30f;
 	float HotkeyValueTextY = height * .06f;
 	
 	float InversePaddingY = height - addPaddingY - HotkeyValueTextY;
 
-//Manual hotkey management
-#define OLD_HOTKEY_POS 0
-#if OLD_HOTKEY_POS
 	HWND HotkeyValue = CreateWindowEx(0, HOTKEY_CLASS,TEXT(""), WS_CHILD | WS_VISIBLE 
 		, ThreeQuarterWindowX, InversePaddingY, HotkeyValueTextX, HotkeyValueTextY, hWnd, (HMENU)SCV_SETTINGS_HOTKEY, NULL, NULL);
 
@@ -2060,7 +2052,7 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 	//TODO(fran): decide proper placement and size
 	POINT settings_pos;
 	POINT settings_size; 
-	settings_size.x = height * .12f; 
+	settings_size.x = height * .137f; 
 	settings_size.y = settings_size.x;
 	//settings_size.x+=2; //INFO: Trying to make the button be less of a square so it is easier for the icon to be correctly centered
 	//if ((settings_size.x % 2) != 0) settings_size.x+=1;
