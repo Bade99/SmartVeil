@@ -1769,6 +1769,18 @@ HWND OpacityPos;
 
 HWND TurnOnOff;
 
+std::wstring first_numberstring(std::wstring const & str)
+{
+https://stackoverflow.com/questions/30073839/c-extract-number-from-the-middle-of-a-string
+	std::size_t const n = str.find_first_of(L"0123456789");
+	if (n != std::wstring::npos)
+	{
+		std::size_t const m = str.find_first_not_of(L"0123456789", n);
+		return str.substr(n, m != std::string::npos ? m - n : m);
+	}
+	return std::wstring();
+}
+
 void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 	RECT windowRect;
 	GetMyClientRect(hWnd,&windowRect);
@@ -2274,7 +2286,11 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 		case SCV_SECRET_ABOUT:
 		{
-			std::wstring about_msg = L"Franco Badenas Abal © 2020\n\n";//TODO(fran): the year should be parametric, using the version maybe and cutting the string
+			std::wstring copyright = GetVersionInfo(NULL, SCV_VERSION_INFO, L"LegalCopyright");
+			std::wstring copyright_year = first_numberstring(copyright);
+			std::wstring about_msg = L"Franco Badenas Abal ©";
+			if (copyright_year != L"") about_msg += L" " + copyright_year;
+			about_msg += L"\n\n";
 			about_msg += RS(SCV_LANG_VERSION);
 			about_msg += L" " + GetVersionInfo(NULL, SCV_VERSION_INFO, L"ProductVersion");//TODO(fran): if no version found put message saying that or dont show version
 			//TODO(fran): make it so only one about window can exist at any single time, without having to put hwnd parameter which locks the manager
