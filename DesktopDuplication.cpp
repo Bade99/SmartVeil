@@ -100,18 +100,14 @@ double TargetMs = 1000.0 / TargetFPS;//TODO(fran): do we leave this as a global?
 //TODOs:
 //·Alt+F4 doesnt close the app cause of the closing system we currently have, change it now that we have a close and a minimize button
 //·Checkbox for Minimize button: when tray icon is disabled show app icon on taskbar?
-//?·Add a minimize button that will do the job of the x button now, and use the x button for quitting the app, we can eliminate the "quit app" button
 //?·Bren said that left click is related with opening stuff so it'd make more sense to use the left click for opening the manager and right for turn on/off
 //·I dont think ProcessCmdline is doing any use to me
 //·Icons on buttons are not correctly centered
 //·Create one big square for the tooltips of threshold and opacity each one encompassing the area from the beginning of the text to the end of the slider?
 //·Adjust to realtime resolution change
-//·Change exe icon
-//·Adjust sizes of all controls to their maximum, so there is no problem with langs
 //·Fix CreateToolTipForRect, doesnt work now that each tooltip has to use the messageID to retrieve the string, maybe some flag is missing?
-//·When the user changes to another window we could slightly change the color to indicate that we are not the focused window anymore
 //·When using the wheel over a slider the values go in reverse
-//·When sliders are pressed there is a white border around it, what happened?, also the thingy that moves the slider is now white when moved, why? looks better though
+//·When sliders are pressed there is a white border around it, why?, also the thingy that moves the slider is now white when moved, why? looks better though
 //·Fix incorrect string retrieval for hotkey control, I think we need to add an extended flag to some keys
 //·When the veil gets turned on it starts slowly taking mem to around 11.5MB and then stops, what is happening there?
 //·When no language was found on settings file use the system default if we support it, otherwise english
@@ -132,11 +128,12 @@ double TargetMs = 1000.0 / TargetFPS;//TODO(fran): do we leave this as a global?
 //·Automatic opacity increase in a time interval? eg from 0:00 to 4:00
 //·Settings: save button greyed out until something is changed
 //·Hotkey control goes insane when inputting with japanese keyboard
-//·Way to know when a window is visible, so for example when dont send the frame update info to the settings
+//·Way to know when a window is visible, so for example we dont send the frame update info to the settings
 //·Find out why just the mouse movement is causing the highest of cpu and gpu usage, look into the other cpp files
 //·IMPORTANT: the fact that we update our veil means there is a new frame that windows has to present, therefore we are always generating more
 // and more frames non stop, can we fix this somehow? ie skip one frame update each time
 //LOOKs:
+//·When the user changes to another window we could slightly change the color to indicate that we are not the focused window anymore
 //·I like how the settings icon looks without the white border, we could also make light-blue only inside the icon
 //·Make the icon have a hidden design that can only be viewed in the tray when the threshold & opacity are at some point x
 //·Change mouse icon when manager is open, to one that only has white borders, and the inside transparent or black?
@@ -149,13 +146,12 @@ double TargetMs = 1000.0 / TargetFPS;//TODO(fran): do we leave this as a global?
 //·Paint title bar: http://www.it-quants.com/Blogs/tabid/83/EntryId/53/Win32-SDK-how-to-change-the-title-bar-color-title.aspx
 //·Custom draw?: https://docs.microsoft.com/en-us/windows/win32/controls/custom-draw
 //·Custom frame, looks like guaranteed suffering: https://docs.microsoft.com/en-us/windows/win32/dwm/customframe#extending-the-client-frame
-//·How to add icons to visual studio: create default icon, copy your icon in the same folder, go to vs and change the path of the icon to yours,
-// then vs resets your icon to the default, copy yours again, done! thanks vs
+//·How to add icons to visual studio: create default icon, change name to your icon's, copy your icon in the same folder, done! thanks vs
 
 // )appdata roaming( , in a way I like those inverse parenthesis
 
 //THANKs:
-//·Mica (1st tester)
+//·Micaela Zabatta (1st tester)
 
 // Below are lists of errors expect from Dxgi API calls when a transition event like mode change, PnpStop, PnpStart
 // desktop switch, TDR or session disconnect/reconnect. In all these cases we want the application to clean up the threads that process
@@ -326,11 +322,7 @@ HANDLE thread_finished_mutex;
 BOOL ProgramFinished = FALSE;
 
 //Path to the file where we store our startup data
-std::wstring appdata;//none of this have a slash at the end, you have to do + L"\\"
-std::wstring info_folder;
-std::wstring info_file;
-std::wstring info_extension;
-
+STARTUP_INFO_PATH info_path;
 
 std::wstring GetExePath() {
 	WCHAR exe_path[MAX_PATH];
@@ -577,15 +569,15 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	HRESULT folder_res = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL,&folder_path);//TODO(fran): this is only supported on windows vista and above, will we ever care?
 	//INFO: no retorna la ultima barra, la tenés que agregar vos, tambien te tenés que encargar de liberar el string
 	Assert(SUCCEEDED(folder_res));
-	appdata = folder_path;
+	info_path.known_folder = folder_path;
 	CoTaskMemFree(folder_path);
-	info_folder = L"Smart Veil";
-	info_file = L"startup_info";
-	info_extension = L"txt";//just so the user doesnt even have to open the file manually on windows
+	info_path.info_folder = L"Smart Veil";
+	info_path.info_file = L"startup_info";
+	info_path.info_extension = L"txt";//just so the user doesnt even have to open the file manually on windows
 
 	STARTUP_INFO startup_info;
 
-	std::wstring info_file_path = appdata + L"\\" + info_folder + L"\\" + info_file + L"." + info_extension;
+	std::wstring info_file_path = info_path.known_folder + L"\\" + info_path.info_folder + L"\\" + info_path.info_file + L"." + info_path.info_extension;
 	HANDLE info_file_handle = CreateFileW(info_file_path.c_str(), GENERIC_READ, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE
 		, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -777,6 +769,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
         return 0;
     }
 
+	//Controls' color setup
+	ControlProcedures::Instance().Set_BackgroundColor(RGB(0, 0, 0));
+	ControlProcedures::Instance().Set_HighlightColor(RGB(255, 255, 255));
+	ControlProcedures::Instance().Set_PushColor(RGB(0, 110, 200));
+	ControlProcedures::Instance().Set_MouseoverColor(RGB(0, 120, 215));
+
 	std::wstring appManagerClassName = L"Smart Veil Manager Franco Badenas Abal";
 
 	//Register Manager class
@@ -789,7 +787,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	WMc.hInstance = hInstance;
 	WMc.hIcon = logo_icon;
 	WMc.hCursor = Cursor;
-	WMc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);// CreateSolidBrush(RGB(0, 0, 0));
+	WMc.hbrBackground = ControlProcedures::Instance().Get_BackgroundBrush();
 	WMc.lpszMenuName = nullptr;
 	WMc.lpszClassName = appManagerClassName.c_str();
 	WMc.hIconSm = logo_icon_small;
@@ -872,13 +870,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	FRAME.bottom_border = 0;//We will have no borders, also be dont support resizing
 	FRAME.left_border = 0;
 	FRAME.right_border = 0;
-	FRAME.caption_bk_brush = GetStockBrush(DKGRAY_BRUSH);
+	FRAME.caption_bk_brush = GetStockBrush(DKGRAY_BRUSH); //TODO(fran): take this out of FRAME and just use the one in ControlProcedures
 
-	//Controls setup
-	ControlProcedures::Instance().Set_BackgroundColor(RGB(0, 0, 0));
-	ControlProcedures::Instance().Set_HighlightColor(RGB(255, 255, 255));
-	ControlProcedures::Instance().Set_PushColor(RGB(0, 110, 200));
-	ControlProcedures::Instance().Set_MouseoverColor(RGB(0, 120, 215));
+	//More Controls' color setup
 	LOGBRUSH lb;
 	GetObject(FRAME.caption_bk_brush, sizeof(LOGBRUSH), &lb);
 	ControlProcedures::Instance().Set_CaptionBackgroundColor(lb.lbColor);
@@ -909,7 +903,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	WSc.hInstance = hInstance;
 	WSc.hIcon = logo_icon;
 	WSc.hCursor = Cursor;
-	WSc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);// CreateSolidBrush(RGB(0, 0, 0));
+	WSc.hbrBackground = ControlProcedures::Instance().Get_BackgroundBrush();
 	WSc.lpszMenuName = nullptr;
 	WSc.lpszClassName = settings_class.c_str();
 	WSc.hIconSm = logo_icon_small;
@@ -1549,17 +1543,17 @@ LRESULT CALLBACK WndSettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 	case WM_CTLCOLORLISTBOX:
 	{
 		HDC comboboxDC = (HDC)wParam;
-		SetTextColor(comboboxDC, RGB(255, 255, 255));
-		SetBkColor(comboboxDC, RGB(0, 0, 0));
+		SetTextColor(comboboxDC, ControlProcedures::Instance().Get_HighlightColor());
+		SetBkColor(comboboxDC, ControlProcedures::Instance().Get_BackgroundColor());
 		
-		return (INT_PTR)(HBRUSH)GetStockObject(BLACK_BRUSH);
+		return (INT_PTR)ControlProcedures::Instance().Get_BackgroundBrush();
 	}
 	case WM_CTLCOLORSTATIC:
 	{
 		HDC staticDC = (HDC)wParam;
-		SetTextColor(staticDC, RGB(255, 255, 255));
-		SetBkColor(staticDC, RGB(0, 0, 0));
-		return (INT_PTR)(HBRUSH)GetStockObject(BLACK_BRUSH);
+		SetTextColor(staticDC, ControlProcedures::Instance().Get_HighlightColor());
+		SetBkColor(staticDC, ControlProcedures::Instance().Get_BackgroundColor());
+		return (INT_PTR)ControlProcedures::Instance().Get_BackgroundBrush();
 	}
 	//case WM_CTLCOLORBTN: {}
 	//case WM_DRAWITEM: { //INFO: I'm using it only to draw buttons
@@ -2264,8 +2258,8 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			FillStartupInfo(startup_info, CurrentValidSettings, CurrentValidHotkeyModifiers, CurrentValidHotkeyVirtualKey, isTurnedOn,
 				mgrpos, virtualscreensize, thresholdpos, opacitypos);
 
-			std::wstring info_directory_path = appdata + L"\\" + info_folder;
-			std::wstring info_file_name = info_file + L"." + info_extension;
+			std::wstring info_directory_path = info_path.known_folder + L"\\" + info_path.info_folder;
+			std::wstring info_file_name = info_path.info_file + L"." + info_path.info_extension;
 			SaveStartupInfo(startup_info, info_directory_path, info_file_name);
 
 			if (WindowHandle != NULL) { DestroyWindow(WindowHandle); }
@@ -2425,9 +2419,9 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	case WM_CTLCOLORSTATIC:
 	{
 		HDC staticDC = (HDC)wParam;
-		SetTextColor(staticDC, RGB(255, 255, 255));
-		SetBkColor(staticDC, RGB(0, 0, 0));
-		return (INT_PTR)(HBRUSH)GetStockObject(BLACK_BRUSH);
+		SetTextColor(staticDC, ControlProcedures::Instance().Get_HighlightColor());
+		SetBkColor(staticDC, ControlProcedures::Instance().Get_BackgroundColor());
+		return (INT_PTR)ControlProcedures::Instance().Get_BackgroundBrush();
 	}
 	//case WM_CTLCOLORBTN:{}
 	//case WM_DRAWITEM: { //INFO: I'm using it only to draw buttons
@@ -2551,7 +2545,7 @@ LRESULT PaintCaption(HWND hWnd) {
 	//TODO: try SetWindowRgn to make invisible the borders, documentation says what is outside isnt displayed!
 
 	//SelectObject(hdc, original);
-	COLORREF prev_text_col = SetTextColor(hdc, RGB(255, 255, 255));
+	COLORREF prev_text_col = SetTextColor(hdc, ControlProcedures::Instance().Get_HighlightColor());
 	LOGBRUSH bk_brush_info;
 	GetObject(FRAME.caption_bk_brush, sizeof(bk_brush_info), &bk_brush_info);
 	COLORREF prev_bk_col = SetBkColor(hdc, bk_brush_info.lbColor);

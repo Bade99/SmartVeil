@@ -45,6 +45,22 @@ public:
 		CaptionBackground = CreateSolidBrush(newColor);
 	}
 
+	HBRUSH Get_BackgroundBrush() {
+		return Background;
+	}
+
+	COLORREF Get_BackgroundColor() {
+		LOGBRUSH lb;
+		GetObject(Background, sizeof(LOGBRUSH), &lb);
+		return lb.lbColor;
+	}
+
+	COLORREF Get_HighlightColor() {
+		LOGBRUSH lb;
+		GetObject(Highlight, sizeof(LOGBRUSH), &lb);
+		return lb.lbColor;
+	}
+
 	//INFO: to use this functions pass the ControlProcedures object pointer thorugh the last parameter of setwindowsubclass
 
 	static LRESULT CALLBACK ButtonProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);

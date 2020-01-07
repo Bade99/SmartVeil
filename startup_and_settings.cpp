@@ -9,6 +9,14 @@ enum VEIL_ON_STARTUP {
 	YES = 0, NO, REMEMBER_LAST_STATE
 };
 
+//· None of its strings should have a slash at the end, you have to do + L"\\" later, extension should not include the dot "."
+struct STARTUP_INFO_PATH {
+	std::wstring known_folder; //eg. path to appdata
+	std::wstring info_folder; //eg. smartveil
+	std::wstring info_file; //eg. info
+	std::wstring info_extension; //eg txt
+};
+
 struct STARTUP_INFO {
 	BOOL is_turned_on;
 	int slider_threshold_pos;
