@@ -16,7 +16,7 @@ Everything has been done on C++ with the Windows API, Desktop Duplication API an
 
 * **Windows overhead.** It seems Windows is not too good at managing the type of window needed to make this program work (layered windows) which causes a pretty significant system slowdown and lack of response. I don't have many ideas in this regard so it remains as an open problem.
 
-Feel free to try it, change it, etc. and if you're interested in helping please let me know!
+Feel free to try the program, change it, etc. and if you're interested in helping please let me know!
 
 Franco Badenas Abal
 
