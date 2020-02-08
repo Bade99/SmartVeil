@@ -1,0 +1,9 @@
+-App needs visual c++ 2015 x86 or x64 (VCRUNTIME140.dll y MSVCP140.dll)
+-most people prefer sliders go to 100%
+-gray color for the manager instead of pure black
+-custom tooltip text/background color, corresponding with the rest of the ui
+-better explain what "reduce high slider values on startup" means
+-nobody thinks "threshold" is an intuitive name for the slider
+-ask language on first startup
+-opacity&threshold presets for different situations
+-explain better to the user that minimizing moves the app to the tray instead of the taskbar, maybe with a message, maybe ask the user what he/she prefers
