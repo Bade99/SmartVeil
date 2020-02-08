@@ -58,7 +58,7 @@ float4 PSV(PS_INPUT input) : SV_Target
 		color.b = 1;
 	}
 	else {
-		//TODO(fran): si asignamos color al veil (osea no negro) lo agregaríamos acá, ver smartcolorveil.cpp
+		//TODO(fran): si asignamos color al veil (osea no negro) lo agregarÃ­amos acÃ¡, ver smartcolorveil.cpp
 		color.r /= (1 - previousColor.a);
 		color.g /= (1 - previousColor.a);
 		color.b /= (1 - previousColor.a);
@@ -71,8 +71,6 @@ float4 PSV(PS_INPUT input) : SV_Target
 		//color.a = (pixelWeight - Threshold)*Opacity;//This is wrong, at a big enough alpha a brighter pixel will get darker than one less bright that is also getting darkened
 		//also it's wrong because it does not produce a line that goes from pixelWeight to Threshold (remember geogebra)
 													
-		//TODO: hay algun problema con la funcion/todo el codigo que hace que el pixel oscile entre oscuro y claro, que puede ser?
-
 		//color.a = 1 - ((pixelWeight + (Threshold - pixelWeight)*Opacity) / pixelWeight);//TODO(fran): can we reduce this function?
 		//->reducing this function:
 		color.a = Opacity - Threshold * Opacity / pixelWeight;
@@ -88,6 +86,6 @@ float4 PSV(PS_INPUT input) : SV_Target
 	return color;
 }
 
-//THINKING: I feel like the rapid flipping that we are seeing is because of the fact that we take pixel as a single value when actually it's r,g,b with different values each
+//TODO IMPORTANT: I feel like the rapid flipping (flickering) that we are seeing is because of the fact that we take each pixel as a single value when actually it's r,g,b with different values each
 // maybe we are destroying some values, for example if we are supposed to subtract 30 from each component but one only has 10, 
 // then probably the value is not what we expect and we are breaking stuff, not sure though
