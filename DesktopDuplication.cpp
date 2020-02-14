@@ -98,17 +98,10 @@ double TargetMs = 1000.0 / TargetFPS;//TODO(fran): do we leave this as a global?
 #endif
 
 //TODOs:
-//·Alt+F4 doesnt close the app cause of the closing system we currently have, change it now that we have a close and a minimize button
-//·Checkbox for Minimize button: when tray icon is disabled show app icon on taskbar?
-//?·Bren said that left click is related with opening stuff so it'd make more sense to use the left click for opening the manager and right for turn on/off
 //·I dont think ProcessCmdline is doing any use to me
 //·Icons on buttons are not correctly centered
 //·Create one big square for the tooltips of threshold and opacity each one encompassing the area from the beginning of the text to the end of the slider?
-//·Adjust to realtime resolution change
-//·Fix CreateToolTipForRect, doesnt work now that each tooltip has to use the messageID to retrieve the string, maybe some flag is missing?
-//·When using the wheel over a slider the values go in reverse
 //·When sliders are pressed there is a white border around it, why?, also the thingy that moves the slider is now white when moved, why? looks better though
-//·Fix incorrect string retrieval for hotkey control, I think we need to add an extended flag to some keys
 //·When the veil gets turned on it starts slowly taking mem to around 11.5MB and then stops, what is happening there?
 //·When no language was found on settings file use the system default if we support it, otherwise english
 //·Need to manage erasebkgrnd on buttonproc, getting white backgrounds some times, probably there's some other bug too
@@ -127,8 +120,6 @@ double TargetMs = 1000.0 / TargetFPS;//TODO(fran): do we leave this as a global?
 //·A simpler name instead of threshold for the text control
 //·Automatic opacity increase in a time interval? eg from 0:00 to 4:00
 //·Settings: save button greyed out until something is changed
-//·Hotkey control goes insane when inputting with japanese keyboard
-//·Way to know when a window is visible, so for example we dont send the frame update info to the settings
 //·Find out why just the mouse movement is causing the highest of cpu and gpu usage, look into the other cpp files
 //·IMPORTANT: the fact that we update our veil means there is a new frame that windows has to present, therefore we are always generating more
 // and more frames non stop, can we fix this somehow? ie skip one frame update each time
