@@ -98,6 +98,8 @@ double TargetMs = 1000.0 / TargetFPS;//TODO(fran): do we leave this as a global?
 #endif
 
 //TODOs:
+//?·Change slider name from Opacity to Brightness and invert the selected slider value. This way both sliders go up for more brightness and down for less
+//?·Change Threshold to Limit
 //·I dont think ProcessCmdline is doing any use to me
 //·Icons on buttons are not correctly centered
 //·Create one big square for the tooltips of threshold and opacity each one encompassing the area from the beginning of the text to the end of the slider?
