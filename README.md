@@ -24,4 +24,4 @@ Contact info
 [twitter](https://twitter.com/francobadenas)
 
 ## Proof of concept video
-[![Click to play](http://img.youtube.com/vi/xd47HjfELbk/0.jpg)](http://www.youtube.com/watch?v=xd47HjfELbk "Click to play")
+[![Click to watch](http://img.youtube.com/vi/Uxysi92NWP8/0.jpg)](http://www.youtube.com/watch?v=Uxysi92NWP8 "Click to watch")
