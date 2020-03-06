@@ -31,14 +31,14 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 		MouseOver = true;
 		CurrentMouseOverButton = hWnd;
 		InvalidateRect(hWnd, 0, 1);
-		break;
+		return DefSubclassProc(hWnd, Msg, wParam, lParam);
 	}
 	case WM_MOUSELEAVE:
 	{
 		MouseOver = false;
 		CurrentMouseOverButton = NULL;
 		InvalidateRect(hWnd, 0, 1);
-		break;
+		return DefSubclassProc(hWnd, Msg, wParam, lParam);
 	}
 	case WM_MOUSEMOVE:
 	{
@@ -50,7 +50,7 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 		tme.hwndTrack = hWnd;
 
 		TrackMouseEvent(&tme);
-		break;
+		return DefSubclassProc(hWnd, Msg, wParam, lParam);
 	}
 	case WM_PAINT://TODO(fran): I think we should handle erasebkgnd cause there some weird problems happen, we are patching them by calling update every time we change the control from the outside
 	{
