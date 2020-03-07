@@ -1556,7 +1556,7 @@ LRESULT CALLBACK WndSettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 	//}
 	case WM_CLOSE:
 	{
-		ShowWindow(hWnd, SW_HIDE);
+		ShowWindow(hWnd, SW_HIDE);//TODO(fran): is this still needed?
 		RestoreCurrentValidSettingsToControls(hWnd, CurrentValidSettings);
 
 		break;
@@ -2402,10 +2402,11 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 		case WM_RBUTTONDOWN:
 		{
-			//TODO(fran): we need to check if the window is already shown and do nothing in that case
 			//TODO(fran): should we do the animation on startup?
 			//TODO(fran): add support for taskbar icon
-			if (CurrentValidSettings.show_tray_icon) {
+			//TODO(fran): we need to check if the window is already shown and do nothing in that case
+			//TODO(fran): do further tests to be sure IsWindowVisible will always work here
+			if (CurrentValidSettings.show_tray_icon && !IsWindowVisible(hWnd)) {
 				//Animate closing to tray
 				//Pd AnimateWindow is awful
 				//Thanks to: https://www.codeproject.com/Articles/735/Minimizing-windows-to-the-System-Tray
