@@ -2353,6 +2353,7 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			break;
 		}
 #endif
+		//Show/Hide the veil
 		case SCV_TURN_ON_OFF://TODO(fran): this will be separated into updating the bool and another msg for updating the text
 		{
 			isTurnedOn = !isTurnedOn;
@@ -2401,7 +2402,18 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 		case WM_RBUTTONDOWN:
 		{
-			ShowWindow(hWnd, SW_SHOW);
+			//TODO(fran): we need to check if the window is already shown and do nothing in that case
+			//TODO(fran): should we do the animation on startup?
+			//TODO(fran): add support for taskbar icon
+			if (CurrentValidSettings.show_tray_icon) {
+				//Animate closing to tray
+				//Pd AnimateWindow is awful
+				//Thanks to: https://www.codeproject.com/Articles/735/Minimizing-windows-to-the-System-Tray
+				RestoreWndFromTray(hWnd);
+			}
+			else
+				ShowWindow(hWnd, SW_SHOW);
+
 			break;
 		}
 		}
@@ -2441,10 +2453,19 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	//}
 	case WM_CLOSE:
 	{
-		ShowWindow(hWnd, SW_HIDE);
+		if (CurrentValidSettings.show_tray_icon) {
+			//Animate closing to tray
+			//Pd AnimateWindow is awful
+			//Thanks to: https://www.codeproject.com/Articles/735/Minimizing-windows-to-the-System-Tray
+			MinimizeWndToTray(hWnd);
+		}
+		else
+			ShowWindow(hWnd, SW_HIDE);
+
 		SendMessage(WindowSettingsHandle, WM_CLOSE, 0, 0);
-		//Reset the state of the hotkey control in case the user typed something else that wasnt valid
+
 #if OLD_HOTKEY_POS
+		//Reset the state of the hotkey control in case the user typed something else that wasnt valid
 		SendDlgItemMessage(hWnd,SCV_SETTINGS_HOTKEY,
 			HKM_SETHOTKEY,
 			MAKEWORD(CurrentValidHotkeyVirtualKey, HotkeyModifiersToHotkeyControlModifiers(CurrentValidHotkeyModifiers)),

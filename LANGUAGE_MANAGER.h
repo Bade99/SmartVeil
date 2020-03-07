@@ -18,7 +18,7 @@ class LANGUAGE_MANAGER
 {
 public://TODO(fran): add lang to the rest of the classes: outmgr,duplmgr,...
 	
-	enum LANGUAGE
+	enum LANGUAGE //TODO(fran): should probably start with 1 since NULL==0 and things can go wrong there with other objects sending with NULL code
 	{
 		ENGLISH = 0, SPANISH
 	};
