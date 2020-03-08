@@ -68,15 +68,17 @@
 #define SCV_CUSTOMFRAME_CLOSE (WM_USER+33)
 #define SCV_CUSTOMFRAME_MINIMIZE (WM_USER+34)
 
-struct CUSTOM_FRAME { //INFO: defines the sizes for the custom window frame
+struct CUSTOM_FRAME { // Defines the sizes for the custom window frame
 	int caption_height;
 	int left_border;
 	int right_border;
 	int bottom_border;
 	HBRUSH caption_bk_brush;
-} FRAME; //INFO: every frame will be like this one
+} FRAME; // Every window frame will be like this one
 
-//INFO: Can and probably will return left & top values different from 0 since now that we draw a custom frame the whole window rect is ours
+/// <summary>
+/// Use instead of GetClientRect. Can and probably will return left and top values that are non zero since now we draw our own custom frame and the whole window rect is ours
+/// </summary>
 BOOL GetMyClientRect(HWND hwnd, RECT* rc) {
 	BOOL res = GetWindowRect(hwnd, rc);//INFO: could use getclientrect, though values will be wrong until the hwnd destroys its non client area
 	if (res) {
@@ -295,9 +297,9 @@ HANDLE UnexpectedErrorEvent = nullptr;
 HANDLE ExpectedErrorEvent = nullptr;
 HANDLE TerminateThreadsEvent = nullptr;
 
-bool isTurnedOn = true;
+bool isTurnedOn = true; // Tells at any time if the veil is on or off
 
-SETTINGS CurrentValidSettings;
+SETTINGS CurrentValidSettings; // Current app settings, updated realtime
 
 //Hotkey management
 //Manual hotkey work
@@ -310,14 +312,16 @@ HWND WindowManagerHandle = nullptr; // Manager window
 HWND WindowSettingsHandle = nullptr; // Settings window
 
 
-HANDLE start_mutex;//signals the worker thread that the main window is ready to receive data to display
-HANDLE process_next_frame_mutex;//indicates that the veil is turned on, therefore the worker thread can send data to display
+HANDLE start_mutex;// Signals the worker thread that the main window is ready to receive data to display
+HANDLE process_next_frame_mutex;// Indicates that the veil is turned on, therefore the worker thread can send data to display
 HANDLE thread_finished_mutex;
 BOOL ProgramFinished = FALSE;
 
-//Path to the file where we store our startup data
-STARTUP_INFO_PATH info_path;
+STARTUP_INFO_PATH info_path; // Path to the file where we store our startup data
 
+/// <summary>
+/// Returns full path to the program's exe
+/// </summary>
 std::wstring GetExePath() {
 	WCHAR exe_path[MAX_PATH];
 	GetModuleFileNameW(NULL, exe_path, MAX_PATH);//INFO: last param is size of buffer in TCHAR
@@ -330,8 +334,10 @@ std::wstring GetExePath() {
 	return exe_path;
 }
 
-//·Returns ERROR_SUCCESS if succeeded
-//·On failure returns error code, use FormatMessage with FORMAT_MESSAGE_FROM_SYSTEM to get error description
+/// <summary>
+/// Registers program to start with the user session
+/// </summary>
+/// <returns>ERROR_SUCCESS if succeeded, otherwise error code, use FormatMessage with FORMAT_MESSAGE_FROM_SYSTEM to get error description</returns>
 LSTATUS RegisterProgramOnStartup(std::wstring exe_path) {
 	
 	WCHAR exe_stored_path[32767];
@@ -372,18 +378,26 @@ LSTATUS RegisterProgramOnStartup(std::wstring exe_path) {
 	return res;
 }
 
-//If successful returns ERROR_SUCCESS, otherwise returns the error value, use FormatMessage with FORMAT_MESSAGE_FROM_SYSTEM flag to get error description 
+/// <returns>ERROR_SUCCESS if succeeded, otherwise error code, use FormatMessage with FORMAT_MESSAGE_FROM_SYSTEM to get error description</returns>
 LSTATUS UnregisterProgramFromStartup() {
 	LSTATUS res = RegDeleteKeyValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", L"Smart Veil");
 	return res;
 }
 
+/// <summary>
+/// Used to notify on startup errors that need to close the program
+/// </summary>
 inline void ShowClosingAppError(UINT error_stringID) {
 	std::wstring error_msg = RS(error_stringID);
 	error_msg += L" " + std::to_wstring(GetLastError()) + L"\n" + RS(SCV_LANG_ERROR_CLOSING_APP);
 	MessageBoxW(NULL, error_msg.c_str(), RCS(SCV_LANG_ERROR_SMARTVEIL), NULL);
 }
 
+/// <summary>
+/// Simple hack to retrieve the size of a normal window's title area
+/// </summary>
+/// <param name="aprox_pos">Position(top-left corner) where you'll place your real window</param>
+/// <returns>Height of the title/caption area</returns>
 int GetBasicWindowCaptionHeight(HINSTANCE hInstance,POINT aprox_pos) {//TODO(fran): make this work for multi-monitor
 	WNDCLASSEXW wcex;
 
@@ -446,6 +460,22 @@ int GetBasicWindowCaptionHeight(HINSTANCE hInstance,POINT aprox_pos) {//TODO(fra
 //"OriginalFilename"
 //"ProductName"
 //"ProductVersion"
+/// <summary>
+/// Retrieve information from a Version resource
+/// </summary>
+/// <param name="hLib">The module from which to obtain the version info, for current thread use NULL</param>
+/// <param name="versionID">The ID of the Version resource, aka MAKEINTRESOURCE(versionID)</param>
+/// <param name="csEntry">
+/// You can search for: 
+/// "CompanyName"
+/// "FileDescription" 
+/// "FileVersion" 
+/// "InternalName" 
+/// "LegalCopyright" 
+/// "OriginalFilename" 
+/// "ProductName" 
+/// "ProductVersion"
+/// </param>
 std::wstring GetVersionInfo(HMODULE hLib, UINT versionID, WCHAR* csEntry)
 //Thanks https://www.codeproject.com/Articles/8628/Retrieving-version-information-from-your-local-app
 //Code modified for wchar
@@ -535,9 +565,16 @@ std::wstring GetVersionInfo(HMODULE hLib, UINT versionID, WCHAR* csEntry)
 	*/
 }
 
-//
-// Program entry point
-//
+/// <summary>
+/// Program entry point, lot's of setup happens here:
+/// <para>-Checking no other instance of the program is running on this session</para>
+/// <para>-Loading startup info</para>
+/// <para>-Language Manager setup</para>
+/// <para>-Tooltip Repo setup</para>
+/// <para>-Mutexes for working with veil's display output thread and starting its thread</para>
+/// <para>-Custom window classes</para>
+/// <para>-Clean when program ends</para>
+/// </summary>
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ INT nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
@@ -1016,6 +1053,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 //
 // Process command line parameters
 //
+// TODO(fran): we dont really use this
 bool ProcessCmdline(_Out_ INT* Output)
 {
     *Output = -1;
@@ -1049,6 +1087,12 @@ bool ProcessCmdline(_Out_ INT* Output)
     return true;
 }
 
+/// <summary>
+/// Full control setup for the Settings window
+/// </summary>
+/// <param name="hwnd"></param>
+/// <param name="hInstance"></param>
+/// <param name="current_settings"></param>
 void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 	//Settings needs:
 	//·language (combobox)
@@ -1311,6 +1355,11 @@ void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 	}
 }
 
+/// <summary>
+/// Updates the Current Settings with the new info from the Settings window
+/// </summary>
+/// <param name="settings_window"></param>
+/// <param name="current_settings"></param>
 inline void SaveCurrentValidSettings(HWND settings_window, SETTINGS &current_settings) {//TODO(fran): should this and the restore procedure be in startup_and_settings.cpp ? hard to decouple
 	//We ask each control for its current state and save it to current_settings
 	
@@ -1329,6 +1378,11 @@ inline void SaveCurrentValidSettings(HWND settings_window, SETTINGS &current_set
 
 }
 
+/// <summary>
+/// Used to restore the controls of the Settings window in case the user changes something but does not save
+/// </summary>
+/// <param name="settings_window"></param>
+/// <param name="current_settings"></param>
 void RestoreCurrentValidSettingsToControls(HWND settings_window, SETTINGS const& current_settings) {
 	//Resets the state of the controls to the one that is saved in current_settings
 	
@@ -1355,6 +1409,11 @@ void RestoreCurrentValidSettingsToControls(HWND settings_window, SETTINGS const&
 	SendDlgItemMessage(settings_window, SCV_SETTINGS_START_WITH_WINDOWS, BM_SETCHECK, current_settings.start_with_windows ? BST_CHECKED : BST_UNCHECKED, 0);
 }
 
+/// <summary>
+/// Awfully complex code to do something as simple as managing the Current Hotkey and hotkey control
+/// </summary>
+/// <param name="mgr">The window that will receive messages when a hotkey is pressed</param>
+/// <param name="settings">The window that has the hotkey control and therefore the needed info</param>
 void Settings_SaveHotkey(HWND mgr,HWND settings) {
 	WORD new_hotkey = SendDlgItemMessage(settings,SCV_SETTINGS_HOTKEY, HKM_GETHOTKEY, 0, 0);
 	BYTE new_modifs = HotkeyControlModifiersToHotkeyModifiers(HIBYTE(new_hotkey));
@@ -1408,19 +1467,28 @@ void Settings_SaveHotkey(HWND mgr,HWND settings) {
 	}
 }
 
+/// <summary>
+/// Window procedure for Settings window
+/// </summary>
+/// <param name="hWnd"></param>
+/// <param name="message"></param>
+/// <param name="wParam"></param>
+/// <param name="lParam"></param>
+/// <returns></returns>
 LRESULT CALLBACK WndSettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	static int numberOfUpdates = 0;
 
 	switch (message) {
 	case WM_CREATE:
 	{
+		//Creating and setting up controls
 		SetWindowTheme(hWnd, L"", L"");//INFO: to avoid top curved corners on frame
 		CREATESTRUCT* creation_info = (CREATESTRUCT*)lParam;
 		SETTINGS* current_settings = (SETTINGS*)creation_info->lpCreateParams;
 		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE);
 		SetupSettings(hWnd,hInstance, current_settings);
 	
-		//Create procedure to add things to the "non client" area
+		//Create procedure to add things to the "non client" area, in this case close button
 		RECT rc;
 		GetWindowRect(hWnd, &rc);
 
@@ -1435,6 +1503,7 @@ LRESULT CALLBACK WndSettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		//
 
 		//TEST
+		//Starts timer to check how many times does the Veil update per second
 		SetTimer(hWnd, 1, 1000, NULL);
 		
 		break;
@@ -1469,6 +1538,7 @@ LRESULT CALLBACK WndSettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		return 0;
 	}
 	case WM_TIMER: {
+		//Showing current fps counter for the Veil
 		KillTimer(hWnd, 1);
 		SetWindowText(GetDlgItem(hWnd, SCV_UPDATE_COUNTER_TEXT), std::to_wstring(numberOfUpdates).c_str());
 		numberOfUpdates = 0;
@@ -1536,6 +1606,7 @@ LRESULT CALLBACK WndSettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 	}
 	case WM_CTLCOLORLISTBOX:
 	{
+		//Needed to paint the list that comes out of comboboxes
 		HDC comboboxDC = (HDC)wParam;
 		SetTextColor(comboboxDC, ControlProcedures::Instance().Get_HighlightColor());
 		SetBkColor(comboboxDC, ControlProcedures::Instance().Get_BackgroundColor());
@@ -1549,11 +1620,6 @@ LRESULT CALLBACK WndSettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		SetBkColor(staticDC, ControlProcedures::Instance().Get_BackgroundColor());
 		return (INT_PTR)ControlProcedures::Instance().Get_BackgroundBrush();
 	}
-	//case WM_CTLCOLORBTN: {}
-	//case WM_DRAWITEM: { //INFO: I'm using it only to draw buttons
-
-	//	return DrawButton((DRAWITEMSTRUCT*)lParam, wParam);
-	//}
 	case WM_CLOSE:
 	{
 		ShowWindow(hWnd, SW_HIDE);//TODO(fran): is this still needed?
@@ -1567,26 +1633,11 @@ LRESULT CALLBACK WndSettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 	return 0;
 }
 
-inline double GetPCFrequency() {
-	LARGE_INTEGER li;
-	Assert(QueryPerformanceFrequency(&li));
-	return double(li.QuadPart) / 1000.0; //milliseconds
-}
-
-inline void StartCounter(__int64 &CounterStart) {
-	LARGE_INTEGER li;
-	QueryPerformanceCounter(&li);
-	CounterStart = li.QuadPart;
-}
-
-inline double GetCounter(__int64 CounterStart, double PCFreq)
-{
-	LARGE_INTEGER li;
-	QueryPerformanceCounter(&li);
-	return double(li.QuadPart - CounterStart) / PCFreq;
-}
-
-//*Everything related to updating the contents of the veil takes place here
+/// <summary>
+/// Everything related to updating the contents of the veil takes place here
+/// </summary>
+/// <param name="Param">The HWND of the Veil, aka the window that will darken the screen</param>
+/// <returns></returns>
 DWORD WINAPI WorkerThread(LPVOID Param) {
 	HWND veil = (HWND)Param;//TODO(fran): every important parameter should be put into a struct and passed through this
 	DYNAMIC_WAIT DynamicWait;
@@ -1714,9 +1765,14 @@ DWORD WINAPI WorkerThread(LPVOID Param) {
 	return 0;
 }
 
-//
-// Window message processor
-//
+/// <summary>
+/// The Veil's window procedure
+/// </summary>
+/// <param name="hWnd"></param>
+/// <param name="message"></param>
+/// <param name="wParam"></param>
+/// <param name="lParam"></param>
+/// <returns></returns>
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
@@ -1763,6 +1819,11 @@ HWND OpacityPos;
 
 HWND TurnOnOff;
 
+/// <summary>
+/// Extract a number from the middle of a string
+/// </summary>
+/// <param name="str">The string that contains a number somewhere in its contents</param>
+/// <returns>The number as a string</returns>
 std::wstring first_numberstring(std::wstring const & str)
 {
 https://stackoverflow.com/questions/30073839/c-extract-number-from-the-middle-of-a-string
@@ -1775,6 +1836,12 @@ https://stackoverflow.com/questions/30073839/c-extract-number-from-the-middle-of
 	return std::wstring();
 }
 
+/// <summary>
+/// Full control setup for the Manager window
+/// </summary>
+/// <param name="hWnd"></param>
+/// <param name="hInstance"></param>
+/// <param name="startup_info"></param>
 void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 	RECT windowRect;
 	GetMyClientRect(hWnd,&windowRect);
@@ -2076,12 +2143,21 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 	//
 }
 
+/// <summary>
+/// Window procedure for the Manager window
+/// </summary>
+/// <param name="hWnd"></param>
+/// <param name="message"></param>
+/// <param name="wParam"></param>
+/// <param name="lParam"></param>
+/// <returns></returns>
 LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
 	case WM_CREATE:
 	{
+		//Setup all the controls and the "look and feel" of the window
 		SetWindowTheme(hWnd, L"", L"");//INFO: to avoid top curved corners on frame
 		CREATESTRUCT* creation_info = (CREATESTRUCT*)lParam;
 		STARTUP_INFO* startup_info = (STARTUP_INFO*)creation_info->lpCreateParams;
@@ -2111,6 +2187,7 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
 		//
 
+		//Setting up position and visibility of the window
 		if(startup_info->show_manager_on_startup) ShowWindow(hWnd, SW_SHOW); //TODO(fran): here is why we first see the manager with the old frame, this should be done after first wm_paint
 		
 		if (startup_info->remember_manager_position) {
@@ -2151,15 +2228,15 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	{
 		return PaintCaption(hWnd);
 	}
-	case WM_NCACTIVATE://stuff for custom frame
+	case WM_NCACTIVATE: //stuff for custom frame
 	{
 		return TRUE;
 	}
-	case WM_NCHITTEST://stuff for custom frame
+	case WM_NCHITTEST: //stuff for custom frame
 	{
 		return HitTestNCA(hWnd, wParam, lParam);
 	}
-	case WM_NCCALCSIZE://stuff for custom frame
+	case WM_NCCALCSIZE: //stuff for custom frame
 	{
 		if (wParam == TRUE) {
 			NCCALCSIZE_PARAMS *pncsp = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
@@ -2172,12 +2249,13 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 		else return DefWindowProc(hWnd, message, wParam, lParam);
 	}
-	case WM_NCPAINT://stuff for custom frame
+	case WM_NCPAINT: //stuff for custom frame
 	{
 		return 0;
 	}
 	case SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF:
 	{
+		
 		//const WCHAR* turnedOnOffText;
 		if (isTurnedOn) {
 			//turnedOnOffText = RST(SCV_LANG_MGR_TURN_OFF).c_str();
@@ -2192,7 +2270,7 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		InvalidateRect(TurnOnOff, NULL, TRUE);
 		break;
 	}
-	case SCV_LANG_DYNAMIC_UPDATE:
+	case SCV_LANG_DYNAMIC_UPDATE: //Message sent for windows that have controls that need more than the supported functions from LANGUAGE_MANAGER
 	{
 		SendMessage(hWnd, SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF, 0, 0);
 		break;
@@ -2208,8 +2286,8 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 		break;
 	}
-	//Manage Slider
-	case WM_HSCROLL: //horizontal sliders send WM_HSCROLL, vertical ones send WM_VSCROLL
+	case WM_HSCROLL: //Manage Slider
+	//INFO: horizontal sliders send WM_HSCROLL, vertical ones send WM_VSCROLL
 	{
 		switch (LOWORD(wParam)) {//TODO(fran): better way to handle multiple sliders, they must have a way to set an ID as I think saw in the example
 			case TB_PAGEDOWN:
@@ -2353,8 +2431,9 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			break;
 		}
 #endif
-		//Show/Hide the veil
-		case SCV_TURN_ON_OFF://TODO(fran): this will be separated into updating the bool and another msg for updating the text
+		
+		case SCV_TURN_ON_OFF: //Show/Hide the Veil
+		//TODO(fran): this will be separated into updating the bool and another msg for updating the text
 		{
 			isTurnedOn = !isTurnedOn;
 			if (isTurnedOn) {
@@ -2493,7 +2572,13 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	return 0;
 }
 
-// Hit test the frame for resizing and moving.
+/// <summary>
+/// Hit test the window frame for resizing and moving.
+/// </summary>
+/// <param name="hWnd"></param>
+/// <param name="wParam"></param>
+/// <param name="lParam"></param>
+/// <returns></returns>
 LRESULT HitTestNCA(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
 	// Get the point coordinates for the hit test.
@@ -2544,6 +2629,11 @@ LRESULT HitTestNCA(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	return hitTests[uRow][uCol];
 }
 
+/// <summary>
+/// Paints the title area of a window (its caption area)
+/// </summary>
+/// <param name="hWnd"></param>
+/// <returns></returns>
 LRESULT PaintCaption(HWND hWnd) {
 	HDC         hdc;
 	PAINTSTRUCT ps;
@@ -2649,9 +2739,11 @@ LRESULT PaintCaption(HWND hWnd) {
 //	return 0;
 //}
 
-//
-// Entry point for new duplication threads
-//
+/// <summary>
+/// Entry point for new duplication threads
+/// </summary>
+/// <param name="Param">Pointer to a THREAD_DATA structure</param>
+/// <returns></returns>
 DWORD WINAPI DDProc(_In_ void* Param)
 {
     // Classes
@@ -2892,9 +2984,12 @@ DUPL_RETURN ProcessFailure(_In_opt_ ID3D11Device* Device, _In_ LPCWSTR Str, _In_
     return DUPL_RETURN_ERROR_UNEXPECTED;
 }
 
-//
-// Displays a message
-//
+/// <summary>
+/// Displays a message
+/// </summary>
+/// <param name="Str"></param>
+/// <param name="Title"></param>
+/// <param name="hr"></param>
 void DisplayMsg(_In_ LPCWSTR Str, _In_ LPCWSTR Title, HRESULT hr)
 {
     if (SUCCEEDED(hr))

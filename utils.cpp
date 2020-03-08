@@ -218,9 +218,9 @@ inline void GetTrayWndRect(LPRECT lpTrayRect)
 /// <summary>
 /// Animates a window going to or from the tray and shows/hides it accordingly
 /// </summary>
-/// <param name="from">place from where the window will start moving, ej its top-left corner when going to the tray, and top-left of the tray when going to the desktop</param>
-/// <param name="to">window destination, aka the opposite of "from"</param>
-/// <param name="milliseconds">duration of the animation</param>
+/// <param name="from">Place from where the window will start moving, ej its top-left corner when going to the tray, and top-left of the tray when going to the desktop</param>
+/// <param name="to">Window destination, aka the opposite of "from"</param>
+/// <param name="milliseconds">Duration of the animation</param>
 /// <returns></returns>
 inline void WindowToTray(HWND hWnd, POINT from, POINT to, int milliseconds) {
 	double frametime = (1. / 120.)*1000.; //TODO(fran): this should be 2x monitor refresh rate
@@ -319,4 +319,33 @@ inline void RestoreWndFromTray(HWND hWnd)
 		SetActiveWindow(hWnd);
 		SetForegroundWindow(hWnd);
 	}
+}
+
+/// <summary>
+/// Get CPU frequency
+/// </summary>
+/// <returns>CPU frequency in milliseconds</returns>
+inline double GetPCFrequency() {
+	LARGE_INTEGER li;
+	Assert(QueryPerformanceFrequency(&li));
+	return double(li.QuadPart) / 1000.0; //milliseconds
+}
+
+inline void StartCounter(__int64 &CounterStart) {
+	LARGE_INTEGER li;
+	QueryPerformanceCounter(&li);
+	CounterStart = li.QuadPart;
+}
+
+/// <summary>
+/// Get time passed since CounterStart, in the same unit of time of PCFreq
+/// </summary>
+/// <param name="CounterStart">Moment when the counter was started, use StartCounter</param>
+/// <param name="PCFreq">CPU frequency of the PC, use GetPCFrequency, if this value is in milliseconds then so will be the returned value</param>
+/// <returns>Time passed since CounterStart, in the time unit defined by PCFreq</returns>
+inline double GetCounter(__int64 CounterStart, double PCFreq)
+{
+	LARGE_INTEGER li;
+	QueryPerformanceCounter(&li);
+	return double(li.QuadPart - CounterStart) / PCFreq;
 }
