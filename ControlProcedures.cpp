@@ -149,8 +149,8 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 			//TODO(fran): why does this +1 -1 work perfectly and aligns the icon correctly in every resolution???
 			icon_size.y = icon_size.x;
 
-			LONG icon_id = GetWindowLongPtr(hWnd, GWL_USERDATA);
-
+			//LONG icon_id = GetWindowLongPtr(hWnd, GWL_USERDATA);
+			LONG icon_id = SendMessage(hWnd, BM_GETIMAGE, IMAGE_ICON, 0);
 			//TODO: should probably use inflaterect
 
 			//INFO: everybody MUST be on the same process for this hinstance to work
@@ -264,21 +264,15 @@ LRESULT CALLBACK ControlProcedures::ComboProc(HWND hWnd, UINT Msg, WPARAM wParam
 
 		BOOL ButtonState = SendMessageW(hWnd, CB_GETDROPPEDSTATE, 0, 0);
 		if (ButtonState) {
-			LOGBRUSH lb;
-			GetObject(pthis->BackgroundPush, sizeof(LOGBRUSH), &lb);
-			SetBkColor(hdc, lb.lbColor);
+			SetBkColor(hdc, ColorFromBrush(pthis->BackgroundPush));
 			FillRect(hdc, &rc, pthis->BackgroundPush);
 		}
 		else if (MouseOverCombo && CurrentMouseOverCombo == hWnd) {
-			LOGBRUSH lb;
-			GetObject(pthis->BackgroundMouseover, sizeof(LOGBRUSH), &lb);
-			SetBkColor(hdc, lb.lbColor);
+			SetBkColor(hdc, ColorFromBrush(pthis->BackgroundMouseover));
 			FillRect(hdc, &rc, pthis->BackgroundMouseover);
 		}
 		else {
-			LOGBRUSH lb;
-			GetObject(pthis->Background, sizeof(LOGBRUSH), &lb);
-			SetBkColor(hdc, lb.lbColor);
+			SetBkColor(hdc, ColorFromBrush(pthis->Background));
 			FillRect(hdc, &rc, pthis->Background);
 		}
 
@@ -328,9 +322,9 @@ LRESULT CALLBACK ControlProcedures::ComboProc(HWND hWnd, UINT Msg, WPARAM wParam
 		icon_size.cx = icon_size.cy;
 
 		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE); 
-		LONG icon_id = GetWindowLongPtr(hWnd, GWL_USERDATA);
+		//LONG icon_id = GetWindowLongPtr(hWnd, GWL_USERDATA);
 		//TODO(fran): we could set the icon value on control creation, use GWL_USERDATA
-		HICON combo_dropdown_icon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(icon_id), IMAGE_ICON, icon_size.cx, icon_size.cy, LR_SHARED);
+		HICON combo_dropdown_icon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(pthis->ComboIconID), IMAGE_ICON, icon_size.cx, icon_size.cy, LR_SHARED);
 
 		if (combo_dropdown_icon) {
 			DrawIconEx(hdc, r.right - r.left - icon_size.cx - DISTANCE_TO_SIDE, ((r.bottom - r.top) - icon_size.cy) / 2,
@@ -415,21 +409,15 @@ LRESULT CALLBACK ControlProcedures::CheckboxProc(HWND hWnd, UINT Msg, WPARAM wPa
 
 		WORD ButtonState = SendMessageW(hWnd, BM_GETSTATE, 0, 0);
 		if (ButtonState & BST_PUSHED) {
-			LOGBRUSH lb;
-			GetObject(pthis->BackgroundPush, sizeof(LOGBRUSH), &lb);
-			SetBkColor(hdc, lb.lbColor);
+			SetBkColor(hdc, ColorFromBrush(pthis->BackgroundPush));
 			FillRect(hdc, &modified_rc, pthis->BackgroundPush);
 		}
 		else if (MouseOverCheck && CurrentMouseOverCheck == hWnd) {
-			LOGBRUSH lb;
-			GetObject(pthis->BackgroundMouseover, sizeof(LOGBRUSH), &lb);
-			SetBkColor(hdc, lb.lbColor);
+			SetBkColor(hdc, ColorFromBrush(pthis->BackgroundMouseover));
 			FillRect(hdc, &modified_rc, pthis->BackgroundMouseover);
 		}
 		else {
-			LOGBRUSH lb;
-			GetObject(pthis->Background, sizeof(LOGBRUSH), &lb);
-			SetBkColor(hdc, lb.lbColor);
+			SetBkColor(hdc, ColorFromBrush(pthis->Background));
 			FillRect(hdc, &modified_rc, pthis->Background);
 		}
 
@@ -455,8 +443,8 @@ LRESULT CALLBACK ControlProcedures::CheckboxProc(HWND hWnd, UINT Msg, WPARAM wPa
 		int deflation = -max(1, CheckboxWidth * .2f);
 		InflateRect(&icon_rc, deflation, deflation);
 		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE); 
-		LONG icon_id = GetWindowLongPtr(hWnd, GWL_USERDATA); //TODO(fran): I could set this id as a variable in controlprocedures instead of having to put it in every control
-		HICON checkbox_tick_icon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(icon_id), IMAGE_ICON, RECTWIDTH(icon_rc), RECTHEIGHT(icon_rc), LR_SHARED);
+		//LONG icon_id = GetWindowLongPtr(hWnd, GWL_USERDATA); 
+		HICON checkbox_tick_icon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(pthis->CheckboxIconID), IMAGE_ICON, RECTWIDTH(icon_rc), RECTHEIGHT(icon_rc), LR_SHARED);
 
 		//Draw tick mark if checked
 		if (ButtonState & BST_CHECKED && checkbox_tick_icon) { //TODO(fran): make an icon that is easier to see
@@ -581,13 +569,21 @@ LRESULT CALLBACK ControlProcedures::CaptionButtonProc(HWND hwnd, UINT message, W
 		//FillRect(hdc, &rc, BorderColor);
 		//SelectClipRgn(hdc, NULL);
 
+
+
+		//LONG icon_id = GetWindowLongPtr(hwnd, GWL_USERDATA);
 		DWORD style = GetWindowLongPtr(hwnd, GWL_STYLE);
-		if (style & BS_ICON) {
+
+		LONG icon_id = NULL;
+
+		//This windows should always have an icon so no need to test with BS_ICON
+		if (style & WS_MINIMIZEBOX) icon_id = pthis->CaptionMinimizeIconID; //Is a minimize button
+		else if (style & WS_MAXIMIZEBOX)icon_id = pthis->CaptionCloseIconID; //Is a maximize button
+
+		if (icon_id) {
 			SIZE icon_size;
 			icon_size.cx = RECTHEIGHT(rc)*.55f;
 			icon_size.cy = icon_size.cx;
-
-			LONG icon_id = GetWindowLongPtr(hwnd, GWL_USERDATA);
 
 			HICON icon = (HICON)LoadImage((HINSTANCE)GetWindowLongPtr(hwnd, GWL_HINSTANCE), MAKEINTRESOURCE(icon_id), IMAGE_ICON, icon_size.cx, icon_size.cy, LR_SHARED);
 

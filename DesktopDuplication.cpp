@@ -805,6 +805,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	ControlProcedures::Instance().Set_HighlightColor(RGB(255, 255, 255));
 	ControlProcedures::Instance().Set_PushColor(RGB(0, 110, 200));
 	ControlProcedures::Instance().Set_MouseoverColor(RGB(0, 120, 215));
+	ControlProcedures::Instance().Set_ComboIconID(COMBO_ICON);
+	ControlProcedures::Instance().Set_CheckboxIconID(CHECKBOX_ICON);
+	ControlProcedures::Instance().Set_CaptionCloseIconID(CROSS_ICON);
+	ControlProcedures::Instance().Set_CaptionMinimizeIconID(MINIMIZE_ICON);
 
 	std::wstring appManagerClassName = L"Smart Veil Manager Franco Badenas Abal";
 
@@ -1130,7 +1134,7 @@ void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 	HWND manager_on_startup = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX
 		, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_MANAGER_ON_STARTUP, hInstance, NULL);
 	AWT(manager_on_startup, SCV_LANG_SETTINGS_SHOW_MGR);
-	SetWindowLongPtr(manager_on_startup, GWL_USERDATA, CHECKBOX_ICON);
+	//SetWindowLongPtr(manager_on_startup, GWL_USERDATA, CHECKBOX_ICON);
 	SetWindowSubclass(manager_on_startup, ControlProcedures::Instance().CheckboxProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 	
 	SendMessageW(manager_on_startup, BM_SETCHECK, current_settings->show_manager_on_startup? BST_CHECKED : BST_UNCHECKED, 0);
@@ -1140,7 +1144,7 @@ void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 	HWND show_tray = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX
 		, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_SHOW_TRAY, hInstance, NULL);
 	AWT(show_tray, SCV_LANG_SETTINGS_SHOW_TRAY);
-	SetWindowLongPtr(show_tray, GWL_USERDATA, CHECKBOX_ICON);
+	//SetWindowLongPtr(show_tray, GWL_USERDATA, CHECKBOX_ICON);
 	SetWindowSubclass(show_tray, ControlProcedures::Instance().CheckboxProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
 	SendMessageW(show_tray, BM_SETCHECK, current_settings->show_tray_icon ? BST_CHECKED : BST_UNCHECKED, 0);
@@ -1151,7 +1155,7 @@ void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 	HWND dangerous_slider = CreateWindowW(L"Button", NULL, WS_VISIBLE| WS_CHILD| BS_AUTOCHECKBOX
 	, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_DANGEROUS_SLIDER, hInstance, NULL);
 	AWT(dangerous_slider, SCV_LANG_SETTINGS_REDUCE_SLIDER);
-	SetWindowLongPtr(dangerous_slider, GWL_USERDATA, CHECKBOX_ICON);
+	//SetWindowLongPtr(dangerous_slider, GWL_USERDATA, CHECKBOX_ICON);
 	SetWindowSubclass(dangerous_slider, ControlProcedures::Instance().CheckboxProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
 	SendMessageW(dangerous_slider, BM_SETCHECK, current_settings->reduce_dangerous_slider_values ? BST_CHECKED : BST_UNCHECKED, 0);
@@ -1164,7 +1168,7 @@ void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 	HWND remember_manager_pos = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX
 		, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_MANAGER_POS, hInstance, NULL);
 	AWT(remember_manager_pos, SCV_LANG_SETTINGS_REMEMBER_MGR_POS);
-	SetWindowLongPtr(remember_manager_pos, GWL_USERDATA, CHECKBOX_ICON);
+	//SetWindowLongPtr(remember_manager_pos, GWL_USERDATA, CHECKBOX_ICON);
 	SetWindowSubclass(remember_manager_pos, ControlProcedures::Instance().CheckboxProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
 	SendMessageW(remember_manager_pos, BM_SETCHECK, current_settings->remember_manager_position ? BST_CHECKED : BST_UNCHECKED, 0);
@@ -1174,7 +1178,7 @@ void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 	HWND show_tooltips = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX
 		, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_SHOW_TOOLTIPS, hInstance, NULL);
 	AWT(show_tooltips, SCV_LANG_SETTINGS_SHOW_TOOLTIP);
-	SetWindowLongPtr(show_tooltips, GWL_USERDATA, CHECKBOX_ICON);
+	//SetWindowLongPtr(show_tooltips, GWL_USERDATA, CHECKBOX_ICON);
 	SetWindowSubclass(show_tooltips, ControlProcedures::Instance().CheckboxProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
 	SendMessageW(show_tooltips, BM_SETCHECK, current_settings->show_tooltips ? BST_CHECKED : BST_UNCHECKED, 0);
@@ -1186,7 +1190,7 @@ void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 	HWND start_with_windows = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX
 		, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_START_WITH_WINDOWS, hInstance, NULL);
 	AWT(start_with_windows, SCV_LANG_SETTINGS_START_WITH_WIN);
-	SetWindowLongPtr(start_with_windows, GWL_USERDATA, CHECKBOX_ICON);
+	//SetWindowLongPtr(start_with_windows, GWL_USERDATA, CHECKBOX_ICON);
 	SetWindowSubclass(start_with_windows, ControlProcedures::Instance().CheckboxProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
 	SendMessageW(start_with_windows, BM_SETCHECK, current_settings->start_with_windows ? BST_CHECKED : BST_UNCHECKED, 0);
@@ -1212,7 +1216,7 @@ void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 	ACT(veil_on_startup_combo, VEIL_ON_STARTUP::NO, SCV_LANG_SETTINGS_TURN_ON_NO);
 	ACT(veil_on_startup_combo, VEIL_ON_STARTUP::REMEMBER_LAST_STATE, SCV_LANG_SETTINGS_TURN_ON_REMEMBER);
 	SendMessageW(veil_on_startup_combo, CB_SETCURSEL, current_settings->show_veil_on_startup, 0);
-	SetWindowLongPtr(veil_on_startup_combo, GWL_USERDATA, COMBO_ICON);
+	//SetWindowLongPtr(veil_on_startup_combo, GWL_USERDATA, COMBO_ICON);
 	SetWindowSubclass(veil_on_startup_combo, ControlProcedures::Instance().ComboProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
 	paddingY += combobox_text.y + addPaddingY;
@@ -1230,7 +1234,7 @@ void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 	SendMessageW(language_combo, CB_ADDSTRING, LANGUAGE_MANAGER::LANGUAGE::ENGLISH, (LPARAM)L"English");//INFO(fran):this values MUST be lined up with LANGUAGE enum
 	SendMessageW(language_combo, CB_ADDSTRING, LANGUAGE_MANAGER::LANGUAGE::SPANISH, (LPARAM)L"Español");//INFO: this strings will not change with langs, each lang will be written like it should
 	SendMessageW(language_combo, CB_SETCURSEL, current_settings->language, 0);
-	SetWindowLongPtr(language_combo, GWL_USERDATA, COMBO_ICON);
+	//SetWindowLongPtr(language_combo, GWL_USERDATA, COMBO_ICON);
 	SetWindowSubclass(language_combo, ControlProcedures::Instance().ComboProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
 	paddingY += combobox_text.y + addPaddingY;
@@ -1495,9 +1499,9 @@ LRESULT CALLBACK WndSettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 		float button_height = FRAME.caption_height;
 		float button_width = button_height * 16.f / 9.f;
 
-		HWND close_button = CreateWindowW(L"Button", L"", WS_VISIBLE | WS_CHILD | BS_ICON
+		HWND close_button = CreateWindowW(L"Button", L"", WS_VISIBLE | WS_CHILD | WS_MAXIMIZEBOX
 			, RECTWIDTH(rc) - button_width - FRAME.right_border, 0, button_width, button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_CLOSE, hInstance, NULL);
-		SetWindowLongPtr(close_button, GWL_USERDATA, CROSS_ICON);
+		//SetWindowLongPtr(close_button, GWL_USERDATA, CROSS_ICON);
 		SetWindowSubclass(close_button, ControlProcedures::Instance().CaptionButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 		TOOLTIP_REPO::Instance().CreateToolTip(SCV_CUSTOMFRAME_CLOSE, hWnd, SCV_LANG_CLOSE);
 		//
@@ -2136,8 +2140,9 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 
 	SetWindowSubclass(Settings, ControlProcedures::Instance().ButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
-	//INFO IMPORTANT: evert button that needs and icon drawn will send the icon value through GWL_USERDATA
-	SetWindowLongPtr(Settings, GWL_USERDATA, SETTINGS_ICON);
+	//INFO IMPORTANT: every button that needs and icon drawn will send the icon value through the BM_SETIMAGE message
+	//SetWindowLongPtr(Settings, GWL_USERDATA, SETTINGS_ICON);
+	SendMessage(Settings, BM_SETIMAGE, IMAGE_ICON, SETTINGS_ICON);
 	
 	TOOLTIP_REPO::Instance().CreateToolTip(SCV_SETTINGS, hWnd, SCV_LANG_MGR_SETTINGS);
 	//
@@ -2173,15 +2178,15 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		float button_height = FRAME.caption_height;
 		float button_width = button_height * 16.f / 9.f;
 
-		HWND close_button = CreateWindowW(L"Button", L"", WS_VISIBLE | WS_CHILD | BS_ICON
+		HWND close_button = CreateWindowW(L"Button", L"", WS_VISIBLE | WS_CHILD | WS_MAXIMIZEBOX
 			, RECTWIDTH(rc) - button_width - FRAME.right_border, 0, button_width, button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_CLOSE, hInstance, NULL);
-		SetWindowLongPtr(close_button, GWL_USERDATA, CROSS_ICON);
+		//SetWindowLongPtr(close_button, GWL_USERDATA, CROSS_ICON);
 		SetWindowSubclass(close_button, ControlProcedures::Instance().CaptionButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 		TOOLTIP_REPO::Instance().CreateToolTip(SCV_CUSTOMFRAME_CLOSE, hWnd, SCV_LANG_CLOSE);
 
-		HWND minimize_button = CreateWindowW(L"Button", L"", WS_VISIBLE | WS_CHILD | BS_ICON
+		HWND minimize_button = CreateWindowW(L"Button", L"", WS_VISIBLE | WS_CHILD | WS_MINIMIZEBOX
 			, RECTWIDTH(rc) - button_width*2 - FRAME.right_border, 0, button_width, button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_MINIMIZE, hInstance, NULL);
-		SetWindowLongPtr(minimize_button, GWL_USERDATA, MINIMIZE_ICON);
+		//SetWindowLongPtr(minimize_button, GWL_USERDATA, MINIMIZE_ICON);
 		SetWindowSubclass(minimize_button, ControlProcedures::Instance().CaptionButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 		TOOLTIP_REPO::Instance().CreateToolTip(SCV_CUSTOMFRAME_MINIMIZE, hWnd, SCV_LANG_MINIMIZE);
 
@@ -2533,6 +2538,8 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	//}
 	case WM_CLOSE:
 	{
+		SendMessage(WindowSettingsHandle, WM_CLOSE, 0, 0);
+
 		if (CurrentValidSettings.show_tray_icon) {
 			//Animate closing to tray
 			//Pd AnimateWindow is awful
@@ -2541,8 +2548,6 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}
 		else
 			ShowWindow(hWnd, SW_HIDE);
-
-		SendMessage(WindowSettingsHandle, WM_CLOSE, 0, 0);
 
 #if OLD_HOTKEY_POS
 		//Reset the state of the hotkey control in case the user typed something else that wasnt valid

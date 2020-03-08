@@ -342,7 +342,7 @@ inline void TrayToWindow(HWND hWnd, POINT from, POINT to, int milliseconds) {
 	}
 	SetLayeredWindowAttributes(hWnd, 0, 255, LWA_ALPHA); //just to make sure
 	SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) ^ WS_EX_LAYERED);
-	SetWindowPos(hWnd, NULL, to.x, to.y, 0, 0, SWP_NOZORDER | SWP_NOSIZE);//just to make sure, and we tell it to redraw this time
+	SetWindowPos(hWnd, NULL, to.x, to.y, 0, 0, SWP_NOZORDER | SWP_NOREDRAW | SWP_NOSIZE);//just to make sure, dont tell it to redraw cause it takes a long time to do it and looks bad
 
 	SetActiveWindow(hWnd);
 	SetForegroundWindow(hWnd);
@@ -426,4 +426,15 @@ inline double GetCounter(__int64 CounterStart, double PCFreq)
 	LARGE_INTEGER li;
 	QueryPerformanceCounter(&li);
 	return double(li.QuadPart - CounterStart) / PCFreq;
+}
+
+/// <summary>
+/// Get color of an HBRUSH
+/// </summary>
+/// <param name="br"></param>
+/// <returns></returns>
+inline COLORREF ColorFromBrush(HBRUSH br) {
+	LOGBRUSH lb;
+	GetObject(br, sizeof(lb), &lb);
+	return lb.lbColor;
 }
