@@ -18,6 +18,9 @@ class LANGUAGE_MANAGER
 {
 public://TODO(fran): add lang to the rest of the classes: outmgr,duplmgr,...
 	
+	/// <summary>
+	/// All the languages supported by the application
+	/// </summary>
 	enum LANGUAGE //TODO(fran): should probably start with 1 since NULL==0 and things can go wrong there with other objects sending with NULL code
 	{
 		ENGLISH = 0, SPANISH
@@ -27,6 +30,10 @@ public://TODO(fran): add lang to the rest of the classes: outmgr,duplmgr,...
 		return lang == LANGUAGE::ENGLISH || lang == LANGUAGE::SPANISH;
 	}
 
+	/// <summary>
+	/// Retrieves the current instance of the Language Manager
+	/// </summary>
+	/// <returns></returns>
 	static LANGUAGE_MANAGER& Instance()
 	{
 		static LANGUAGE_MANAGER instance;

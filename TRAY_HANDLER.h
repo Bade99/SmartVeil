@@ -9,6 +9,9 @@
 class TRAY_HANDLER
 {
 public:
+	/// <summary>
+	/// Retrieves the current instance of the Tray Handler
+	/// </summary>
 	static TRAY_HANDLER& Instance() 
 	{
 		static TRAY_HANDLER instance;

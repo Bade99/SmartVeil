@@ -26,29 +26,23 @@ void TOOLTIP_REPO::ActivateTooltips(BOOL activate)
 		SendMessage(tip, TTM_ACTIVATE, activate, 0);
 }
 
-HWND TOOLTIP_REPO::CreateToolTip(int toolID, HWND hDlg, WORD messageID)
-{
-	if (!toolID || !hDlg ) return (HWND)NULL;
-	// Get the window of the tool.
-	HWND hwndTool = GetDlgItem(hDlg, toolID);
-
-	if (!hwndTool) return (HWND)NULL;
-
+HWND TOOLTIP_REPO::CreateToolTip(HWND hWnd, WORD messageID) {
+	
 	// Create the tooltip. 
 	HWND hwndTip = CreateWindowExW(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL,
 		WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP //| TTS_BALLOON
 		, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-		hDlg, NULL, this->hInstance, NULL);
+		hWnd, NULL, this->hInstance, NULL);
 
 	if (!hwndTip) return (HWND)NULL;
 
 	// Associate the tooltip with the tool.
 	TOOLINFO toolInfo = { 0 };
 	toolInfo.cbSize = sizeof(TOOLINFO);
-	toolInfo.hwnd = hDlg;
+	toolInfo.hwnd = NULL;
 	toolInfo.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
-	toolInfo.uId = (UINT_PTR)hwndTool;
-	toolInfo.lpszText = (LPWSTR)MAKELPARAM(messageID,0);
+	toolInfo.uId = (UINT_PTR)hWnd;
+	toolInfo.lpszText = (LPWSTR)MAKELPARAM(messageID, 0);
 	toolInfo.hinst = this->hInstance;
 
 	//GetClientRect(hwndTool, &toolInfo.rect);
@@ -64,6 +58,7 @@ HWND TOOLTIP_REPO::CreateToolTip(int toolID, HWND hDlg, WORD messageID)
 }
 
 HWND TOOLTIP_REPO::CreateToolTipForRect(HWND hwndParent, WORD messageID)
+//INFO: Im really just creating a tooltip for the parent and assigning it a rect to work with
 {
 	// Create a tooltip.
 	HWND hwndTT = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL,
@@ -71,8 +66,7 @@ HWND TOOLTIP_REPO::CreateToolTipForRect(HWND hwndParent, WORD messageID)
 		, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 		hwndParent, NULL, this->hInstance, NULL);
 
-	SetWindowPos(hwndTT, HWND_TOPMOST, 0, 0, 0, 0,
-		SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+	//SetWindowPos(hwndTT, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
 	// Set up "tool" information. In this case, the "tool" is the entire parent window.
 
@@ -105,8 +99,7 @@ HWND TOOLTIP_REPO::CreateToolTipForRect(HWND hwndParent, HWND hwndTool, WORD mes
 		, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 		hwndParent, NULL, this->hInstance, NULL);
 
-	SetWindowPos(hwndTT, HWND_TOPMOST, 0, 0, 0, 0,
-		SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+	//SetWindowPos(hwndTT, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
 	// Set up "tool" information. In this case, the "tool" is the entire parent window.
 

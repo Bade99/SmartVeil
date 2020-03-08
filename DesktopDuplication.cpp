@@ -1161,7 +1161,7 @@ void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 	SendMessageW(dangerous_slider, BM_SETCHECK, current_settings->reduce_dangerous_slider_values ? BST_CHECKED : BST_UNCHECKED, 0);
 	
 	//INFO: See displaying text in https://docs.microsoft.com/en-us/windows/win32/controls/tooltip-controls
-	TOOLTIP_REPO::Instance().CreateToolTip(SCV_SETTINGS_DANGEROUS_SLIDER, hwnd, SCV_LANG_SETTINGS_REDUCE_SLIDER_TIP);
+	TOOLTIP_REPO::Instance().CreateToolTip(dangerous_slider, SCV_LANG_SETTINGS_REDUCE_SLIDER_TIP);
 
 	paddingY += checkbox_text.y + addPaddingY;
 
@@ -1183,7 +1183,7 @@ void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 
 	SendMessageW(show_tooltips, BM_SETCHECK, current_settings->show_tooltips ? BST_CHECKED : BST_UNCHECKED, 0);
 
-	TOOLTIP_REPO::Instance().CreateToolTip(SCV_SETTINGS_SHOW_TOOLTIPS, hwnd, SCV_LANG_SETTINGS_SHOW_TOOLTIP_TIP);
+	TOOLTIP_REPO::Instance().CreateToolTip(show_tooltips, SCV_LANG_SETTINGS_SHOW_TOOLTIP_TIP);
 	
 	paddingY += checkbox_text.y + addPaddingY;
 
@@ -1503,7 +1503,7 @@ LRESULT CALLBACK WndSettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 			, RECTWIDTH(rc) - button_width - FRAME.right_border, 0, button_width, button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_CLOSE, hInstance, NULL);
 		//SetWindowLongPtr(close_button, GWL_USERDATA, CROSS_ICON);
 		SetWindowSubclass(close_button, ControlProcedures::Instance().CaptionButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
-		TOOLTIP_REPO::Instance().CreateToolTip(SCV_CUSTOMFRAME_CLOSE, hWnd, SCV_LANG_CLOSE);
+		TOOLTIP_REPO::Instance().CreateToolTip(close_button, SCV_LANG_CLOSE);
 		//
 
 		//TEST
@@ -1862,25 +1862,28 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 
 	float ThresholdTextX = width * .225f;
 	float TextY = height * .125f;
-	HWND ThresholdText = CreateWindowW(L"Static",NULL, WS_VISIBLE | WS_CHILD
+	HWND ThresholdText = CreateWindowW(L"Static",NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY
 		, paddingX, paddingY, ThresholdTextX, TextY,hWnd,(HMENU)SCV_THRESHOLD_TITLE,NULL,NULL);
 	AWT(ThresholdText, SCV_LANG_MGR_THRESHOLD);
 
-	TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, ThresholdText, SCV_LANG_MGR_THRESHOLD_TIP);
+	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, ThresholdText, SCV_LANG_MGR_THRESHOLD_TIP);
+	TOOLTIP_REPO::Instance().CreateToolTip(ThresholdText, SCV_LANG_MGR_THRESHOLD_TIP);
 
 	float SliderTextX = width*.06f;
-	ThresholdPos = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD
+	ThresholdPos = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY
 		, paddingX + ThresholdTextX, paddingY, SliderTextX, TextY, hWnd, NULL, NULL, NULL);
 
-	TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, ThresholdPos, SCV_LANG_MGR_THRESHOLD_TIP);
+	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, ThresholdPos, SCV_LANG_MGR_THRESHOLD_TIP);
+	TOOLTIP_REPO::Instance().CreateToolTip(ThresholdPos, SCV_LANG_MGR_THRESHOLD_TIP);
 
 	float PercentTextX = width * .05f;
-	HWND ThresholdPercentText = CreateWindowW(L"Static", L"%", WS_VISIBLE | WS_CHILD
+	HWND ThresholdPercentText = CreateWindowW(L"Static", L"%", WS_VISIBLE | WS_CHILD | SS_NOTIFY
 		, paddingX+ ThresholdTextX + SliderTextX, paddingY, PercentTextX, TextY, hWnd, NULL, NULL, NULL);
 
 	paddingY += TextY *1.8f;
 
-	TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, ThresholdPercentText, SCV_LANG_MGR_THRESHOLD_TIP);
+	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, ThresholdPercentText, SCV_LANG_MGR_THRESHOLD_TIP);
+	TOOLTIP_REPO::Instance().CreateToolTip(ThresholdPercentText, SCV_LANG_MGR_THRESHOLD_TIP);
 
 	float SliderX = width * .3f;
 	float SliderY = height * .091f;
@@ -1889,7 +1892,7 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 
 	paddingY += addPaddingY+ SliderY;
 
-	TOOLTIP_REPO::Instance().CreateToolTip(SCV_TOOLTIP_THRESHOLD_SLIDER, hWnd, SCV_LANG_MGR_THRESHOLD_TIP);
+	TOOLTIP_REPO::Instance().CreateToolTip(ThresholdSlider, SCV_LANG_MGR_THRESHOLD_TIP);
 
 	SendMessage(ThresholdSlider, TBM_SETRANGE, TRUE, (LPARAM)MAKELONG(0, 99));
 	SendMessage(ThresholdSlider, TBM_SETPAGESIZE, 0, (LPARAM)5);
@@ -1900,28 +1903,31 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 
 
 	//float OpacityTextX = width * .165f;
-	HWND OpacityText = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD
+	HWND OpacityText = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY
 		, paddingX, paddingY, ThresholdTextX, TextY, hWnd, NULL, NULL, NULL);
 	AWT(OpacityText, SCV_LANG_MGR_OPACITY);
 
-	TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, OpacityText, SCV_LANG_MGR_OPACITY_TIP);
+	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, OpacityText, SCV_LANG_MGR_OPACITY_TIP);
+	TOOLTIP_REPO::Instance().CreateToolTip(OpacityText, SCV_LANG_MGR_OPACITY_TIP);
 
-	OpacityPos = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD
+	OpacityPos = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY
 		, paddingX + ThresholdTextX, paddingY, SliderTextX, TextY, hWnd, NULL, NULL, NULL);
 
-	TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, OpacityPos, SCV_LANG_MGR_OPACITY_TIP);
+	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, OpacityPos, SCV_LANG_MGR_OPACITY_TIP);
+	TOOLTIP_REPO::Instance().CreateToolTip(OpacityPos, SCV_LANG_MGR_OPACITY_TIP);
 
-	HWND OpacityPercentText = CreateWindowW(L"Static", L"%", WS_VISIBLE | WS_CHILD
+	HWND OpacityPercentText = CreateWindowW(L"Static", L"%", WS_VISIBLE | WS_CHILD | SS_NOTIFY
 		, paddingX + ThresholdTextX + SliderTextX, paddingY, PercentTextX, TextY, hWnd, NULL, NULL, NULL);
 
-	TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, OpacityPercentText, SCV_LANG_MGR_OPACITY_TIP);
+	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, OpacityPercentText, SCV_LANG_MGR_OPACITY_TIP);
+	TOOLTIP_REPO::Instance().CreateToolTip(OpacityPercentText, SCV_LANG_MGR_OPACITY_TIP);
 
 	paddingY += TextY * 1.8f;
 
 	OpacitySlider = CreateWindowExW(0, TRACKBAR_CLASS, 0, WS_CHILD | WS_VISIBLE | TBS_NOTICKS
 		, paddingX, paddingY, SliderX, SliderY, hWnd, (HMENU)SCV_TOOLTIP_OPACITY_SLIDER, NULL, NULL);
 
-	TOOLTIP_REPO::Instance().CreateToolTip(SCV_TOOLTIP_OPACITY_SLIDER, hWnd, SCV_LANG_MGR_OPACITY_TIP);
+	TOOLTIP_REPO::Instance().CreateToolTip(OpacitySlider, SCV_LANG_MGR_OPACITY_TIP);
 
 	paddingY += addPaddingY + SliderY;
 
@@ -2144,7 +2150,8 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 	//SetWindowLongPtr(Settings, GWL_USERDATA, SETTINGS_ICON);
 	SendMessage(Settings, BM_SETIMAGE, IMAGE_ICON, SETTINGS_ICON);
 	
-	TOOLTIP_REPO::Instance().CreateToolTip(SCV_SETTINGS, hWnd, SCV_LANG_MGR_SETTINGS);
+	TOOLTIP_REPO::Instance().CreateToolTip(Settings, SCV_LANG_MGR_SETTINGS);
+
 	//
 }
 
@@ -2182,13 +2189,14 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			, RECTWIDTH(rc) - button_width - FRAME.right_border, 0, button_width, button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_CLOSE, hInstance, NULL);
 		//SetWindowLongPtr(close_button, GWL_USERDATA, CROSS_ICON);
 		SetWindowSubclass(close_button, ControlProcedures::Instance().CaptionButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
-		TOOLTIP_REPO::Instance().CreateToolTip(SCV_CUSTOMFRAME_CLOSE, hWnd, SCV_LANG_CLOSE);
+		TOOLTIP_REPO::Instance().CreateToolTip(close_button, SCV_LANG_CLOSE);
+
 
 		HWND minimize_button = CreateWindowW(L"Button", L"", WS_VISIBLE | WS_CHILD | WS_MINIMIZEBOX
 			, RECTWIDTH(rc) - button_width*2 - FRAME.right_border, 0, button_width, button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_MINIMIZE, hInstance, NULL);
 		//SetWindowLongPtr(minimize_button, GWL_USERDATA, MINIMIZE_ICON);
 		SetWindowSubclass(minimize_button, ControlProcedures::Instance().CaptionButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
-		TOOLTIP_REPO::Instance().CreateToolTip(SCV_CUSTOMFRAME_MINIMIZE, hWnd, SCV_LANG_MINIMIZE);
+		TOOLTIP_REPO::Instance().CreateToolTip(minimize_button, SCV_LANG_MINIMIZE);
 
 		//
 
