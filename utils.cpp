@@ -18,6 +18,11 @@
 //	return vk;
 //}
 
+/// <summary>
+/// Transforms hotkey modifiers of the form MOD_... to their virtual key counterpart VK_...
+/// </summary>
+/// <param name="modifiers">This can be any combination of MOD_CONTROL, MOD_ALT, MOD_SHIFT</param>
+/// <returns>A vector of virtual keys for the corresponding modifiers</returns>
 inline std::vector<UINT> SeparateModifiersToVK(UINT modifiers) {
 	std::vector<UINT> mods;
 	if (modifiers & MOD_CONTROL) mods.push_back(VK_CONTROL);
@@ -27,6 +32,11 @@ inline std::vector<UINT> SeparateModifiersToVK(UINT modifiers) {
 	return mods;
 }
 
+/// <summary>
+/// Transforms hotkey modifiers of the form MOD_... to their hotkey control modifier counterpart HOTKEYF_...
+/// </summary>
+/// <param name="modifiers">This can be any combination of MOD_CONTROL, MOD_ALT, MOD_SHIFT</param>
+/// <returns></returns>
 inline BYTE HotkeyModifiersToHotkeyControlModifiers(WORD modifiers) {
 	BYTE hcm = 0;
 	if (modifiers & MOD_ALT) hcm |= HOTKEYF_ALT;
@@ -35,6 +45,11 @@ inline BYTE HotkeyModifiersToHotkeyControlModifiers(WORD modifiers) {
 	return hcm;
 }
 
+/// <summary>
+/// Transforms hotkey control modifiers of the form HOTKEYF_... to their hotkey modifier counterpart MOD_...
+/// </summary>
+/// <param name="modifiers">This can be any combination of HOTKEYF_SHIFT, HOTKEYF_CONTROL, HOTKEYF_ALT</param>
+/// <returns></returns>
 inline WORD HotkeyControlModifiersToHotkeyModifiers(BYTE modifiers) {
 	WORD hm = 0;
 	if (modifiers & HOTKEYF_ALT) hm |= MOD_ALT;
@@ -43,7 +58,12 @@ inline WORD HotkeyControlModifiersToHotkeyModifiers(BYTE modifiers) {
 	return hm;
 }
 
-//For MOD_CONTROL and the sort
+/// <summary>
+/// Generates the text form of the corresponding hotkey modifiers of the form MOD_..., and a virtual key
+/// </summary>
+/// <param name="modifiers">This can be any combination of MOD_CONTROL, MOD_ALT, MOD_SHIFT</param>
+/// <param name="vk">Virtual key</param>
+/// <returns></returns>
 inline std::wstring HotkeyString(WORD modifiers, BYTE vk) {
 	std::wstring hotkey_str = L"";
 	BOOL first_mod = TRUE;
@@ -75,20 +95,40 @@ inline std::wstring HotkeyString(WORD modifiers, BYTE vk) {
 	return hotkey_str;
 }
 
-//For HOTKEYF_ALT and the sort
+/// <summary>
+/// Generates the text form of the corresponding hotkey control modifiers of the form HOTKEYF_..., and a virtual key
+/// </summary>
+/// <param name="modifiers">This can be any combination of HOTKEYF_SHIFT, HOTKEYF_CONTROL, HOTKEYF_ALT</param>
+/// <param name="vk">Virtual key</param>
+/// <returns></returns>
 inline std::wstring ControlHotkeyString(BYTE modifiers, BYTE vk) {
 	WORD mods = HotkeyControlModifiersToHotkeyModifiers(modifiers);
 	return HotkeyString(mods, vk);
 }
 
+/// <summary>
+/// See if a checkbox is checked
+/// </summary>
+/// <param name="checkbox"></param>
+/// <returns>TRUE if it is checked, FALSE if it isn't</returns>
 inline BOOL isChecked(HWND checkbox) {
 	return ((SendMessageW(checkbox, BM_GETCHECK, 0, 0) == BST_CHECKED) ? TRUE : FALSE);
 }
 
+/// <summary>
+/// Remove all whitespaces from a string
+/// </summary>
+/// <param name="text"></param>
 inline void RemoveWhiteSpace(std::wstring &text) {
 	text.erase(remove_if(text.begin(), text.end(), std::iswspace), text.end());
 }
 
+/// <summary>
+/// Creates a map with Key-Value pairs
+/// </summary>
+/// <param name="s"></param>
+/// <param name="separator">Character that separates the Key from the Value</param>
+/// <returns></returns>
 inline std::map<std::wstring, std::wstring> mappify(std::wstring const& s, wchar_t const& separator)
 {
 	std::map<std::wstring, std::wstring> m;
@@ -105,11 +145,20 @@ inline std::map<std::wstring, std::wstring> mappify(std::wstring const& s, wchar
 	return m;
 }
 
+/// <summary>
+/// Calculates the width of any RECT
+/// </summary>
 #define RECTWIDTH(r) (r.right >= r.left ? r.right - r.left : r.left - r.right )
 
+/// <summary>
+/// Calculates the height of any RECT
+/// </summary>
 #define RECTHEIGHT(r) (r.bottom >= r.top ? r.bottom - r.top : r.top - r.bottom )
 
-// Check to see if the animation has been disabled
+/// <summary>
+/// Check to see if animation has been disabled in Windows
+/// </summary>
+/// <returns></returns>
 inline BOOL GetDoAnimateMinimize(VOID)
 {//Thanks to: https://www.codeproject.com/Articles/735/Minimizing-windows-to-the-System-Tray
 	ANIMATIONINFO ai;
@@ -123,6 +172,12 @@ inline BOOL GetDoAnimateMinimize(VOID)
 // Returns the rect of where we think the system tray is. 
 //If we can't find anything, we return a rect in the lower
 //right hand corner of the screen
+/// <summary>
+/// Returns the rect of where we think the system tray is.
+/// <para>If it can't find it, it returns a rect in the lower</para>
+/// <para>right hand corner of the screen</para>
+/// </summary>
+/// <param name="lpTrayRect"></param>
 inline void GetTrayWndRect(LPRECT lpTrayRect)
 {//Thanks to: https://www.codeproject.com/Articles/735/Minimizing-windows-to-the-System-Tray
 	// First, we'll use a quick hack method. We know that the taskbar is a window
@@ -216,10 +271,12 @@ inline void GetTrayWndRect(LPRECT lpTrayRect)
 }
 
 /// <summary>
-/// Animates a window going to or from the tray and shows/hides it accordingly
+/// Animates a window going to the tray and hides it
+/// <para>Does not check whether the window is already minimized</para>
+/// <para>The window position is left right where it started, so you can later use GetWindowRect to determine the "to" in TrayToWindow</para>
 /// </summary>
-/// <param name="from">Place from where the window will start moving, ej its top-left corner when going to the tray, and top-left of the tray when going to the desktop</param>
-/// <param name="to">Window destination, aka the opposite of "from"</param>
+/// <param name="from">Place from where the window will start moving, ej its top-left corner</param>
+/// <param name="to">Window destination, aka the tray's top left corner, or wherever you want</param>
 /// <param name="milliseconds">Duration of the animation</param>
 /// <returns></returns>
 inline void WindowToTray(HWND hWnd, POINT from, POINT to, int milliseconds) {
@@ -254,6 +311,13 @@ inline void WindowToTray(HWND hWnd, POINT from, POINT to, int milliseconds) {
 }
 
 //TODO(fran): combine this two, or at least parts of them
+/// <summary>
+/// Animates a window coming out of the tray and shows it
+/// </summary>
+/// <param name="hWnd"></param>
+/// <param name="from">Place from where the window will start moving, ej its top-left corner</param>
+/// <param name="to">Window destination, aka the top left corner of where the window was before minimizing, or wherever you want</param>
+/// <param name="milliseconds">Duration of the animation</param>
 inline void TrayToWindow(HWND hWnd, POINT from, POINT to, int milliseconds) {
 	double frametime = (1. / 120.)*1000.; //TODO(fran): this should be 2x monitor refresh rate
 	float frames = milliseconds / frametime;
@@ -284,6 +348,10 @@ inline void TrayToWindow(HWND hWnd, POINT from, POINT to, int milliseconds) {
 	SetForegroundWindow(hWnd);
 }
 
+/// <summary>
+/// Minimizes a window and creates an animation to make it look like it goes to the tray
+/// </summary>
+/// <param name="hWnd"></param>
 inline void MinimizeWndToTray(HWND hWnd)
 {//Thanks to: https://www.codeproject.com/Articles/735/Minimizing-windows-to-the-System-Tray
 	if (GetDoAnimateMinimize())
@@ -300,6 +368,11 @@ inline void MinimizeWndToTray(HWND hWnd)
 	else ShowWindow(hWnd, SW_HIDE);// Just hide the window
 }
 
+/// <summary>
+/// Restores a window and makes it look like it comes out of the tray 
+/// <para>and makes it back to where it was before minimizing</para>
+/// </summary>
+/// <param name="hWnd"></param>
 inline void RestoreWndFromTray(HWND hWnd)
 {//Thanks to: https://www.codeproject.com/Articles/735/Minimizing-windows-to-the-System-Tray
 	if (GetDoAnimateMinimize())
@@ -331,6 +404,11 @@ inline double GetPCFrequency() {
 	return double(li.QuadPart) / 1000.0; //milliseconds
 }
 
+/// <summary>
+/// Sets the initial point of a counter that will later be used in GetCounter
+/// <para>to determine the time passed between here and there</para>
+/// </summary>
+/// <param name="CounterStart"></param>
 inline void StartCounter(__int64 &CounterStart) {
 	LARGE_INTEGER li;
 	QueryPerformanceCounter(&li);
@@ -338,7 +416,7 @@ inline void StartCounter(__int64 &CounterStart) {
 }
 
 /// <summary>
-/// Get time passed since CounterStart, in the same unit of time of PCFreq
+/// Get time passed since CounterStart, in the same unit of time as PCFreq
 /// </summary>
 /// <param name="CounterStart">Moment when the counter was started, use StartCounter</param>
 /// <param name="PCFreq">CPU frequency of the PC, use GetPCFrequency, if this value is in milliseconds then so will be the returned value</param>
