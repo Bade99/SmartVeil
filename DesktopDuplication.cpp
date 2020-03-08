@@ -2465,9 +2465,7 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	}
 	case SCV_MANAGER_CREATE_TRAY:
 	{
-		HICON tray_icon;
-		LoadIconMetric((HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE), MAKEINTRESOURCE(LOGO_ICON), LIM_SMALL, &tray_icon);
-		if (!TRAY_HANDLER::Instance().CreateTrayIcon(WindowManagerHandle, 1, tray_icon, SCV_TRAY, SCV_LANG_TRAY_TIP))
+		if (!TRAY_HANDLER::Instance().CreateTrayIcon(WindowManagerHandle, 1, LOGO_ICON, SCV_TRAY, SCV_LANG_TRAY_TIP))
 			MessageBox(hWnd, RCS(SCV_LANG_ERROR_TRAY_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL), NULL);
 		break;
 	}

@@ -2,15 +2,21 @@
 #include "LANGUAGE_MANAGER.h"
 
 
-BOOL TRAY_HANDLER::CreateTrayIcon(HWND hwnd, UINT uID, HICON hicon, UINT uCallbackMessage, WORD messageID)
+BOOL TRAY_HANDLER::CreateTrayIcon(HWND hwnd, UINT uID, LONG iconID, UINT uCallbackMessage, WORD messageID)
 {
+
+	HICON tray_icon=NULL;
+	LoadIconMetric((HINSTANCE)GetWindowLongPtr(hwnd, GWL_HINSTANCE), MAKEINTRESOURCE(iconID), LIM_SMALL, &tray_icon);
+
+	if (!tray_icon) return FALSE;
+
 	NOTIFYICONDATA notification;
 	notification.cbSize = sizeof(NOTIFYICONDATA);//TODO(fran): this is not quite the way
 	notification.hWnd = hwnd;
 	notification.uID = uID;
 	notification.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP | NIF_SHOWTIP;//TODO(fran): check this
 	notification.uCallbackMessage = uCallbackMessage;
-	notification.hIcon = hicon;
+	notification.hIcon = tray_icon;
 	notification.dwState = NIS_SHAREDICON;//TODO(fran): check this
 	notification.dwStateMask = NIS_SHAREDICON;
 	notification.szInfo[0] = 0;
