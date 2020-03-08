@@ -5,11 +5,19 @@
 #include <string>
 #include "utils.cpp"
 
+/// <summary>
+/// Options for the corresponding combobox in the Settings window
+/// </summary>
 enum VEIL_ON_STARTUP {
 	YES = 0, NO, REMEMBER_LAST_STATE
 };
 
 //· None of its strings should have a slash at the end, you have to do + L"\\" later, extension should not include the dot "."
+/// <summary>
+/// Structure that contains all the parts to make the full path to the save info file
+/// <para>None of its strings should have a slash at the end (you'll have to do + L"\\" later)</para>
+/// <para>The extension should not include the dot "."</para>
+/// </summary>
 struct STARTUP_INFO_PATH {
 	std::wstring known_folder; //eg. path to appdata
 	std::wstring info_folder; //eg. smartveil
@@ -17,6 +25,9 @@ struct STARTUP_INFO_PATH {
 	std::wstring info_extension; //eg txt
 };
 
+/// <summary>
+/// All the required information for application startup
+/// </summary>
 struct STARTUP_INFO {
 	BOOL is_turned_on;
 	int slider_threshold_pos;
@@ -36,6 +47,9 @@ struct STARTUP_INFO {
 	BOOL remember_manager_position;
 };
 
+/// <summary>
+/// All the keys to associate with the values of the STARTUP_INFO struct, and the separator character
+/// </summary>
 struct STARTUP_INFO_TEXT {
 	std::wstring hotkey_modifiers = L"hotkey_mods";
 	std::wstring hotkey_virtual_key = L"hotkey_vk";
@@ -57,6 +71,9 @@ struct STARTUP_INFO_TEXT {
 	wchar_t separator = L'=';
 };
 
+/// <summary>
+/// Structure that contains all the current valid values from the Settings window
+/// </summary>
 struct SETTINGS {
 	//UINT hotkey_modifiers;//TODO(fran): put the CurrentValidHotkey here now
 	//UINT hotkey_virtual_key;
@@ -68,8 +85,11 @@ struct SETTINGS {
 	BOOL show_tooltips;
 	BOOL reduce_dangerous_slider_values;
 	BOOL remember_manager_position;
-};//this structure will be used to store the current valid settings, so in case the user cancels some change we can rollback
+};
 
+/// <summary>
+/// A sort of constructor to set the default settings on startup in case we couldn't retrieve them from the save file
+/// </summary>
 inline void DefaultStartupInfo(STARTUP_INFO &startup_info) {//TODO(fran): this could be a constructor
 	startup_info.hotkey_modifiers = MOD_CONTROL;
 	startup_info.hotkey_virtual_key = VK_F9;
@@ -90,6 +110,10 @@ inline void DefaultStartupInfo(STARTUP_INFO &startup_info) {//TODO(fran): this c
 	startup_info.start_with_windows = FALSE;
 }
 
+/// <summary>
+/// Makes sure the retrieved slider value is between bounds 0-99 and sets it if not
+/// </summary>
+/// <param name="val"></param>
 inline void SanitizeSliderValue(int &val) {
 	//TODO(fran): establish max and min slider values somewhere
 	if (val > 99 || val < 0) {//TODO(fran): I think there is no real problem with leaving this hardcoded, the sliders will never change, I hope
@@ -101,7 +125,11 @@ inline void SanitizeSliderValue(int &val) {
 #define DANGEROUS_OPACITY_SLIDER_VALUE 90
 #define SAFE_OPACITY_SLIDER_VALUE 80
 
-//Fills the info with the data from the string
+/// <summary>
+/// Fills the info with the data from the map
+/// </summary>
+/// <param name="info_mapped"></param>
+/// <param name="startup_info"></param>
 inline void FillStartupInfo(std::map<std::wstring, std::wstring> info_mapped, STARTUP_INFO &startup_info) {
 	STARTUP_INFO_TEXT startup_info_text;
 	std::wstring info_str;
@@ -278,6 +306,11 @@ inline void WriteInfoLine(std::wstring &buffer, std::wstring const& key, info_ty
 	buffer += key + separator + std::to_wstring(value) + L"\n";
 }
 
+/// <summary>
+/// Creates a string with the correct formatting to be saved and later retrieved
+/// </summary>
+/// <param name="startup_info"></param>
+/// <param name="info_buf"></param>
 inline void FillStartupInfoString(STARTUP_INFO startup_info, std::wstring &info_buf) {
 	STARTUP_INFO_TEXT startup_info_text;
 	WriteInfoLine(info_buf, startup_info_text.hotkey_modifiers, startup_info.hotkey_modifiers, startup_info_text.separator);
@@ -299,7 +332,12 @@ inline void FillStartupInfoString(STARTUP_INFO startup_info, std::wstring &info_
 	WriteInfoLine(info_buf, startup_info_text.start_with_windows, startup_info.start_with_windows, startup_info_text.separator);
 }
 
-inline void SaveStartupInfo(STARTUP_INFO startup_info, std::wstring directory, std::wstring filename) {//do not put slash at the end of directory string
+/// <summary>
+/// Saves the STARTUP_INFO struct to the desired path
+/// </summary>
+/// <param name="directory">Do not put slash at the end, eg C:\Users\User\AppData\SmartVeil</param>
+/// <param name="filename">Should also contain extesion, eg info.txt</param>
+inline void SaveStartupInfo(STARTUP_INFO startup_info, std::wstring directory, std::wstring filename) {
 	std::wstring info_buf;
 	FillStartupInfoString(startup_info, info_buf);
 
@@ -325,8 +363,19 @@ inline void SaveStartupInfo(STARTUP_INFO startup_info, std::wstring directory, s
 }
 
 
-//Fills the info with the current data of the program
 //TODO(fran): put extra params into a struct or create new struct with startup_info inside (only to use here)
+/// <summary>
+/// Fills the STARTUP_INFO struct with the current data of the program, provided by the other parameters
+/// </summary>
+/// <param name="startup_info"></param>
+/// <param name="CurrentValidSettings"></param>
+/// <param name="currentvalidhotkeymods"></param>
+/// <param name="currentvalidhotkeyvk"></param>
+/// <param name="isturnedon"></param>
+/// <param name="mgrpos"></param>
+/// <param name="virtualscreensize"></param>
+/// <param name="thresholdpos"></param>
+/// <param name="opacitypos"></param>
 inline void FillStartupInfo(STARTUP_INFO &startup_info, SETTINGS CurrentValidSettings,
 					UINT currentvalidhotkeymods,UINT currentvalidhotkeyvk,BOOL isturnedon,
 					POINT mgrpos,SIZE virtualscreensize, int thresholdpos, int opacitypos) {
