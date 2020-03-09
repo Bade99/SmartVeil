@@ -24,7 +24,7 @@ Contact info
 [twitter](https://twitter.com/francobadenas)
 
 ## Proof of concept video
-[![Click to watch](http://img.youtube.com/vi/Uxysi92NWP8/0.jpg)](http://www.youtube.com/watch?v=Uxysi92NWP8 "Click to watch")
+[![Click to watch](https://i.imgur.com/rvLHzBu.png)](http://www.youtube.com/watch?v=Uxysi92NWP8 "Click to watch")
 
 ## Download binaries
 You can get an already compiled version of the program going into the [releases](https://github.com/Bade99/SmartVeil/releases) tab and downloading the attached .7z file for each release.
