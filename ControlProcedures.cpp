@@ -90,7 +90,7 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 #endif
 		int borderSize = max(1, RECTHEIGHT(rc)*.06f);
 						// = max(1,GetSystemMetrics(SM_CXSIZEFRAME)-1); //TODO(fran): this doesnt look as good, we need a combination between RECTHEIGHT and GetSystemMetrics
-
+						//other alternatives are SM_CXPADDEDBORDER and SM_CXEDGE
 #if 1
 
 
