@@ -81,22 +81,20 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 		}
 
 		//if I do 4 calls to fillrect I could create a border
-		HBRUSH BorderColor;
+		//HBRUSH BorderColor;
 #if 0
 		if (MouseOver) BorderColor = ButtonBorderOver;
 		else BorderColor = (HBRUSH)GetStockObject(WHITE_BRUSH);
 #else 
-		BorderColor = pthis->Highlight;// (HBRUSH)GetStockObject(WHITE_BRUSH);
+		//BorderColor = pthis->Highlight;// (HBRUSH)GetStockObject(WHITE_BRUSH);
 #endif
 		int borderSize = max(1, RECTHEIGHT(rc)*.06f);
-
-		LOGBRUSH highlight_lb;
-		GetObject(pthis->Highlight, sizeof(LOGBRUSH), &highlight_lb);
+						// = max(1,GetSystemMetrics(SM_CXSIZEFRAME)-1); //TODO(fran): this doesnt look as good, we need a combination between RECTHEIGHT and GetSystemMetrics
 
 #if 1
 
 
-		HPEN pen = CreatePen(PS_SOLID, borderSize, highlight_lb.lbColor); //para el borde
+		HPEN pen = CreatePen(PS_SOLID, borderSize, ColorFromBrush(pthis->Highlight)); //para el borde
 
 		HBRUSH oldbrush = (HBRUSH)SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));//para lo de adentro
 		HPEN oldpen = (HPEN)SelectObject(hdc, pen);
@@ -160,7 +158,7 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 				//TODO(fran): icon position isnt perfectly centered, probably due to precision error + even versus odd rect and icon sizes
 
 #if 1
-				DrawIconEx(hdc, .5f*(((float)RECTWIDTH(rc)) - (icon_size.x-1)), .5f*(((float)RECTHEIGHT(rc)) - (icon_size.y-1)),
+				DrawIconEx(hdc, .5f*(((float)RECTWIDTH(rc)) - (icon_size.x-1.f)), .5f*(((float)RECTHEIGHT(rc)) - (icon_size.y-1.f)),
 					icon, icon_size.x, icon_size.y, 0, NULL, DI_NORMAL);//INFO: changing that NULL gives the option of "flicker free" icon drawing, if I need
 				//INFO: using DI_MASK the button could have an interesting look
 #else
@@ -182,7 +180,7 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 			if (font) {//if font == NULL then it is using system font(default I assume)
 				(HFONT)SelectObject(hdc, (HGDIOBJ)(HFONT)font);
 			}
-			SetTextColor(hdc, highlight_lb.lbColor);
+			SetTextColor(hdc, ColorFromBrush(pthis->Highlight));
 			WCHAR Text[40];
 			int len = SendMessage(hWnd, WM_GETTEXT,
 				ARRAYSIZE(Text), (LPARAM)Text);
@@ -279,17 +277,15 @@ LRESULT CALLBACK ControlProcedures::ComboProc(HWND hWnd, UINT Msg, WPARAM wParam
 		RECT client_rec;
 		GetClientRect(hWnd, &client_rec);
 
-		LOGBRUSH lb;
-		GetObject(pthis->Highlight, sizeof(LOGBRUSH), &lb);
+		//TODO
+		HPEN pen = CreatePen(PS_SOLID, max(1, (RECTHEIGHT(client_rec))*.01f), ColorFromBrush(pthis->Highlight)); //For the border
 
-		HPEN pen = CreatePen(PS_SOLID, max(1, (RECTHEIGHT(client_rec))*.01f), lb.lbColor); //para el borde
-
-		HBRUSH oldbrush = (HBRUSH)SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));//para lo de adentro
+		HBRUSH oldbrush = (HBRUSH)SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));//For the insides
 		HPEN oldpen = (HPEN)SelectObject(hdc, pen);
 
 		SelectObject(hdc, (HFONT)SendMessage(hWnd, WM_GETFONT, 0, 0));
 		//SetBkColor(hdc, bkcolor);
-		SetTextColor(hdc, lb.lbColor);
+		SetTextColor(hdc, ColorFromBrush(pthis->Highlight));
 
 		//Border
 		Rectangle(hdc, 0, 0, rc.right, rc.bottom);
@@ -423,23 +419,23 @@ LRESULT CALLBACK ControlProcedures::CheckboxProc(HWND hWnd, UINT Msg, WPARAM wPa
 
 		RECT client_rec;
 		GetClientRect(hWnd, &client_rec);
-		LOGBRUSH lb;
-		GetObject(pthis->Highlight, sizeof(LOGBRUSH), &lb);
-		HPEN pen = CreatePen(PS_SOLID, max(1, (RECTHEIGHT(client_rec))*.01f), lb.lbColor); //para el borde
+
+		//TODO
+		HPEN pen = CreatePen(PS_SOLID, max(1, (RECTHEIGHT(client_rec))*.01f), ColorFromBrush(pthis->Highlight)); //para el borde
 
 		HBRUSH oldbrush = (HBRUSH)SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));//para lo de adentro
 		HPEN oldpen = (HPEN)SelectObject(hdc, pen);
 
 		SelectObject(hdc, (HFONT)SendMessage(hWnd, WM_GETFONT, 0, 0));
-		LOGBRUSH highlight_lb;
-		GetObject(pthis->Highlight, sizeof(LOGBRUSH), &highlight_lb);
 
-		SetTextColor(hdc, highlight_lb.lbColor);
+		SetTextColor(hdc, ColorFromBrush(pthis->Highlight));
 
 		//Border
 		Rectangle(hdc, modified_rc.left, modified_rc.top, modified_rc.right, modified_rc.bottom);
 
 		RECT icon_rc = modified_rc;
+
+		//TODO
 		int deflation = -max(1, CheckboxWidth * .2f);
 		InflateRect(&icon_rc, deflation, deflation);
 		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE); 
@@ -457,8 +453,7 @@ LRESULT CALLBACK ControlProcedures::CheckboxProc(HWND hWnd, UINT Msg, WPARAM wPa
 		}
 
 		WCHAR Text[150];
-		int len = SendMessage(hWnd, WM_GETTEXT,
-			ARRAYSIZE(Text), (LPARAM)Text);
+		int len = SendMessage(hWnd, WM_GETTEXT,	ARRAYSIZE(Text), (LPARAM)Text);
 
 		TEXTMETRIC tm;
 		GetTextMetrics(hdc, &tm);
@@ -541,21 +536,15 @@ LRESULT CALLBACK ControlProcedures::CaptionButtonProc(HWND hwnd, UINT message, W
 
 		WORD ButtonState = SendMessageW(hwnd, BM_GETSTATE, 0, 0);
 		if (ButtonState & BST_PUSHED) {
-			LOGBRUSH lb;
-			GetObject(pthis->BackgroundPush, sizeof(LOGBRUSH), &lb);
-			SetBkColor(hdc, lb.lbColor);
+			SetBkColor(hdc, ColorFromBrush(pthis->BackgroundPush));
 			FillRect(hdc, &rc, pthis->BackgroundPush);
 		}
 		else if (MouseOver && CurrentMouseOverButton == hwnd) {
-			LOGBRUSH lb;
-			GetObject(pthis->BackgroundMouseover, sizeof(LOGBRUSH), &lb);
-			SetBkColor(hdc, lb.lbColor);
+			SetBkColor(hdc, ColorFromBrush(pthis->BackgroundMouseover));
 			FillRect(hdc, &rc, pthis->BackgroundMouseover);
 		}
 		else {
-			LOGBRUSH bk_brush_info;
-			GetObject(pthis->CaptionBackground, sizeof(bk_brush_info), &bk_brush_info);
-			SetBkColor(hdc, bk_brush_info.lbColor);
+			SetBkColor(hdc, ColorFromBrush(pthis->CaptionBackground));
 			FillRect(hdc, &rc, pthis->CaptionBackground);
 		}
 
@@ -568,8 +557,6 @@ LRESULT CALLBACK ControlProcedures::CaptionButtonProc(HWND hwnd, UINT message, W
 		//SelectClipRgn(hdc, cross_rgn);//INFO: coordinates MUST be in device units
 		//FillRect(hdc, &rc, BorderColor);
 		//SelectClipRgn(hdc, NULL);
-
-
 
 		//LONG icon_id = GetWindowLongPtr(hwnd, GWL_USERDATA);
 		DWORD style = GetWindowLongPtr(hwnd, GWL_STYLE);
@@ -712,10 +699,8 @@ LRESULT CALLBACK ControlProcedures::HotkeyProc(HWND hWnd, UINT Msg, WPARAM wPara
 		RECT client_rec;
 		GetClientRect(hWnd, &client_rec);
 
-		LOGBRUSH lb;
-		GetObject(pthis->Highlight, sizeof(LOGBRUSH), &lb);
-
-		HPEN pen = CreatePen(PS_SOLID, max(1, (RECTHEIGHT(client_rec))*.01f), lb.lbColor); //para el borde
+		//TODO
+		HPEN pen = CreatePen(PS_SOLID, max(1, (RECTHEIGHT(client_rec))*.01f), ColorFromBrush(pthis->Highlight)); //para el borde
 
 		HPEN old_pen = (HPEN)SelectObject(hotframedc, pen);
 		Rectangle(hotframedc, RW.left, RW.top, RW.right, RW.bottom);
@@ -742,16 +727,12 @@ LRESULT CALLBACK ControlProcedures::HotkeyProc(HWND hWnd, UINT Msg, WPARAM wPara
 		PAINTSTRUCT paint;
 		HDC hotdc = BeginPaint(hWnd, &paint);
 		
-		LOGBRUSH bk_lb;
-		GetObject(pthis->Background, sizeof(LOGBRUSH), &bk_lb);
-		SetBkColor(hotdc, bk_lb.lbColor);
+		SetBkColor(hotdc, ColorFromBrush(pthis->Background));
 		if (new_valid_hotkey) {
 			SetTextColor(hotdc, RGB(0, 255, 0));//TODO(fran): I leave this and the red hardcoded for now
 		}
 		else if (accepted_hotkey) {
-			LOGBRUSH lb;
-			GetObject(pthis->Highlight, sizeof(LOGBRUSH), &lb);
-			SetTextColor(hotdc, lb.lbColor);
+			SetTextColor(hotdc, ColorFromBrush(pthis->Highlight));
 		}
 		else {
 			SetTextColor(hotdc, RGB(255, 0, 0));
