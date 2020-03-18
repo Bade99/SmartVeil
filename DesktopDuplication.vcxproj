@@ -162,6 +162,7 @@
     </ClCompile>
     <ClCompile Include="DisplayManager.cpp" />
     <ClCompile Include="DuplicationManager.cpp" />
+    <ClCompile Include="fmt\format.cc" />
     <ClCompile Include="LANGUAGE_MANAGER.cpp" />
     <ClCompile Include="OutputManager.cpp" />
     <ClCompile Include="startup_and_settings.cpp" />
@@ -175,6 +176,9 @@
     <ClInclude Include="ControlProcedures.h" />
     <ClInclude Include="DisplayManager.h" />
     <ClInclude Include="DuplicationManager.h" />
+    <ClInclude Include="fmt\core.h" />
+    <ClInclude Include="fmt\format-inl.h" />
+    <ClInclude Include="fmt\format.h" />
     <ClInclude Include="LANGUAGE_MANAGER.h" />
     <ClInclude Include="OutputManager.h" />
     <ClInclude Include="resource.h" />

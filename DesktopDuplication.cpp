@@ -31,6 +31,7 @@
 #include "vssym32.h"
 #include "startup_and_settings.cpp"
 #include "ControlProcedures.h"
+#include "fmt/format.h" //Thanks to https://github.com/fmtlib/fmt
 
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"") 
 #pragma comment(lib,"comctl32.lib")
@@ -67,6 +68,11 @@
 #define SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF (WM_USER+32)
 #define SCV_CUSTOMFRAME_CLOSE (WM_USER+33)
 #define SCV_CUSTOMFRAME_MINIMIZE (WM_USER+34)
+#define SCV_MANAGER_UPDATE_THRESHOLD_OPACITY (WM_USER+35)
+
+struct APPFONTS { //Defines the fonts used in the application
+	HFONT manager, settings, caption;
+};
 
 struct CUSTOM_FRAME { // Defines the sizes for the custom window frame
 	int caption_height;
@@ -74,21 +80,7 @@ struct CUSTOM_FRAME { // Defines the sizes for the custom window frame
 	int right_border;
 	int bottom_border;
 	HBRUSH caption_bk_brush;
-} FRAME; // Every window frame will be like this one
-
-/// <summary>
-/// Use instead of GetClientRect. Can and probably will return left and top values that are non zero since now we draw our own custom frame and the whole window rect is ours
-/// </summary>
-BOOL GetMyClientRect(HWND hwnd, RECT* rc) {
-	BOOL res = GetWindowRect(hwnd, rc);//INFO: could use getclientrect, though values will be wrong until the hwnd destroys its non client area
-	if (res) {
-		rc->right = RECTWIDTH((*rc)) - FRAME.right_border;
-		rc->bottom = RECTHEIGHT((*rc)) - FRAME.bottom_border;
-		rc->left = FRAME.left_border;
-		rc->top = FRAME.caption_height;
-	}
-	return res;
-}
+};
 
 #define MS_UPDATE 0 //show veil update rate in milliseconds
 
@@ -284,6 +276,11 @@ void DYNAMIC_WAIT::Wait()
 //
 // Globals
 //
+
+APPFONTS FONTS = {0};
+
+CUSTOM_FRAME FRAME; // Defines what all window frames will be like
+
 OUTPUTMANAGER OutMgr;
 
 INT SingleOutput;
@@ -318,6 +315,79 @@ HANDLE thread_finished_mutex;
 BOOL ProgramFinished = FALSE;
 
 STARTUP_INFO_PATH info_path; // Path to the file where we store our startup data
+
+HWND ThresholdSlider;
+HWND OpacitySlider;
+HWND ThresholdText;
+HWND OpacityText;
+
+HWND TurnOnOff;
+
+
+/// <summary>
+/// Decides which font FaceName is appropiate for the current system
+/// </summary>
+std::wstring GetFontFaceName() {
+	//Font guidelines: https://docs.microsoft.com/en-us/windows/win32/uxguide/vis-fonts
+	//Stock fonts: https://docs.microsoft.com/en-us/windows/win32/gdi/using-a-stock-font-to-draw-text
+
+	//TODO(fran): can we take the best codepage from each font and create our own? (look at font linking & font fallback)
+
+	//We looked at 2195 fonts, this is what's left
+	//Options:
+	//Segoe UI (good txt, jp ok) (10 codepages) (supported on most versions of windows)
+	//-Arial Unicode MS (good text; good jp) (33 codepages) (doesnt come with windows)
+	//-Microsoft YaHei or UI (look the same,good txt,good jp) (6 codepages) (supported on most versions of windows)
+	//-Microsoft JhengHei or UI (look the same,good txt,ok jp) (3 codepages) (supported on most versions of windows)
+
+	HDC hdc = GetDC(GetDesktopWindow()); //You can use any hdc, but not NULL
+	std::vector<std::wstring> fontnames;
+	EnumFontFamiliesEx(hdc, NULL
+		, [](const LOGFONT *lpelfe, const TEXTMETRIC *lpntme, DWORD FontType, LPARAM lParam)->int {((std::vector<std::wstring>*)lParam)->push_back(lpelfe->lfFaceName); return TRUE; }
+	, (LPARAM)&fontnames, NULL);
+
+	const WCHAR* requested_fontname[] = { TEXT("Segoe UI"), TEXT("Arial Unicode MS"), TEXT("Microsoft YaHei"), TEXT("Microsoft YaHei UI")
+										, TEXT("Microsoft JhengHei"), TEXT("Microsoft JhengHei UI") };
+
+	for (int i = 0; i < ARRAYSIZE(requested_fontname); i++)
+		if (std::any_of(fontnames.begin(), fontnames.end(), [f = requested_fontname[i]](std::wstring s) {return !s.compare(f); })) return requested_fontname[i];
+
+	return L"";
+}
+
+//Change opacity to brightness, add {0} to strings using the lib from srtfix
+
+/// <summary>
+/// Creates the application wide font in the desired height
+/// </summary>
+/// <param name="height">Must be a negative value, eg 10 -> -10</param>
+/// <returns>The new font or NULL if failed</returns>
+HFONT CreateMyFont(LONG height) {
+	LOGFONTW lf;
+
+	memset(&lf, 0, sizeof(lf));
+	lf.lfQuality = CLEARTYPE_QUALITY;
+	lf.lfHeight = height>0?-height:height;
+
+	//INFO: by default if I dont set faceName it uses "Modern", looks good but it lacks some charsets
+	wcsncpy(lf.lfFaceName, GetFontFaceName().c_str(), ARRAYSIZE(lf.lfFaceName));
+	return CreateFontIndirectW(&lf);
+
+}
+
+/// <summary>
+/// Use instead of GetClientRect. Can and probably will return left and top values that are non zero since now we draw our own custom frame and the whole window rect is ours
+/// </summary>
+BOOL GetMyClientRect(HWND hwnd, RECT* rc) {
+	BOOL res = GetWindowRect(hwnd, rc);//INFO: could use getclientrect, though values will be wrong until the hwnd destroys its non client area
+	if (res) {
+		rc->right = RECTWIDTH((*rc)) - FRAME.right_border;
+		rc->bottom = RECTHEIGHT((*rc)) - FRAME.bottom_border;
+		rc->left = FRAME.left_border;
+		rc->top = FRAME.caption_height;
+	}
+	return res;
+}
 
 /// <summary>
 /// Returns full path to the program's exe
@@ -451,15 +521,6 @@ int GetBasicWindowCaptionHeight(HINSTANCE hInstance,POINT aprox_pos) {//TODO(fra
 	return caption_height;
 }
 
-//·You can search for:
-//"CompanyName"
-//"FileDescription"
-//"FileVersion"
-//"InternalName"
-//"LegalCopyright"
-//"OriginalFilename"
-//"ProductName"
-//"ProductVersion"
 /// <summary>
 /// Retrieve information from a Version resource
 /// </summary>
@@ -1032,6 +1093,13 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	if (logo_icon) DestroyIcon(logo_icon);
 	if (logo_icon_small) DestroyIcon(logo_icon_small);
 
+	//TODO(fran): can we make a union and traverse an hfont array or something so we dont have to put each font here?
+	//TODO(fran): do destructors work with global objects?
+	DeleteObject(FONTS.caption);
+	DeleteObject(FONTS.manager);
+	DeleteObject(FONTS.settings);
+
+
     if (msg.message == WM_QUIT)
     {
         // For a WM_QUIT message we should return the wParam value
@@ -1325,37 +1393,15 @@ void SetupSettings(HWND hwnd,HINSTANCE hInstance, SETTINGS* current_settings) {
 		, rec.left + UpdateCounterSize.x, rec.top + height - UpdateCounterSize.y, UpdateCounterUnitSize.x, UpdateCounterUnitSize.y, hwnd, NULL, NULL, NULL);
 
 	//Font set-up
-	HFONT font;
+	FONTS.settings = CreateMyFont((LONG)(-width * .046f));
 
-	LOGFONTW lf;
-
-	memset(&lf, 0, sizeof(lf));
-	lf.lfQuality = CLEARTYPE_QUALITY;
-	lf.lfHeight = (LONG)(-width * .046f);
-	//@ver: lf.pszFaceName y EnumFontFamiliesW
-	font = CreateFontIndirectW(&lf);
-
-	if (font == NULL)
+	if (FONTS.settings == NULL)
 	{
 		MessageBox(hwnd, RCS(SCV_LANG_ERROR_FONT_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL), MB_OK);
 	}
 	else {
-		SendMessageW(LanguageText, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(language_combo, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(dangerous_slider, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(remember_manager_pos, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(manager_on_startup, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(show_tooltips, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(show_tray, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(veil_on_startup, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(veil_on_startup_combo, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(start_with_windows, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(Hotkey_text, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(HotkeyValue, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(Save, WM_SETFONT, (WPARAM)font, TRUE);
-
-		SendMessageW(UpdateCounter, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(UpdateCounterUnit, WM_SETFONT, (WPARAM)font, TRUE);
+		EnumChildWindows(hwnd, [](HWND child,LPARAM font) ->BOOL {SendMessageW(child, WM_SETFONT, (WPARAM)(HFONT)font, TRUE); return TRUE; }
+			, (LPARAM)FONTS.settings);
 	}
 }
 
@@ -1816,13 +1862,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-HWND ThresholdSlider;
-HWND OpacitySlider;
-HWND ThresholdPos;
-HWND OpacityPos;
-
-HWND TurnOnOff;
-
 /// <summary>
 /// Extract a number from the middle of a string
 /// </summary>
@@ -1858,34 +1897,19 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 	float addPaddingY = paddingY;
 	paddingY += windowRect.top;
 
-	float ThreeQuarterWindowX = width*.5f + windowRect.left;
+	float SecondColumnX = width*.51f + windowRect.left;
 
-	float ThresholdTextX = width * .225f;
-	float TextY = height * .125f;
-	HWND ThresholdText = CreateWindowW(L"Static",NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY
+	float ThresholdTextX = width * .335f;
+	float TextY = height * .14f;
+	ThresholdText = CreateWindowW(L"Static",NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY | SS_CENTERIMAGE | SS_CENTER
 		, paddingX, paddingY, ThresholdTextX, TextY,hWnd,(HMENU)SCV_THRESHOLD_TITLE,NULL,NULL);
-	AWT(ThresholdText, SCV_LANG_MGR_THRESHOLD);
 
 	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, ThresholdText, SCV_LANG_MGR_THRESHOLD_TIP);
 	TOOLTIP_REPO::Instance().CreateToolTip(ThresholdText, SCV_LANG_MGR_THRESHOLD_TIP);
 
-	float SliderTextX = width*.06f;
-	ThresholdPos = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY
-		, paddingX + ThresholdTextX, paddingY, SliderTextX, TextY, hWnd, NULL, NULL, NULL);
+	paddingY += TextY *1.6f;
 
-	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, ThresholdPos, SCV_LANG_MGR_THRESHOLD_TIP);
-	TOOLTIP_REPO::Instance().CreateToolTip(ThresholdPos, SCV_LANG_MGR_THRESHOLD_TIP);
-
-	float PercentTextX = width * .05f;
-	HWND ThresholdPercentText = CreateWindowW(L"Static", L"%", WS_VISIBLE | WS_CHILD | SS_NOTIFY
-		, paddingX+ ThresholdTextX + SliderTextX, paddingY, PercentTextX, TextY, hWnd, NULL, NULL, NULL);
-
-	paddingY += TextY *1.8f;
-
-	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, ThresholdPercentText, SCV_LANG_MGR_THRESHOLD_TIP);
-	TOOLTIP_REPO::Instance().CreateToolTip(ThresholdPercentText, SCV_LANG_MGR_THRESHOLD_TIP);
-
-	float SliderX = width * .3f;
+	float SliderX = ThresholdTextX;
 	float SliderY = height * .091f;
 	ThresholdSlider = CreateWindowExW(0, TRACKBAR_CLASS, 0, WS_CHILD| WS_VISIBLE | TBS_NOTICKS
 		, paddingX, paddingY, SliderX, SliderY, hWnd, (HMENU)SCV_TOOLTIP_THRESHOLD_SLIDER, NULL, NULL);
@@ -1903,26 +1927,13 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 
 
 	//float OpacityTextX = width * .165f;
-	HWND OpacityText = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY
+	OpacityText = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY | SS_CENTERIMAGE | SS_CENTER
 		, paddingX, paddingY, ThresholdTextX, TextY, hWnd, NULL, NULL, NULL);
 	AWT(OpacityText, SCV_LANG_MGR_OPACITY);
 
-	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, OpacityText, SCV_LANG_MGR_OPACITY_TIP);
 	TOOLTIP_REPO::Instance().CreateToolTip(OpacityText, SCV_LANG_MGR_OPACITY_TIP);
 
-	OpacityPos = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY
-		, paddingX + ThresholdTextX, paddingY, SliderTextX, TextY, hWnd, NULL, NULL, NULL);
-
-	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, OpacityPos, SCV_LANG_MGR_OPACITY_TIP);
-	TOOLTIP_REPO::Instance().CreateToolTip(OpacityPos, SCV_LANG_MGR_OPACITY_TIP);
-
-	HWND OpacityPercentText = CreateWindowW(L"Static", L"%", WS_VISIBLE | WS_CHILD | SS_NOTIFY
-		, paddingX + ThresholdTextX + SliderTextX, paddingY, PercentTextX, TextY, hWnd, NULL, NULL, NULL);
-
-	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, OpacityPercentText, SCV_LANG_MGR_OPACITY_TIP);
-	TOOLTIP_REPO::Instance().CreateToolTip(OpacityPercentText, SCV_LANG_MGR_OPACITY_TIP);
-
-	paddingY += TextY * 1.8f;
+	paddingY += TextY * 1.6f;
 
 	OpacitySlider = CreateWindowExW(0, TRACKBAR_CLASS, 0, WS_CHILD | WS_VISIBLE | TBS_NOTICKS
 		, paddingX, paddingY, SliderX, SliderY, hWnd, (HMENU)SCV_TOOLTIP_OPACITY_SLIDER, NULL, NULL);
@@ -1936,16 +1947,8 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 	SendMessage(OpacitySlider, TBM_SETLINESIZE, 0, (LPARAM)5);
 	SendMessage(OpacitySlider, TBM_SETPOS, (WPARAM)TRUE, (LPARAM)startup_info->slider_opacity_pos);
 
-	WCHAR textPos[4];
-	float pos = (float)SendMessage(ThresholdSlider, TBM_GETPOS, 0, 0);
-	_itow(pos, textPos, 10);
-	SetWindowTextW(ThresholdPos, textPos);
-	OutMgr.SetThreshold(pos / 100.f); //TODO(fran): the setup for the outputmgr should go in a separate function
-
-	pos = (float)SendMessage(OpacitySlider, TBM_GETPOS, 0, 0);
-	_itow(pos, textPos, 10);
-	SetWindowTextW(OpacityPos, textPos);
-	OutMgr.SetOpacity(pos / 100.f);
+	//A bit of a hack to pipe the necessary messages for setting up OutMgr and the slider's text
+	SendMessage(hWnd, SCV_MANAGER_UPDATE_THRESHOLD_OPACITY, 0, 0);
 
 	//Restart paddingY to configure second column
 	paddingY = addPaddingY + windowRect.top;
@@ -1958,165 +1961,22 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance, const STARTUP_INFO* startup_info) {
 	float SettingX = width * .33f;
 	float SettingY = height * .205f;
 	TurnOnOff = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD //| BS_OWNERDRAW //| BS_NOTIFY
-		, ThreeQuarterWindowX, paddingY, SettingX, SettingY, hWnd, (HMENU)SCV_TURN_ON_OFF, NULL, NULL);
+		, SecondColumnX, paddingY, SettingX, SettingY, hWnd, (HMENU)SCV_TURN_ON_OFF, NULL, NULL);
 	SetWindowSubclass(TurnOnOff, ControlProcedures::Instance().ButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
 	paddingY += addPaddingY + SettingY;
 
-
-	//HWND Quit = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD //| BS_OWNERDRAW
-	//	, ThreeQuarterWindowX, paddingY, SettingX, SettingY, hWnd,(HMENU)SCV_QUIT, NULL, NULL);
-	//AWT(Quit, SCV_LANG_MGR_QUIT);
-	//SetWindowSubclass(Quit, ControlProcedures::Instance().ButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
-
-	//paddingY += addPaddingY + SettingY;
-
-
-
-//Manual hotkey management
-#define OLD_HOTKEY_POS 0
-#if OLD_HOTKEY_POS
-
-	float HotkeyValueTextX = width * .30f;
-	float HotkeyValueTextY = height * .06f;
-	
-	float InversePaddingY = height - addPaddingY - HotkeyValueTextY;
-
-	HWND HotkeyValue = CreateWindowEx(0, HOTKEY_CLASS,TEXT(""), WS_CHILD | WS_VISIBLE 
-		, ThreeQuarterWindowX, InversePaddingY, HotkeyValueTextX, HotkeyValueTextY, hWnd, (HMENU)SCV_SETTINGS_HOTKEY, NULL, NULL);
-
-	SetWindowSubclass(HotkeyValue, HotkeyProc, 0, 0);
-
-	// Set rules for invalid key combinations. If the user does not supply a
-	// modifier key, use ALT as a modifier. If the user supplies SHIFT as a 
-	// modifier key, use SHIFT + ALT instead.
-	SendMessage(HotkeyValue,
-		HKM_SETRULES,
-		(WPARAM)HKCOMB_NONE ,   // invalid key combinations 
-		MAKELPARAM(HOTKEYF_ALT, 0));       // add ALT to invalid entries 
-
-#if 0
-	SendMessage(HotkeyValue,
-		HKM_SETRULES,
-		(WPARAM)HKCOMB_S,   // invalid key combinations 
-		MAKELPARAM(HOTKEYF_SHIFT|HOTKEYF_ALT, 0));
-#endif
-
-	InversePaddingY -= HotkeyValueTextY *1.f;
-	
-	float HotkeyTextY = height * .05f;
-	float HotkeyTextX = width * .45f;
-	//TODO(fran): will this be a shortcut to turn the veil on and off, or to open smart veil manager??
-	//			  or do I make two shortcuts
-	std::wstring HotkeyText = L"Shortcut to open Smart Veil Manager";
-	HWND Hotkey = CreateWindowW(L"Static", HotkeyText.c_str() , WS_VISIBLE | WS_CHILD
-		, ThreeQuarterWindowX, InversePaddingY, HotkeyTextX, HotkeyTextY, hWnd, NULL, NULL, NULL);
-
-	float InversePaddingHotkeyButtonY = InversePaddingY;
-
-	InversePaddingY -= addPaddingY;
-
-	//Register hotkey
-	if (CurrentValidHotkeyModifiers || CurrentValidHotkeyVirtualKey) { //if we have some modifiers and a key then try to register
-		if (!RegisterHotKey(hWnd, 0, CurrentValidHotkeyModifiers | MOD_NOREPEAT, CurrentValidHotkeyVirtualKey)) {
-			SendMessageW(HotkeyValue, SCV_HOTKEY_REG_FAILED, 0, 0);
-			//Convert virtual key+modifier into string
-			//http://cottonvibes.blogspot.com/2010/11/virtual-key-code-to-string.html
-			std::wstring HotkeyStr = HotkeyString(CurrentValidHotkeyModifiers, CurrentValidHotkeyVirtualKey);
-			//TODO(fran): this shouldnt be here
-			std::wstring hotname = L"Failed to register " + HotkeyStr + L" shortcut" + L", it's already in use by another program";
-			MessageBoxW(NULL, hotname.c_str(), L"Smart Veil Error", MB_OK | MB_ICONEXCLAMATION);
-		}
-		else {
-			SendMessageW(HotkeyValue, SCV_HOTKEY_REG_SUCCESS, 0, 0);
-		}
-
-		//TODO(fran): if hotkey registration fails and the vk and modifs are not 0 then send to hotkeycontrol the values anyway,
-		//			  maybe we could paint the text red to indicate there is a problem and needs changing, but that way we dont delete
-		//			  what they already wrote and might forget
-
-		// Set the default hot key for this window. 
-		SendMessage(HotkeyValue,
-			HKM_SETHOTKEY,
-			MAKEWORD(CurrentValidHotkeyVirtualKey, HotkeyModifiersToHotkeyControlModifiers(CurrentValidHotkeyModifiers)),
-			0);
-	}
-#endif
-
 	//Font set-up
-	HFONT font;
-#if OLD_HOTKEY_POS
-	HFONT hotkey_font;
-#endif
-	LOGFONTW lf;
+	FONTS.manager = CreateMyFont((LONG)(-width * .046f));
 
-	memset(&lf, 0, sizeof(lf));
-	lf.lfQuality = CLEARTYPE_QUALITY;
-	lf.lfHeight = (LONG)(-width * .046f);
-	//@ver: lf.pszFaceName y EnumFontFamiliesW
-	font = CreateFontIndirectW(&lf);
-
-#if OLD_HOTKEY_POS
-	lf.lfHeight /= 2;
-	hotkey_font = CreateFontIndirectW(&lf);
-#endif
-
-	if (font == NULL)
+	if (FONTS.manager == NULL)
 	{
 		MessageBox(hWnd, RCS(SCV_LANG_ERROR_FONT_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL), MB_OK);
 	}
 	else {
-		SendMessageW(ThresholdText, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(ThresholdPos, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(ThresholdPercentText, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(OpacityText, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(OpacityPos, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(OpacityPercentText, WM_SETFONT, (WPARAM)font, TRUE);
-		SendMessageW(TurnOnOff, WM_SETFONT, (WPARAM)font, TRUE);
-		//SendMessageW(Quit, WM_SETFONT, (WPARAM)font, TRUE);
+		EnumChildWindows(hWnd, [](HWND child, LPARAM font) ->BOOL {SendMessageW(child, WM_SETFONT, (WPARAM)(HFONT)font, TRUE); return TRUE; }
+		, (LPARAM)FONTS.manager);
 	}
-#if OLD_HOTKEY_POS
-	if (hotkey_font) {
-		SendMessageW(Hotkey, WM_SETFONT, (WPARAM)hotkey_font, TRUE);
-		SendMessageW(HotkeyValue, WM_SETFONT, (WPARAM)hotkey_font, TRUE);
-	}
-	else { MessageBox(hWnd, L"Could not create the fonts, will use defaults", L"Smart Veil Error", MB_OK); }
-#endif
-
-#if OLD_HOTKEY_POS
-	RECT r1, r2;
-	GetWindowRect(Hotkey,&r1);
-	GetWindowRect(HotkeyValue,&r2);
-	float SaveHotBtnX = r2.bottom-r1.top;
-	float SaveHotBtnY = SaveHotBtnX;
-	SIZE SizeOfHotkeyText;
-	HDC textDC = GetDC(Hotkey);
-
-	HFONT hot_font = (HFONT)SendMessage(Hotkey, WM_GETFONT, 0, 0);
-	HFONT old_hot_font = nullptr;
-	if (hot_font) {//if font == NULL then it is using system font(default I assume)
-		old_hot_font = (HFONT)SelectObject(textDC, (HGDIOBJ)hot_font);
-	}
-	HotkeyText += L"AA";//INFO:to make some space for the button
-	GetTextExtentPoint32W(textDC, HotkeyText.c_str(), HotkeyText.length(), &SizeOfHotkeyText);
-	HotkeyText.pop_back();//Taking away those two A just in case
-	HotkeyText.pop_back();
-	if(old_hot_font)SelectObject(textDC, (HGDIOBJ)old_hot_font);//TODO(fran): if old font is NULL I think I should also do SelectObject
-	ReleaseDC(Hotkey, textDC);
-	//INFO: I need to create the button here so that the dc for the text next to it already has the new font applied
-	HWND SaveHotkey = CreateWindowW(L"Button", L"", WS_VISIBLE | WS_CHILD | BS_ICON //| BS_OWNERDRAW
-		, ThreeQuarterWindowX + SizeOfHotkeyText.cx, InversePaddingHotkeyButtonY, SaveHotBtnX, SaveHotBtnY, hWnd, (HMENU)SCV_SAVE_HOTKEY, NULL, NULL);
-
-	SetWindowSubclass(SaveHotkey, ButtonProc, 0, 0);
-
-	HICON save_hotkey = LoadIcon(app_instance, MAKEINTRESOURCE(SAVE_HOTKEY_ICON));
-	SendMessage(SaveHotkey, BM_SETIMAGE, (WPARAM)IMAGE_ICON, (LPARAM)save_hotkey);
-
-	std::wstring save_hotkey_tooltip_text = L"Save and apply new hotkey";
-	//INFO; both this functions work with buttons
-	//CreateToolTipForRect(SaveHotkey, save_hotkey_tooltip_text);
-	CreateToolTip(SCV_SAVE_HOTKEY, hWnd, (LPWSTR)save_hotkey_tooltip_text.c_str(), startup_info->show_tooltips);
-#endif
 
 	float secretX = width*.1f;
 	float secretY = height*.1f;
@@ -2266,6 +2126,12 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	{
 		return 0;
 	}
+	case SCV_MANAGER_UPDATE_THRESHOLD_OPACITY:
+	{
+		SendMessage(GetParent(ThresholdSlider), WM_HSCROLL, MAKELONG(TB_PAGEDOWN, 0), (LPARAM)ThresholdSlider);
+		SendMessage(GetParent(OpacitySlider), WM_HSCROLL, MAKELONG(TB_PAGEDOWN, 0), (LPARAM)OpacitySlider);
+		break;
+	}
 	case SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF:
 	{
 		
@@ -2286,6 +2152,7 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	case SCV_LANG_DYNAMIC_UPDATE: //Message sent for windows that have controls that need more than the supported functions from LANGUAGE_MANAGER
 	{
 		SendMessage(hWnd, SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF, 0, 0);
+		SendMessage(hWnd, SCV_MANAGER_UPDATE_THRESHOLD_OPACITY, 0, 0);
 		break;
 	}
 	case WM_HOTKEY:
@@ -2314,15 +2181,13 @@ LRESULT CALLBACK WndMgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			case TB_TOP:
 				HWND slider = (HWND)lParam;
 				float pos = (float)SendMessage(slider, TBM_GETPOS, 0, 0);
-				WCHAR textPos[4];
-				_itow(pos, textPos, 10);
 				if (slider == ThresholdSlider) {
-					SetWindowTextW(ThresholdPos, textPos);
+					SetWindowTextW(ThresholdText, fmt::format(RS(SCV_LANG_MGR_THRESHOLD), (int)pos).c_str());
 					OutMgr.SetThreshold(pos/100.f);
 				}
 				else if (slider == OpacitySlider) {
-					SetWindowTextW(OpacityPos, textPos);
-					OutMgr.SetOpacity(pos / 100.f);
+					SetWindowTextW(OpacityText, fmt::format(RS(SCV_LANG_MGR_OPACITY), (int)pos).c_str());
+					OutMgr.SetOpacity((100-pos) / 100.f);
 				}
 				break;
 		}
@@ -2699,16 +2564,9 @@ LRESULT PaintCaption(HWND hWnd) {
 		DestroyIcon(logo_icon);
 	}
 
-	HFONT font;
-	LOGFONTW lf;
+	if (!FONTS.caption) FONTS.caption = CreateMyFont((LONG)(-RECTHEIGHT(fill_rc) * .5));
 
-	memset(&lf, 0, sizeof(lf));
-	lf.lfQuality = CLEARTYPE_QUALITY;
-	lf.lfHeight = (LONG)(-RECTHEIGHT(fill_rc) * .5);
-	//@ver: lf.pszFaceName y EnumFontFamiliesW
-	font = CreateFontIndirectW(&lf);
-
-	HFONT prev_font = (HFONT)SelectObject(hdc, (HGDIOBJ)font);
+	HFONT prev_font = (HFONT)SelectObject(hdc, (HGDIOBJ)FONTS.caption);
 
 	WCHAR title[200];
 	SendMessage(hWnd, WM_GETTEXT, 200, (LPARAM)title);
