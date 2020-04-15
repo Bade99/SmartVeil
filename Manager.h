@@ -3,36 +3,40 @@
 #include <Windows.h>
 #include "Settings.h"
 
-//TODO(fran): indicate what each defines refers to
+//TODO(fran): indicate what each define refers to
+/// <summary>
+/// The first id from which to send messages , each one counts up by one from this starting position
+/// </summary>
 #define SCV_MANAGER_FIRST_MESSAGE (WM_USER+0)
 
+/// <summary>
+/// Identifies messages sent from the manager's tray icon
+/// </summary>
 #define SCV_MANAGER_TRAY (SCV_MANAGER_FIRST_MESSAGE+1)
+
+/// <summary>
+/// Signals the manager to switch the Veil's on-off state
+/// <para>wParam = unused</para>
+/// <para>lParam = unused</para>
+/// </summary>
 #define SCV_MANAGER_TURN_ON_OFF (SCV_MANAGER_FIRST_MESSAGE+2)
-#define SCV_MANAGER_THRESHOLD_TITLE (SCV_MANAGER_FIRST_MESSAGE+3)
-#define SCV_MANAGER_TOOLTIP_THRESHOLD_SLIDER (SCV_MANAGER_FIRST_MESSAGE+4)
-#define SCV_MANAGER_SECRET_ABOUT (SCV_MANAGER_FIRST_MESSAGE+5)
-#define SCV_MANAGER_SETTINGS (SCV_MANAGER_FIRST_MESSAGE+6)
-#define SCV_MANAGER_TOOLTIP_OPACITY_SLIDER (SCV_MANAGER_FIRST_MESSAGE+7)
+
+#define SCV_MANAGER_TOOLTIP_OPACITY_SLIDER (SCV_MANAGER_FIRST_MESSAGE+3)
 /// <summary>
 /// Message to send to request a change in the tray status
 /// <para>wParam = TRUE to create the tray, FALSE to destroy it</para>
 /// <para>lParam = unused</para>
 /// </summary>
-#define SCV_MANAGER_MODIFY_TRAY (SCV_MANAGER_FIRST_MESSAGE+8)//TODO(fran): no need to have two defines, could send true or false through param
-#define SCV_MANAGER_LANG_DYNAMIC_UPDATE (SCV_MANAGER_FIRST_MESSAGE+9)
-#define SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF (SCV_MANAGER_FIRST_MESSAGE+10)
-#define SCV_MANAGER_UPDATE_THRESHOLD_OPACITY (SCV_MANAGER_FIRST_MESSAGE+11)
-#define SCV_MANAGER_OPACITY_TITLE (SCV_MANAGER_FIRST_MESSAGE+12)
-
+#define SCV_MANAGER_MODIFY_TRAY (SCV_MANAGER_FIRST_MESSAGE+4)
 
 #define SCV_VEIL_FIRST_MESSAGE (WM_USER+500)
 
-#define SCV_VEIL_SHOW_MGR (SCV_VEIL_FIRST_MESSAGE+10)
+#define SCV_VEIL_SHOW_MGR (SCV_VEIL_FIRST_MESSAGE+1)
 
-#define SLIDER_MAX 99
-#define SLIDER_MIN 0
-#define SLIDER_DANGEROUS 90
-#define SLIDER_SAFE 80
+#define MGR_SLIDER_MAX 99
+#define MGR_SLIDER_MIN 0
+#define MGR_SLIDER_DANGEROUS 90
+#define MGR_SLIDER_SAFE 80
 
 
 /// <summary>
@@ -117,9 +121,9 @@ private:
 	/// Makes sure the slider value is between bounds and fixes it if not
 	/// </summary>
 	inline int SanitizeSlider(int val, bool reduce_dangerous) {
-		if (val > SLIDER_MAX || val < SLIDER_MIN)
-			val = (SLIDER_MAX - SLIDER_MIN) / 2;
-		if (reduce_dangerous && val > SLIDER_DANGEROUS) val = SLIDER_SAFE;
+		if (val > MGR_SLIDER_MAX || val < MGR_SLIDER_MIN)
+			val = (MGR_SLIDER_MAX - MGR_SLIDER_MIN) / 2;
+		if (reduce_dangerous && val > MGR_SLIDER_DANGEROUS) val = MGR_SLIDER_SAFE;
 		return val;
 	}
 };

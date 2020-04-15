@@ -9,33 +9,19 @@
 ///First index from which windows messages will be sent
 #define SCV_SETTINGS_FIRST_MESSAGE (WM_USER+1000)
 
-#define SCV_SETTINGS_LANG_COMBO (SCV_SETTINGS_FIRST_MESSAGE+1)
-#define SCV_SETTINGS_LANG_TITLE (SCV_SETTINGS_FIRST_MESSAGE+2)
-#define SCV_SETTINGS_DANGEROUS_SLIDER (SCV_SETTINGS_FIRST_MESSAGE+3)
-#define SCV_SETTINGS_MANAGER_POS (SCV_SETTINGS_FIRST_MESSAGE+4)
-#define SCV_SETTINGS_MANAGER_ON_STARTUP (SCV_SETTINGS_FIRST_MESSAGE+5)
-#define SCV_SETTINGS_SHOW_TOOLTIPS (SCV_SETTINGS_FIRST_MESSAGE+6)
-#define SCV_SETTINGS_SHOW_TRAY (SCV_SETTINGS_FIRST_MESSAGE+7)
-#define SCV_SETTINGS_VEIL_STARTUP_TITLE (SCV_SETTINGS_FIRST_MESSAGE+8)
-#define SCV_SETTINGS_VEIL_STARTUP_COMBO (SCV_SETTINGS_FIRST_MESSAGE+9)
-#define SCV_SETTINGS_START_WITH_WINDOWS (SCV_SETTINGS_FIRST_MESSAGE+10)
-#define SCV_SETTINGS_SAVE (SCV_SETTINGS_FIRST_MESSAGE+11)
-#define SCV_SETTINGS_HOTKEY (SCV_SETTINGS_FIRST_MESSAGE+12)
-/// <summary>
-/// Updates the settings' veil update counter
-/// <para>wParam = a float that holds the timing data</para>
-/// <para>lParam = unused</para>
-/// </summary>
-#define SCV_SETTINGS_UPDATE_COUNTER (SCV_SETTINGS_FIRST_MESSAGE+13)
-#define SCV_SETTINGS_UPDATE_COUNTER_TEXT (SCV_SETTINGS_FIRST_MESSAGE+14)
-
 /// <summary>
 /// Message to send to the Settings Window to retrieve its settings
 /// <para>wParam = pointer to a SETTINGS structure for storing the current settings</para>
 /// <para>lParam = unused</para>
 /// </summary>
-#define SCV_SETTINGS_GET_SETTINGS (SCV_SETTINGS_FIRST_MESSAGE+15)
+#define SCV_SETTINGS_GET_SETTINGS (SCV_SETTINGS_FIRST_MESSAGE+1)
 
+/// <summary>
+/// Updates the settings' veil update counter
+/// <para>wParam = a float that holds the timing data</para>
+/// <para>lParam = unused</para>
+/// </summary>
+#define SCV_SETTINGS_UPDATE_COUNTER (SCV_SETTINGS_FIRST_MESSAGE+2)
 
 #define MS_UPDATE 0 //show veil update rate in milliseconds
 

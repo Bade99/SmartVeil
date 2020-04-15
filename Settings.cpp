@@ -11,6 +11,20 @@
 
 #include "Manager.h" //TODO(fran): I need this just for one #define, lets move all those to a common file
 
+//Definition of child control ids and internal messages
+#define SCV_SETTINGS_LANG_COMBO 1 //The combobox that contains the language selection
+#define SCV_SETTINGS_DANGEROUS_SLIDER 2 //The checkbox that contains the "reduce dangerous sliders" option
+#define SCV_SETTINGS_MANAGER_POS 3 //The checkbox that contains the "remember mgr pos" option
+#define SCV_SETTINGS_MANAGER_ON_STARTUP 4 //The checkbox that contains the "show mgr on application startup" option
+#define SCV_SETTINGS_SHOW_TOOLTIPS 5 //The checkbox that contains the "show tooltips" option
+#define SCV_SETTINGS_SHOW_TRAY 6 //The checkbox that contains the "show tray icon" option
+#define SCV_SETTINGS_VEIL_STARTUP_COMBO 7 //The combobox that contains the "turn on veil on startup" selection
+#define SCV_SETTINGS_START_WITH_WINDOWS 8 //The checkbox that contains the "start with windows" option
+#define SCV_SETTINGS_SAVE 9 //Save button
+#define SCV_SETTINGS_HOTKEY 10 //Hotkey control
+#define SCV_SETTINGS_UPDATE_COUNTER_TEXT 11 //Static text control that shows the veil update rate - DEBUG ONLY
+
+
 /// <summary>
 /// Full control setup for the Settings window
 /// </summary>
@@ -122,7 +136,7 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	veil_on_startup_text.y = TextY;
 	//TODO(fran): proper static control text alignment
 	HWND veil_on_startup = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_CENTERIMAGE
-		, paddingX, paddingY, veil_on_startup_text.x, veil_on_startup_text.y, hwnd, (HMENU)SCV_SETTINGS_VEIL_STARTUP_TITLE, NULL, NULL);
+		, paddingX, paddingY, veil_on_startup_text.x, veil_on_startup_text.y, hwnd, NULL, NULL, NULL);
 	AWT(veil_on_startup, SCV_LANG_SETTINGS_TURN_ON);
 
 	POINT combobox_text;
@@ -145,7 +159,7 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	language_text.x = width * .25f;
 	language_text.y = TextY;
 	HWND LanguageText = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_CENTERIMAGE
-		, paddingX, paddingY, language_text.x, language_text.y, hwnd, (HMENU)SCV_SETTINGS_LANG_TITLE, NULL, NULL);
+		, paddingX, paddingY, language_text.x, language_text.y, hwnd, NULL, NULL, NULL);
 	AWT(LanguageText, SCV_LANG_SETTINGS_LANG);
 
 	HWND language_combo = CreateWindowW(L"ComboBox", NULL, WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST | WS_TABSTOP
@@ -240,9 +254,11 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	HWND UpdateCounter = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD
 		, rec.left, rec.top + height - UpdateCounterSize.y, UpdateCounterSize.x, UpdateCounterSize.y, hwnd, (HMENU)SCV_SETTINGS_UPDATE_COUNTER_TEXT, NULL, NULL);
 
+#ifdef _DEBUG
 	POINT UpdateCounterUnitSize = { (LONG)(width *.08f),(LONG)(height*.1f) };
 	HWND UpdateCounterUnit = CreateWindowW(L"Static", MS_UPDATE ? L"ms" : L"fps", WS_VISIBLE | WS_CHILD
 		, rec.left + UpdateCounterSize.x, rec.top + height - UpdateCounterSize.y, UpdateCounterUnitSize.x, UpdateCounterUnitSize.y, hwnd, NULL, NULL, NULL);
+#endif
 
 	//Font set-up
 	settings_font = CreateMyFont((LONG)(-width * .046f));
@@ -479,9 +495,10 @@ LRESULT CALLBACK SettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		TOOLTIP_REPO::Instance().CreateToolTip(close_button, SCV_LANG_CLOSE);
 		//
 
-		//TEST
+#ifdef _DEBUG
 		//Starts timer to check how many times does the Veil update per second
 		SetTimer(hWnd, 1, 1000, NULL);
+#endif
 
 		break;
 	}
@@ -519,6 +536,7 @@ LRESULT CALLBACK SettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	{
 		return 0;
 	}
+#ifdef _DEBUG
 	case WM_TIMER: {
 		//Showing current fps counter for the Veil
 		KillTimer(hWnd, 1);
@@ -527,7 +545,6 @@ LRESULT CALLBACK SettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		SetTimer(hWnd, 1, 1000, NULL);
 		break;
 	}
-#ifdef _DEBUG
 	case SCV_SETTINGS_UPDATE_COUNTER:
 	{
 #if MS_UPDATE

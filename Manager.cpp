@@ -2,28 +2,20 @@
 
 #include "resource.h"
 
-//TODO(fran): clean includes
-
 #include <string>
-#include <limits.h>
 #include <commctrl.h>
-#include <strsafe.h> //stringcchcopy
-#include <Shlobj.h> //tooltips
 #include <uxtheme.h>// setwindowtheme
 #include <dwmapi.h>
 #include <Windowsx.h>
-#include <vssym32.h>
+//#include <vssym32.h>
 
 #include "DisplayManager.h"
 #include "DuplicationManager.h"
-#include "OutputManager.h"
-#include "ThreadManager.h"
 
 #include "ImagePresentation.h"
 
 #include "Common.h"
 #include "utils.cpp"
-#include "Startup.cpp"
 #include "fmt/format.h" //Thanks to https://github.com/fmtlib/fmt
 #include "TOOLTIP_REPO.h"
 #include "TRAY_HANDLER.h"
@@ -36,6 +28,19 @@
 #pragma comment(lib,"UxTheme.lib")// setwindowtheme
 #pragma comment (lib,"Dwmapi.lib")
 #pragma comment (lib,"Version.lib") //for VerQueryValue
+
+//Definition of child control ids and internal messages
+#define SCV_MANAGER_THRESHOLD_TITLE 1 //The static text control that shows the threshold slider's current value
+#define SCV_MANAGER_OPACITY_TITLE 2 //The static text control that shows the opacity slider's current value
+#define SCV_MANAGER_SECRET_ABOUT 3 //Button for showing about information
+#define SCV_MANAGER_SETTINGS 4 //Button to launch the settings
+#define SCV_MANAGER_LANG_DYNAMIC_UPDATE 5 //Identifier for the LanguageManager to call the manager when dynamic windows (ones where the text constantly changes) need text updates
+#define SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF 6 //Msg sent by the manager to itself to update the turn on-off button when it's pressed and on language change
+#define SCV_MANAGER_UPDATE_THRESHOLD_OPACITY 7 //Msg sent by the manager to itself to update the sliders' text when there's a language change
+#define SCV_MANAGER_TOOLTIP_THRESHOLD_SLIDER 8 //The Slider control for the threshold
+
+
+
 
 //TODOs:
 //CREATE NAMESPACES
@@ -89,24 +94,11 @@ LRESULT CALLBACK VeilProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-	//case WM_CREATE:
-	//{
-	//	LRESULT res = DefWindowProc(hWnd, message, wParam, lParam);
-	//	//ReleaseMutex(start_mutex);//tells the other thread that it can start working with this HWND
-	//	//TODO(fran): MOVE THIS OUT
-
-	//	
-
-	//	return res;
-	//}
-
 	case SCV_VEIL_SHOW_MGR://Only used in case of multiple instances so the new one can tell the one already running to show the manager
 	{
 		ShowWindow(KNOWN_WINDOWS.mgr, SW_SHOW);
-		//ShowWindow(GetDlgItem(hWnd,SCV_MANAGER_WND_ID), SW_SHOW); //TODO(fran): does this work?
 		break;
 	}
-
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
@@ -320,7 +312,7 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		//if (thread_data.output_wnd_ready_mutex == NULL)
 		//{
 		//	ShowClosingAppError(SCV_LANG_ERROR_CREATEMUTEX);
-		//	Assert(0); //TODO(fran): CHANGE TO POSTQUITMESSAGE
+		//	Assert(0); 
 		//}
 
 		//Load values for thread_data
@@ -379,8 +371,6 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			Assert(0); //TODO(fran): resolve leaks
 		}
 		
-		//Once all the needs of the veil are ready, activate it TODO(fran): is that statement true here?
-
 		//Create worker thread that will generate the image to display
 		DWORD ThreadID;
 		worker_thread_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WorkerThread, &thread_data, 0, &ThreadID);
@@ -485,7 +475,7 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		UINT virtualKey = HIWORD(lParam);
 
 		SETTINGS settings;
-		//TODO(fran): can I use SendDlgItemMessage instead?????---------------------------------------------------------------------------------
+		//TODO(fran): can I use SendDlgItemMessage instead?????-----I dont think so
 		SendMessage(KNOWN_WINDOWS.settings, SCV_SETTINGS_GET_SETTINGS, (WPARAM)&settings, NULL);
 
 		//TODO(fran): right now that we only have one hotkey it is pointless to do this check I think
@@ -516,7 +506,6 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 						SetWindowTextW(get_child_by_id(hWnd,SCV_MANAGER_THRESHOLD_TITLE), fmt::format(RS(SCV_LANG_MGR_THRESHOLD), (int)pos).c_str()); //TODO(fran): implement my own static text control
 					thread_data.output_mgr.SetThreshold(pos/100.f);
 					last_thresh_pos = pos;
-					//TODO(fran): DO I NEED INVALIDATERECT ???
 				}
 				else if (GetDlgCtrlID(slider) == SCV_MANAGER_TOOLTIP_OPACITY_SLIDER) {
 					static int last_opac_pos = -1;
@@ -572,7 +561,6 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		case SCV_MANAGER_TURN_ON_OFF: //Show/Hide the Veil
-		//TODO(fran): this will be separated into updating the bool and another msg for updating the text
 		{
 			mgr_data->is_turned_on = !mgr_data->is_turned_on;
 			if (mgr_data->is_turned_on) {
@@ -589,7 +577,7 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				Assert(mut_ret == WAIT_OBJECT_0);
 
 			}
-			SendMessage(hWnd, SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF, 0, 0);
+			SendMessage(hWnd, SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF, 0, 0); 
 			break;
 		}
 		default:
@@ -712,7 +700,7 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			mgr_data->slider_opacity_pos = opacitypos;
 			mgr_data->slider_threshold_pos = thresholdpos;
 
-			//TODO(fran): CHECK WHERE THIS GOES, and ESTABLISH AN ONLY APPLICATION EXIT PATH
+			//TODO(fran): Establish this as the only application exit path
 			//INFO(fran): here destroy everything and close the app
 			//Wait for image processing thread to exit
 			thread_data.terminate = TRUE;
@@ -722,8 +710,7 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			ReleaseMutex(thread_data.worker_finished_mutex);
 			CloseHandle(thread_data.worker_finished_mutex);
 
-			//TODO(fran): check where this goes
-			 // Make sure all other threads have exited
+			// Make sure all other threads have exited
 			if (SetEvent(thread_data.events.TerminateThreadsEvent))
 			{
 				thread_data.thread_mgr.WaitForThreadTermination();
@@ -748,7 +735,7 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//INFO IMPORTANT(fran): DestroyWindow exits this proc goes and destroys the window and then comes back through a new WM_DESTROY,
 			//is this because the window we're destroying is our parent, and it's trying to destroy us? Anyway WM_DESTROY GETS EXECUTED TWICE
 			//that's why CloseHandle throws invalid handle
-			//TODO(fran): solve awful this problem 
+			//TODO(fran): can we solve this problem without the static BOOL?
 		}
 		
 		TRAY_HANDLER::Instance().DestroyTrayIcon(hWnd, 1);

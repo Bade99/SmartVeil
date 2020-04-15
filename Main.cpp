@@ -15,7 +15,15 @@
 CUSTOM_FRAME FRAME; //DEFINITION OF STATIC VARIABLE, so it's the same for all translation units (MUST be defined global)
 _KNOWN_WINDOWS KNOWN_WINDOWS; //DEFINITION OF STATIC VARIABLE
 
-//TODO(fran): implement resizer
+//TODO(fran): implement resizer, probably with a system of columns, where each one contains rows
+//	-----------------------------------------
+//	|	|				|				|	|
+//	|	|				|---------------|	|
+//	|	|				|				|	|
+//	|	|---------------|				|	|
+//	|	|				|				|	|
+//	|	|				|				|	|
+//	-----------------------------------------
 
 /// <summary>
 /// Program entry point, lot's of setup happens here:
@@ -126,7 +134,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	WSc.hIconSm = logo_icon_small;
 	if (!RegisterClassExW(&WSc))
 	{
-		ShowLastError(RCS(SCV_LANG_ERROR_WINDOWCLASS_REG), RCS(SCV_LANG_ERROR_SMARTVEIL)); //TODO(fran): for the next project change naming convention for my strings, this is hard to read, for starters make them lower case
+		ShowLastError(RCS(SCV_LANG_ERROR_WINDOWCLASS_REG), RCS(SCV_LANG_ERROR_SMARTVEIL)); //INFO TODO(fran): for the next project change naming convention for my strings, this is hard to read, for starters make them lower case
 		return 0;
 	}
 	
@@ -136,7 +144,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	//INFO: no retorna la ultima barra, la tenés que agregar vos, tambien te tenés que encargar de liberar el string
 	Assert(SUCCEEDED(folder_res));
 
-	STARTUP_INFO_PATH info_path; // Path to the file where we store our startup data //TODO(fran): main should take care of saving this back
+	STARTUP_INFO_PATH info_path; // Path to the file where we store our startup data
 	info_path.known_folder = folder_path;
 	CoTaskMemFree(folder_path);
 	info_path.info_folder = L"Smart Veil";
@@ -167,8 +175,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 #define SETTINGS_NUMBER_OF_CHECKBOXES 30.f //This scales both mgr and settings windows
 	const float CHECKBOX_SZ = ((float)GetSystemMetrics(SM_CXMENUCHECK))*.8f; //Size of one of our checkboxes that we use for determining window size
-	SIZE mgr_wnd_sz; //TODO(fran): the mgr should be a little smaller in width
-	mgr_wnd_sz.cx = CHECKBOX_SZ * (SETTINGS_NUMBER_OF_CHECKBOXES*16.f / 9.f); //TODO(fran): make this wnd more compact, and the same for its controls
+	SIZE mgr_wnd_sz; //TODO(fran): make this wnd more compact, and the same for its controls
+	mgr_wnd_sz.cx = CHECKBOX_SZ * (SETTINGS_NUMBER_OF_CHECKBOXES*16.f / 9.f); 
 	mgr_wnd_sz.cy = ((float)mgr_wnd_sz.cx) * 8.f / 16.f;
 	//SUPERTODO(fran): I have no idea why on virtual machine with width to minimum the window starts to stretch and position is wrong
 	//TODO(fran): what we can do is in case this values are bigger than the screen then we use the other method
@@ -236,14 +244,14 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	}
 	KNOWN_WINDOWS.mgr = mgr_wnd;
 	AWT(mgr_wnd, SCV_LANG_MGR);
+
+	UpdateWindow(mgr_wnd); //I do update first to semi-solve the ugly default ui problem
+	
 	ShowWindow(mgr_wnd, nCmdShow);
 	if(startup_info.settings.show_manager_on_startup)
 		ShowWindow(mgr_wnd, SW_SHOW);
 	else
 		ShowWindow(mgr_wnd, SW_HIDE);
-
-	UpdateWindow(mgr_wnd); //TODO(fran): should I update first to solve the ugly default ui problem?
-
 
 	SIZE settings_wnd_sz;
 	settings_wnd_sz.cx = CHECKBOX_SZ *SETTINGS_NUMBER_OF_CHECKBOXES;
@@ -288,7 +296,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	//Save startup_info
 
 	//TODO(fran): Main should try to save even if someone threw an exception/error in the loop, I think, maybe it should check the values are valid
-	//TODO(fran): this is annoying
+	//TODO(fran): this is annoying, does the struct really need 4 strings?
 	std::wstring info_directory_path = info_path.known_folder + L"\\" + info_path.info_folder;
 	std::wstring info_file_name = info_path.info_file + L"." + info_path.info_extension;
 
@@ -307,15 +315,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	if (logo_icon_small) DestroyIcon(logo_icon_small);
 
 	//TODO(fran): do destructors work with global objects?
-	DeleteObject(FRAME.caption_font); //TODO(fran): destructor
+	DeleteObject(FRAME.caption_font); //TODO(fran): destructor, or maybe not, what if someone else were still using the font?
 	
 	if (msg.message == WM_QUIT) // For a WM_QUIT message the wParam is the exit code
 		return static_cast<INT>(msg.wParam);
 
 	return 0;
 }
-//TODO(fran): we could make it so each window recieves a pointer to a startup_info created in main, so when everything is terminated
-//the info is updated there and main can use those values immediately. I dont see any other good ways for main to retrieve the values
-//from the windows
-
-//TODO(fran): THE MANAGER DOES NOT NEED ANY INFO FROM SETTINGS TO START, THE STRUCTS ALREADY HANDLED THAT

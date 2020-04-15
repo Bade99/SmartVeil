@@ -57,6 +57,11 @@ inline std::wstring HRESULTToString(HRESULT h) { //TODO(fran): use wstring and a
 	return hresult;
 }
 
+/// <summary>
+/// Creates MessageBox shodwing the last error as an understandable string + it's error code
+/// </summary>
+/// <param name="extra_info">Allows you to add a larger explanation of the problem</param>
+/// <param name="title">MessageBox's title</param>
 inline void ShowLastError(std::wstring extra_info, std::wstring title)
 {
 	UINT flags = MB_OK | MB_TOPMOST;
