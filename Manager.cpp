@@ -18,7 +18,6 @@
 #include "DuplicationManager.h"
 #include "OutputManager.h"
 #include "ThreadManager.h"
-#include "CommonTypes.h"
 
 #include "ImagePresentation.h"
 
@@ -165,7 +164,6 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance,const CUSTOM_FRAME& frame, const MAN
 	//float OpacityTextX = width * .165f;
 	HWND OpacityText = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY | SS_CENTERIMAGE | SS_CENTER
 		, paddingX, paddingY, ThresholdTextX, TextY, hWnd, (HMENU)SCV_MANAGER_OPACITY_TITLE, NULL, NULL);
-	AWT(OpacityText, SCV_LANG_MGR_OPACITY);
 
 	TOOLTIP_REPO::Instance().CreateToolTip(OpacityText, SCV_LANG_MGR_OPACITY_TIP);
 
@@ -265,6 +263,9 @@ inline HWND get_child_by_id(HWND parent, int ID) { //TODO(fran): this is probabl
 	, (LPARAM)&params);
 	return params.child;
 }
+
+
+
 LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static WORKER_THREAD_INIT thread_data;
@@ -295,6 +296,7 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		float button_height = FRAME.caption_height;
 		float button_width = button_height * 16.f / 9.f;
 
+		//TODO(fran): send normal WM_CLOSE and associate messages from caption buttons, having extra msgs is unnecessary
 		HWND close_button = CreateWindowW(L"Button", L"", WS_VISIBLE | WS_CHILD | WS_MAXIMIZEBOX
 			, RECTWIDTH(rc) - button_width - FRAME.right_border, 0, button_width, button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_CLOSE, hInstance, NULL);
 		//SetWindowLongPtr(close_button, GWL_USERDATA, CROSS_ICON);
@@ -357,8 +359,7 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		thread_data.events.UnexpectedErrorEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 		if (!thread_data.events.UnexpectedErrorEvent)
 		{
-			//TODO(fran): REPLACE ProcessFailure with Our own function that has nothing to do with all those managers
-			ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_UNEXPECTEDERROREVENT_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL), E_UNEXPECTED);
+			ShowLastError(RCS(SCV_LANG_ERROR_UNEXPECTEDERROREVENT_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL));
 			Assert(0);
 		}
 
@@ -366,7 +367,7 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		thread_data.events.ExpectedErrorEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 		if (!thread_data.events.ExpectedErrorEvent)
 		{
-			ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_EXPECTEDERROREVENT_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL), E_UNEXPECTED);
+			ShowLastError(RCS(SCV_LANG_ERROR_EXPECTEDERROREVENT_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL));
 			Assert(0);
 		}
 
@@ -374,8 +375,8 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		thread_data.events.TerminateThreadsEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
 		if (!thread_data.events.TerminateThreadsEvent)
 		{
-			ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_TERMINATETHREADSEVENT_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL), E_UNEXPECTED);
-			Assert(0);
+			ShowLastError(RCS(SCV_LANG_ERROR_TERMINATETHREADSEVENT_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL));
+			Assert(0); //TODO(fran): resolve leaks
 		}
 		
 		//Once all the needs of the veil are ready, activate it TODO(fran): is that statement true here?
@@ -510,13 +511,19 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				float pos = (float)SendMessage(slider, TBM_GETPOS, 0, 0);
 				if (GetDlgCtrlID(slider) == SCV_MANAGER_TOOLTIP_THRESHOLD_SLIDER) {
 					//TODO(fran): doing enumchildwindows all the time is probably very expensive, we might need to keep a list of important hwnds
-					SetWindowTextW(get_child_by_id(hWnd,SCV_MANAGER_THRESHOLD_TITLE), fmt::format(RS(SCV_LANG_MGR_THRESHOLD), (int)pos).c_str());
+					static int last_thresh_pos = -1; //TODO(fran): I'm not sure this is even better, the problem must be somewhere else
+					if(pos!= last_thresh_pos)
+						SetWindowTextW(get_child_by_id(hWnd,SCV_MANAGER_THRESHOLD_TITLE), fmt::format(RS(SCV_LANG_MGR_THRESHOLD), (int)pos).c_str()); //TODO(fran): implement my own static text control
 					thread_data.output_mgr.SetThreshold(pos/100.f);
+					last_thresh_pos = pos;
 					//TODO(fran): DO I NEED INVALIDATERECT ???
 				}
 				else if (GetDlgCtrlID(slider) == SCV_MANAGER_TOOLTIP_OPACITY_SLIDER) {
-					SetWindowTextW(get_child_by_id(hWnd, SCV_MANAGER_OPACITY_TITLE), fmt::format(RS(SCV_LANG_MGR_OPACITY), (int)pos).c_str());
+					static int last_opac_pos = -1;
+					if (pos != last_opac_pos)
+						SetWindowTextW(get_child_by_id(hWnd, SCV_MANAGER_OPACITY_TITLE), fmt::format(RS(SCV_LANG_MGR_OPACITY), (int)pos).c_str());
 					thread_data.output_mgr.SetOpacity((100-pos) / 100.f);
+					last_opac_pos = pos;
 				}
 				break;
 		}

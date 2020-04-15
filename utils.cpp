@@ -13,6 +13,7 @@
 
 #define Assert(assertion) if(!(assertion))*(int*)NULL=0
 
+
 inline std::wstring GetLastErrorAsString()
 {
 	//Thanks https://stackoverflow.com/questions/1387064/how-to-get-the-error-message-from-the-error-code-returned-by-getlasterror
@@ -32,6 +33,42 @@ inline std::wstring GetLastErrorAsString()
 	LocalFree(messageBuffer);
 
 	return message;
+}
+
+/// <summary>
+/// Returns a string with the format "HRESULT 0x########"
+/// </summary>
+/// <param name="h"></param>
+/// <returns></returns>
+inline std::wstring HRESULTToString(HRESULT h) { //TODO(fran): use wstring and avoid new and delete
+	const UINT StringLen = sizeof(L"HRESULT 0x########") + 1;
+	wchar_t* OutStr = new wchar_t[StringLen];
+	if (!OutStr)
+	{
+		return std::wstring();
+	}
+
+	swprintf_s(OutStr, StringLen, L"HRESULT 0x%X", h);
+
+	std::wstring hresult = OutStr;
+
+	delete[] OutStr;
+
+	return hresult;
+}
+
+inline void ShowLastError(std::wstring extra_info, std::wstring title)
+{
+	UINT flags = MB_OK | MB_TOPMOST;
+
+	std::wstring last_err = GetLastErrorAsString();
+
+	std::wstring hresult = HRESULTToString(HRESULT_FROM_WIN32(GetLastError()));
+
+	std::wstring msg = extra_info!=L""? extra_info + L"\n" + last_err : last_err;
+	msg += hresult;
+
+	MessageBoxW(nullptr, msg.c_str(), title.c_str(), flags);
 }
 
 /// <summary>

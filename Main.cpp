@@ -11,12 +11,11 @@
 #include "LANGUAGE_MANAGER.h"
 #include "ControlProcedures.h"
 
-#include "CommonTypes.h" //TODO(fran): get rid of this here
-
 //TODO(fran): this with the extern are ugly, look for better solution, maybe passing a bigger struct to the windows
 CUSTOM_FRAME FRAME; //DEFINITION OF STATIC VARIABLE, so it's the same for all translation units (MUST be defined global)
 _KNOWN_WINDOWS KNOWN_WINDOWS; //DEFINITION OF STATIC VARIABLE
 
+//TODO(fran): implement resizer
 
 /// <summary>
 /// Program entry point, lot's of setup happens here:
@@ -52,7 +51,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	HCURSOR Cursor = LoadCursor(nullptr, IDC_ARROW);
 	if (!Cursor)
 	{
-		ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_CURSOR_LOAD), RCS(SCV_LANG_ERROR_SMARTVEIL), E_UNEXPECTED);
+		ShowLastError(RCS(SCV_LANG_ERROR_CURSOR_LOAD), RCS(SCV_LANG_ERROR_SMARTVEIL));
 		return 0;
 	}
 	HICON logo_icon, logo_icon_small;
@@ -85,7 +84,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	Wc.hIconSm = logo_icon_small;
 	if (!RegisterClassExW(&Wc))
 	{
-		ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_WINDOWCLASS_REG), RCS(SCV_LANG_ERROR_SMARTVEIL), E_UNEXPECTED);
+		ShowLastError(RCS(SCV_LANG_ERROR_WINDOWCLASS_REG), RCS(SCV_LANG_ERROR_SMARTVEIL));
 		return 0;
 	}
 
@@ -106,7 +105,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	WMc.hIconSm = logo_icon_small;
 	if (!RegisterClassExW(&WMc))
 	{
-		ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_WINDOW_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL), E_UNEXPECTED);
+		ShowLastError(RCS(SCV_LANG_ERROR_WINDOWCLASS_REG), RCS(SCV_LANG_ERROR_SMARTVEIL));
 		return 0;
 	}
 
@@ -127,10 +126,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	WSc.hIconSm = logo_icon_small;
 	if (!RegisterClassExW(&WSc))
 	{
-		ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_WINDOWCLASS_REG), RCS(SCV_LANG_ERROR_SMARTVEIL), E_UNEXPECTED);
+		ShowLastError(RCS(SCV_LANG_ERROR_WINDOWCLASS_REG), RCS(SCV_LANG_ERROR_SMARTVEIL)); //TODO(fran): for the next project change naming convention for my strings, this is hard to read, for starters make them lower case
 		return 0;
 	}
-
+	
 	//Load startup info
 	PWSTR folder_path;
 	HRESULT folder_res = SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, NULL, &folder_path);//TODO(fran): this is only supported on windows vista and above, will we ever care?
@@ -158,7 +157,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		nullptr, nullptr, hInstance, nullptr);
 	if (!veil_wnd)
 	{
-		ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_WINDOW_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL), E_FAIL);
+		ShowLastError(RCS(SCV_LANG_ERROR_WINDOW_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL));
 		return 0;
 	}
 	KNOWN_WINDOWS.veil = veil_wnd;
@@ -166,10 +165,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	UpdateWindow(veil_wnd);
 
 
-#define SETTINGS_NUMBER_OF_CHECKBOXES 30.f
-
+#define SETTINGS_NUMBER_OF_CHECKBOXES 30.f //This scales both mgr and settings windows
+	const float CHECKBOX_SZ = ((float)GetSystemMetrics(SM_CXMENUCHECK))*.8f; //Size of one of our checkboxes that we use for determining window size
 	SIZE mgr_wnd_sz; //TODO(fran): the mgr should be a little smaller in width
-	mgr_wnd_sz.cx = (((float)GetSystemMetrics(SM_CXMENUCHECK))*.8f) * (SETTINGS_NUMBER_OF_CHECKBOXES*16.f / 9.f);;
+	mgr_wnd_sz.cx = CHECKBOX_SZ * (SETTINGS_NUMBER_OF_CHECKBOXES*16.f / 9.f); //TODO(fran): make this wnd more compact, and the same for its controls
 	mgr_wnd_sz.cy = ((float)mgr_wnd_sz.cx) * 8.f / 16.f;
 	//SUPERTODO(fran): I have no idea why on virtual machine with width to minimum the window starts to stretch and position is wrong
 	//TODO(fran): what we can do is in case this values are bigger than the screen then we use the other method
@@ -232,8 +231,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	//therefore in those cases the x and y position are actually wrong, maybe we should re-position on wm_create
 	if (!mgr_wnd) {
 
-		//ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_WINDOW_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL), E_FAIL);
-		ProcessFailure(nullptr, GetLastErrorAsString().c_str(), RCS(SCV_LANG_ERROR_SMARTVEIL), E_FAIL);
+		ShowLastError(RCS(SCV_LANG_ERROR_WINDOW_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL));
 		return 0;
 	}
 	KNOWN_WINDOWS.mgr = mgr_wnd;
@@ -248,7 +246,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 
 	SIZE settings_wnd_sz;
-	settings_wnd_sz.cx = (GetSystemMetrics(SM_CXMENUCHECK)*.8f)*SETTINGS_NUMBER_OF_CHECKBOXES;
+	settings_wnd_sz.cx = CHECKBOX_SZ *SETTINGS_NUMBER_OF_CHECKBOXES;
 	settings_wnd_sz.cy = settings_wnd_sz.cx * 11 / 9;
 
 	//Create Settings window
@@ -259,7 +257,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		, mgr_wnd, NULL, hInstance, &startup_info.settings);
 
 	if (!settings_wnd) {
-		ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_WINDOW_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL), E_FAIL);
+		ShowLastError(RCS(SCV_LANG_ERROR_WINDOW_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL));
 		return 0;
 	}
 	KNOWN_WINDOWS.settings = settings_wnd;
