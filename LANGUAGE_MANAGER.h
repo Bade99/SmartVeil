@@ -24,10 +24,14 @@ public://TODO(fran): add lang to the rest of the classes: outmgr,duplmgr,...
 	enum LANGUAGE //TODO(fran): should probably start with 1 since NULL==0 and things can go wrong there with other objects sending with NULL code
 	{
 		ENGLISH = 0, SPANISH
-	};
+	}; //TODO(fran): we need some sort of enum constructor to check that a valid lang is passed
 
-	static BOOL IsValidLanguage(int lang) {//TODO(fran): simpler way to check for valid enum without having to add each lang here
-		return lang == LANGUAGE::ENGLISH || lang == LANGUAGE::SPANISH;
+	static LANGUAGE GetValidLanguage(int lang) {//TODO(fran): simpler way to check for valid enum without having to add each lang here
+		switch (lang) {
+		case LANGUAGE::ENGLISH: return LANGUAGE::ENGLISH;
+		case LANGUAGE::SPANISH: return LANGUAGE::SPANISH;
+		default: return LANGUAGE::ENGLISH;
+		}
 	}
 
 	/// <summary>
@@ -53,7 +57,7 @@ public://TODO(fran): add lang to the rest of the classes: outmgr,duplmgr,...
 
 	//·Updates all managed objects to the new language, all the ones added after this call will also use the new language
 	//·On success returns the new LANGID (language) //TODO(fran): should I return the previous langid? it feels more useful
-	//·On failure returns (LANGID)-2 if the language is invalid, (LANGID)-3 if failed to change the language
+	//·On failure returns (LANGID)-3 if failed to change the language
 	LANGID ChangeLanguage(LANGUAGE newLang);
 
 	//·Returns the requested string in the current language

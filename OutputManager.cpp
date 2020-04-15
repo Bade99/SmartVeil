@@ -1,11 +1,13 @@
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
-// Copyright (c) Microsoft Corporation. All rights reserved
 
 #include "OutputManager.h"
+
+#include "PSVeil.h"
+
+#include "utils.cpp"
+
+//#include <stdio.h>
+//#include "warning.h"
+
 using namespace DirectX;
 
 //TODO(fran): i need the default vertex and pixel shader for copying to the backbuffer !!!
@@ -518,7 +520,7 @@ DUPL_RETURN OUTPUTMANAGER::UpdateApplicationWindow(_In_ PTR_INFO* PointerInfo)
 
 
 #if 1
-		HDC hdcScreen = GetDC(NULL);
+		HDC hdcScreen = GetDC(NULL); //TODO(fran): why can I use any dc????
 #else
 		HDC hdcScreen = GetDC(m_WindowHandle);
 #endif

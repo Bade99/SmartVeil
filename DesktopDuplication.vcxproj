@@ -153,8 +153,13 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Common.cpp" />
+    <ClCompile Include="CommonTypes.cpp" />
     <ClCompile Include="ControlProcedures.cpp" />
-    <ClCompile Include="DesktopDuplication.cpp">
+    <ClCompile Include="DYNAMIC_WAIT.cpp" />
+    <ClCompile Include="ImagePresentation.cpp" />
+    <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Manager.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(OutDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(OutDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(OutDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -165,23 +170,29 @@
     <ClCompile Include="fmt\format.cc" />
     <ClCompile Include="LANGUAGE_MANAGER.cpp" />
     <ClCompile Include="OutputManager.cpp" />
-    <ClCompile Include="startup_and_settings.cpp" />
+    <ClCompile Include="Settings.cpp" />
+    <ClCompile Include="Startup.cpp" />
     <ClCompile Include="ThreadManager.cpp" />
     <ClCompile Include="TOOLTIP_REPO.cpp" />
     <ClCompile Include="TRAY_HANDLER.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Common.h" />
     <ClInclude Include="CommonTypes.h" />
     <ClInclude Include="ControlProcedures.h" />
     <ClInclude Include="DisplayManager.h" />
     <ClInclude Include="DuplicationManager.h" />
+    <ClInclude Include="DYNAMIC_WAIT.h" />
     <ClInclude Include="fmt\core.h" />
     <ClInclude Include="fmt\format-inl.h" />
     <ClInclude Include="fmt\format.h" />
+    <ClInclude Include="ImagePresentation.h" />
     <ClInclude Include="LANGUAGE_MANAGER.h" />
+    <ClInclude Include="Manager.h" />
     <ClInclude Include="OutputManager.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Settings.h" />
     <ClInclude Include="ThreadManager.h" />
     <ClInclude Include="TOOLTIP_REPO.h" />
     <ClInclude Include="TRAY_HANDLER.h" />

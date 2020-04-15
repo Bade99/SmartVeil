@@ -42,8 +42,6 @@ BOOL LANGUAGE_MANAGER::AddComboboxText(HWND hwnd, UINT ID, UINT stringID)
 LANGID LANGUAGE_MANAGER::ChangeLanguage(LANGUAGE newLang)
 {
 	//if (newLang == this->CurrentLanguage) return -1;//TODO: negative values wrap around to huge values, I assume not all lcid values are valid, find out if these arent
-	BOOL res = this->IsValidLanguage(newLang);
-	if (!res) return -2;
 
 	this->CurrentLanguage = newLang;
 	//LCID previousLang = SetThreadLocale(this->GetLCID(newLang));

@@ -1,13 +1,7 @@
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
-// Copyright (c) Microsoft Corporation. All rights reserved
 
-#ifndef _COMMONTYPES_H_
-#define _COMMONTYPES_H_
+#pragma once
 
+//TODO(fran): clean includes
 #include <windows.h>
 #include <d3d11.h>
 #include <dxgi1_2.h>
@@ -16,18 +10,31 @@
 #include <warning.h>
 #include <DirectXMath.h>
 
+#include <wchar.h> //swprintf_s
+
 #include "PixelShader.h"
 #include "VertexShader.h"
 
 #define NUMVERTICES 6
 #define BPP         4
 
-#define OCCLUSION_STATUS_MSG WM_USER
+#define OCCLUSION_STATUS_MSG (WM_USER+5000)
 
+// Below are lists of errors expect from Dxgi API calls when a transition event like mode change, PnpStop, PnpStart
+// desktop switch, TDR or session disconnect/reconnect. In all these cases we want the application to clean up the threads that process
+// the desktop updates and attempt to recreate them.
+// If we get an error that is not on the appropriate list then we exit the application
+
+// These are the errors we expect from general Dxgi API due to a transition
 extern HRESULT SystemTransitionsExpectedErrors[];
+
+// These are the errors we expect from IDXGIOutput1::DuplicateOutput due to a transition
 extern HRESULT CreateDuplicationExpectedErrors[];
+
+// These are the errors we expect from IDXGIOutputDuplication methods due to a transition
 extern HRESULT FrameInfoExpectedErrors[];
-extern HRESULT AcquireFrameExpectedError[];
+
+// These are the errors we expect from IDXGIAdapter::EnumOutputs methods due to outputs becoming stale during a transition
 extern HRESULT EnumOutputsExpectedErrors[];
 
 typedef _Return_type_success_(return == DUPL_RETURN_SUCCESS) enum
@@ -39,8 +46,6 @@ typedef _Return_type_success_(return == DUPL_RETURN_SUCCESS) enum
 
 _Post_satisfies_(return != DUPL_RETURN_SUCCESS)
 DUPL_RETURN ProcessFailure(_In_opt_ ID3D11Device* Device, _In_ LPCWSTR Str, _In_ LPCWSTR Title, HRESULT hr, _In_opt_z_ HRESULT* ExpectedErrors = nullptr);
-
-void DisplayMsg(_In_ LPCWSTR Str, _In_ LPCWSTR Title, HRESULT hr);
 
 //
 // Holds info about the pointer/cursor
@@ -111,5 +116,3 @@ typedef struct _VERTEX
     DirectX::XMFLOAT3 Pos;
     DirectX::XMFLOAT2 TexCoord;
 } VERTEX;
-
-#endif

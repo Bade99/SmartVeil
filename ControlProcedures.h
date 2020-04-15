@@ -1,11 +1,13 @@
 #pragma once
-#include <DirectXMath.h>
 #include <Windows.h>
 #include "utils.cpp"
 
-#define SCV_HOTKEY_REG_FAILED (WM_USER+6)
-#define SCV_HOTKEY_REG_SUCCESS (WM_USER+7)
-#define SCV_HOTKEY_RESET_TEXT (WM_USER+25) //botched
+
+#define SCV_CONTROLPROC_FIRST_MESSAGE (WM_USER+4000)
+
+#define SCV_HOTKEY_REG_FAILED (SCV_CONTROLPROC_FIRST_MESSAGE+1)
+#define SCV_HOTKEY_REG_SUCCESS (SCV_CONTROLPROC_FIRST_MESSAGE+2)
+#define SCV_HOTKEY_RESET_TEXT (SCV_CONTROLPROC_FIRST_MESSAGE+3) //botched
 
 class ControlProcedures
 {

@@ -7,16 +7,137 @@
 #include <map>
 #include <sstream>
 
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+//This file defines useful functions and definitions that are for general use, not directly dependent or related to anything specified by this program
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+
 #define Assert(assertion) if(!(assertion))*(int*)NULL=0
 
-//inline UINT ModifierToVK(UINT modifier) {
-//	UINT vk=0;
-//	if (modifier & MOD_ALT) vk = VK_MENU; //WTF?
-//	else if (modifier & MOD_CONTROL) vk = VK_CONTROL;
-//	else if (modifier & MOD_SHIFT) vk = VK_SHIFT;
-//	//MOD_WIN is reserved for the OS, MOD_NOREPEAT is a behavior change
-//	return vk;
-//}
+inline std::wstring GetLastErrorAsString()
+{
+	//Thanks https://stackoverflow.com/questions/1387064/how-to-get-the-error-message-from-the-error-code-returned-by-getlasterror
+	
+	//Get the error message, if any.
+	DWORD errorMessageID = ::GetLastError();
+	if (errorMessageID == 0)
+		return std::wstring(); //No error message has been recorded
+
+	LPWSTR messageBuffer = nullptr;
+	size_t size = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&messageBuffer, 0, NULL);
+
+	std::wstring message(messageBuffer, size);
+
+	//Free the buffer.
+	LocalFree(messageBuffer);
+
+	return message;
+}
+
+/// <summary>
+/// Retrieve information from a Version resource
+/// </summary>
+/// <param name="hLib">The module from which to obtain the version info, for current thread use NULL</param>
+/// <param name="versionID">The ID of the Version resource, aka MAKEINTRESOURCE(versionID)</param>
+/// <param name="csEntry">
+/// You can search for: 
+/// "CompanyName"
+/// "FileDescription" 
+/// "FileVersion" 
+/// "InternalName" 
+/// "LegalCopyright" 
+/// "OriginalFilename" 
+/// "ProductName" 
+/// "ProductVersion"
+/// </param>
+inline std::wstring GetVersionInfo(HMODULE hLib, UINT versionID, WCHAR* csEntry)
+//Thanks https://www.codeproject.com/Articles/8628/Retrieving-version-information-from-your-local-app
+//Code modified for wchar
+{
+	std::wstring csRet;
+
+	HRSRC hVersion = FindResource(hLib, MAKEINTRESOURCE(versionID), RT_VERSION);
+	if (hVersion)
+	{
+		HGLOBAL hGlobal = LoadResource(hLib, hVersion);
+		if (hGlobal)
+		{
+
+			LPVOID versionInfo = LockResource(hGlobal);
+			if (versionInfo)
+			{
+				DWORD vLen, langD;
+				BOOL retVal;
+
+				LPVOID retbuf = NULL;
+
+				WCHAR fileEntry[256];
+
+				swprintf(fileEntry, 256, L"\\VarFileInfo\\Translation");
+				retVal = VerQueryValue(versionInfo, fileEntry, &retbuf, (UINT *)&vLen);
+				if (retVal && vLen == 4)
+				{
+					memcpy(&langD, retbuf, 4);
+					swprintf(fileEntry, 256, L"\\StringFileInfo\\%02X%02X%02X%02X\\%s",
+						(langD & 0xff00) >> 8, langD & 0xff, (langD & 0xff000000) >> 24,
+						(langD & 0xff0000) >> 16, csEntry);
+				}
+				else {
+					swprintf(fileEntry, 256, L"\\StringFileInfo\\%04X04B0\\%s", GetUserDefaultLangID(), csEntry);
+					//swprintf(fileEntry, 256, L"\\StringFileInfo\\040904b0\\%s", csEntry);
+				}
+
+				BOOL res = VerQueryValue(versionInfo, fileEntry, &retbuf, (UINT *)&vLen);
+				if (res)
+					csRet = (wchar_t*)retbuf;
+			}
+		}
+
+		UnlockResource(hGlobal);
+		FreeResource(hGlobal);
+	}
+
+	return csRet;
+
+	//TODO(fran): instead of using the code above use this one which allows for multiple languages, we will need to check the ones it has
+	// and see if any corresponds with the current lang in LANGUAGE_MANAGER, if not look for english
+	/*
+	HRESULT hr;
+
+	// Structure used to store enumerated languages and code pages.
+	struct LANGANDCODEPAGE {
+	  WORD wLanguage;
+	  WORD wCodePage;
+	} *lpTranslate;
+
+	// Read the list of languages and code pages.
+
+	VerQueryValue(pBlock,
+				  TEXT("\\VarFileInfo\\Translation"),
+				  (LPVOID*)&lpTranslate,
+				  &cbTranslate);
+
+	// Read the file description for each language and code page.
+
+	for( i=0; i < (cbTranslate/sizeof(struct LANGANDCODEPAGE)); i++ )
+	{
+	  hr = StringCchPrintf(SubBlock, 50,
+				TEXT("\\StringFileInfo\\%04x%04x\\FileDescription"),
+				lpTranslate[i].wLanguage,
+				lpTranslate[i].wCodePage);
+		if (FAILED(hr))
+		{
+		// TODO: write error handler.
+		}
+
+	  // Retrieve file description for language and code page "i".
+	  VerQueryValue(pBlock,
+					SubBlock,
+					&lpBuffer,
+					&dwBytes);
+	}
+	*/
+}
 
 /// <summary>
 /// Transforms hotkey modifiers of the form MOD_... to their virtual key counterpart VK_...
@@ -129,9 +250,9 @@ inline void RemoveWhiteSpace(std::wstring &text) {
 /// <param name="s"></param>
 /// <param name="separator">Character that separates the Key from the Value</param>
 /// <returns></returns>
-inline std::map<std::wstring, std::wstring> mappify(std::wstring const& s, wchar_t const& separator)
+inline std::map<const std::wstring, std::wstring> mappify(std::wstring const& s, wchar_t separator)
 {
-	std::map<std::wstring, std::wstring> m;
+	std::map<const std::wstring, std::wstring> m;
 
 	std::wstring key, val;
 	std::wistringstream iss(s);
@@ -169,9 +290,6 @@ inline BOOL GetDoAnimateMinimize(VOID)
 	return ai.iMinAnimate ? TRUE : FALSE;
 }
 
-// Returns the rect of where we think the system tray is. 
-//If we can't find anything, we return a rect in the lower
-//right hand corner of the screen
 /// <summary>
 /// Returns the rect of where we think the system tray is.
 /// <para>If it can't find it, it returns a rect in the lower</para>
@@ -438,3 +556,103 @@ inline COLORREF ColorFromBrush(HBRUSH br) {
 	GetObject(br, sizeof(lb), &lb);
 	return lb.lbColor;
 }
+
+/// <summary>
+/// Returns full path to the program's exe
+/// </summary>
+inline std::wstring GetExePath() {
+	WCHAR exe_path[MAX_PATH];
+	GetModuleFileNameW(NULL, exe_path, MAX_PATH);//INFO: last param is size of buffer in TCHAR
+	if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+		//path is too long for the buffer, it must be using the \\?\ prefix
+		WCHAR long_exe_path[32767];//INFO: documentation says this max value is approximate
+		GetModuleFileNameW(NULL, long_exe_path, 32767);//TODO(fran): check whether this works or needs something extra
+		return long_exe_path;
+	}
+	return exe_path;
+}
+
+
+/// <summary>
+/// Simple hack to retrieve the size of a normal window's title area
+/// </summary>
+/// <param name="aprox_pos">Position(top-left corner) where you'll place your real window</param>
+/// <returns>Height of the title/caption area</returns>
+inline int GetBasicWindowCaptionHeight(HINSTANCE hInstance, POINT aprox_pos) {//TODO(fran): make this work for multi-monitor
+	WNDCLASSEXW wcex;
+
+	wcex.cbSize = sizeof(WNDCLASSEX);
+
+	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = [](HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {return DefWindowProc(hwnd, msg, wParam, lParam); };
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hInstance = hInstance;
+	wcex.hIcon = NULL;
+	wcex.hCursor = NULL;
+	wcex.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
+	wcex.lpszMenuName = NULL;
+	wcex.lpszClassName = L"Franco Test Class Height";
+	wcex.hIconSm = NULL;
+
+	ATOM reg_res = RegisterClassExW(&wcex);
+
+	if (!reg_res) {
+		return 0;
+	}
+
+	HWND hWnd = CreateWindowExW(NULL, L"Franco Test Class Height", L"Nothing", WS_OVERLAPPEDWINDOW
+		, aprox_pos.x, aprox_pos.y, 200, 200, nullptr, nullptr, hInstance, nullptr);
+	//INFO: for position use the same as the manager
+	//INFO: the 200, 200 is equal to getwindowrect
+
+	if (!hWnd)
+	{
+		return 0;
+	}
+
+	//ShowWindow(hWnd, nCmdShow);
+	ShowWindow(hWnd, SW_HIDE);
+	UpdateWindow(hWnd);
+
+	RECT rw, rc;
+	GetClientRect(hWnd, &rc);
+	GetWindowRect(hWnd, &rw);
+
+	//First see what the sizing border is for the bottom part
+
+	int border = ((float)(RECTWIDTH(rw) - RECTWIDTH(rc))) / 2.f;
+
+	int caption_height = RECTHEIGHT(rw) - RECTHEIGHT(rc) - border;
+
+	DestroyWindow(hWnd);
+	UnregisterClass(L"Franco Test Class Height", hInstance);
+
+	return caption_height;
+}
+
+/// <summary>
+/// Extract the first number that appears in a string
+/// </summary>
+/// <param name="str">The string that contains a number somewhere in its contents</param>
+/// <returns>The number as a string</returns>
+inline std::wstring first_number_in_string(std::wstring const & str)
+{
+https://stackoverflow.com/questions/30073839/c-extract-number-from-the-middle-of-a-string
+	std::size_t const n = str.find_first_of(L"0123456789");
+	if (n != std::wstring::npos)
+	{
+		std::size_t const m = str.find_first_not_of(L"0123456789", n);
+		return str.substr(n, m != std::string::npos ? m - n : m);
+	}
+	return std::wstring();
+}
+
+//inline UINT ModifierToVK(UINT modifier) {
+//	UINT vk=0;
+//	if (modifier & MOD_ALT) vk = VK_MENU; //WTF?
+//	else if (modifier & MOD_CONTROL) vk = VK_CONTROL;
+//	else if (modifier & MOD_SHIFT) vk = VK_SHIFT;
+//	//MOD_WIN is reserved for the OS, MOD_NOREPEAT is a behavior change
+//	return vk;
+//}
