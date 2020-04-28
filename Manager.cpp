@@ -116,8 +116,8 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance,const CUSTOM_FRAME& frame, const MAN
 	RECT windowRect;
 	GetMyClientRect(hWnd, frame, &windowRect);
 	
-	float width = RECTWIDTH(windowRect);
-	float height = RECTHEIGHT(windowRect);
+	float width = (float)RECTWIDTH(windowRect);
+	float height = (float)RECTHEIGHT(windowRect);
 
 	float paddingX = windowRect.left + width * .1f; //at .1 objects will start 10% to the side of the window
 	float paddingY = height*.114f; //at .1 there will be less than 10 objects for sure
@@ -129,7 +129,7 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance,const CUSTOM_FRAME& frame, const MAN
 	float ThresholdTextX = width * .335f;
 	float TextY = height * .14f;
 	HWND ThresholdText = CreateWindowW(L"Static",NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY | SS_CENTERIMAGE | SS_CENTER
-		, paddingX, paddingY, ThresholdTextX, TextY,hWnd,(HMENU)SCV_MANAGER_THRESHOLD_TITLE,NULL,NULL);
+		, (int)paddingX, (int)paddingY, (int)ThresholdTextX, (int)TextY,hWnd,(HMENU)SCV_MANAGER_THRESHOLD_TITLE,NULL,NULL);
 
 	//TOOLTIP_REPO::Instance().CreateToolTipForRect(hWnd, ThresholdText, SCV_LANG_MGR_THRESHOLD_TIP);
 	TOOLTIP_REPO::Instance().CreateToolTip(ThresholdText, SCV_LANG_MGR_THRESHOLD_TIP);
@@ -139,7 +139,7 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance,const CUSTOM_FRAME& frame, const MAN
 	float SliderX = ThresholdTextX;
 	float SliderY = height * .091f;
 	HWND ThresholdSlider = CreateWindowExW(0, TRACKBAR_CLASS, 0, WS_CHILD| WS_VISIBLE | TBS_NOTICKS
-		, paddingX, paddingY, SliderX, SliderY, hWnd, (HMENU)SCV_MANAGER_TOOLTIP_THRESHOLD_SLIDER, NULL, NULL);
+		, (int)paddingX, (int)paddingY, (int)SliderX, (int)SliderY, hWnd, (HMENU)SCV_MANAGER_TOOLTIP_THRESHOLD_SLIDER, NULL, NULL);
 
 	paddingY += addPaddingY+ SliderY;
 
@@ -155,14 +155,14 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance,const CUSTOM_FRAME& frame, const MAN
 
 	//float OpacityTextX = width * .165f;
 	HWND OpacityText = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_NOTIFY | SS_CENTERIMAGE | SS_CENTER
-		, paddingX, paddingY, ThresholdTextX, TextY, hWnd, (HMENU)SCV_MANAGER_OPACITY_TITLE, NULL, NULL);
+		, (int)paddingX, (int)paddingY, (int)ThresholdTextX, (int)TextY, hWnd, (HMENU)SCV_MANAGER_OPACITY_TITLE, NULL, NULL);
 
 	TOOLTIP_REPO::Instance().CreateToolTip(OpacityText, SCV_LANG_MGR_OPACITY_TIP);
 
 	paddingY += TextY * 1.6f;
 
 	HWND OpacitySlider = CreateWindowExW(0, TRACKBAR_CLASS, 0, WS_CHILD | WS_VISIBLE | TBS_NOTICKS
-		, paddingX, paddingY, SliderX, SliderY, hWnd, (HMENU)SCV_MANAGER_TOOLTIP_OPACITY_SLIDER, NULL, NULL);
+		, (int)paddingX, (int)paddingY, (int)SliderX, (int)SliderY, hWnd, (HMENU)SCV_MANAGER_TOOLTIP_OPACITY_SLIDER, NULL, NULL);
 
 	TOOLTIP_REPO::Instance().CreateToolTip(OpacitySlider, SCV_LANG_MGR_OPACITY_TIP);
 
@@ -187,7 +187,7 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance,const CUSTOM_FRAME& frame, const MAN
 	float SettingX = width * .33f;
 	float SettingY = height * .205f;
 	HWND TurnOnOff = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD //| BS_OWNERDRAW //| BS_NOTIFY
-		, SecondColumnX, paddingY, SettingX, SettingY, hWnd, (HMENU)SCV_MANAGER_TURN_ON_OFF, NULL, NULL);
+		, (int)SecondColumnX, (int)paddingY, (int)SettingX, (int)SettingY, hWnd, (HMENU)SCV_MANAGER_TURN_ON_OFF, NULL, NULL);
 	SetWindowSubclass(TurnOnOff, ControlProcedures::Instance().ButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
 	paddingY += addPaddingY + SettingY;
@@ -207,7 +207,7 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance,const CUSTOM_FRAME& frame, const MAN
 	float secretX = width*.1f;
 	float secretY = height*.1f;
 	HWND secret_button = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD //| BS_OWNERDRAW
-		, windowRect.left, windowRect.top + height-secretY, secretX, secretY, hWnd, (HMENU)SCV_MANAGER_SECRET_ABOUT, NULL, NULL);
+		, windowRect.left, windowRect.top + (int)(height-secretY), (int)secretX, (int)secretY, hWnd, (HMENU)SCV_MANAGER_SECRET_ABOUT, NULL, NULL);
 
 	SetWindowSubclass(secret_button, ControlProcedures::Instance().SecretButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
@@ -215,13 +215,13 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance,const CUSTOM_FRAME& frame, const MAN
 	//TODO(fran): decide proper placement and size
 	POINT settings_pos;
 	POINT settings_size; 
-	settings_size.x = height * .137f; 
-	settings_size.y = settings_size.x;
+	settings_size.x = (LONG)(height * .137f); 
+	settings_size.y = (LONG)(settings_size.x);
 	//settings_size.x+=2; //INFO: Trying to make the button be less of a square so it is easier for the icon to be correctly centered
 	//if ((settings_size.x % 2) != 0) settings_size.x+=1;
 	float settings_separation = height*.1f;
-	settings_pos.x = windowRect.left + width - settings_size.x - settings_separation;
-	settings_pos.y = windowRect.top + height - settings_size.y - settings_separation;
+	settings_pos.x = (int)(windowRect.left + width - settings_size.x - settings_separation);
+	settings_pos.y = (int)(windowRect.top + height - settings_size.y - settings_separation);
 	HWND Settings = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD | BS_ICON //| BS_OWNERDRAW
 		, settings_pos.x, settings_pos.y, settings_size.x, settings_size.y, hWnd, (HMENU)SCV_MANAGER_SETTINGS, hInstance, NULL);
 
@@ -285,19 +285,19 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		RECT rc;
 		GetWindowRect(hWnd, &rc);
 
-		float button_height = FRAME.caption_height;
+		float button_height = (float)FRAME.caption_height;
 		float button_width = button_height * 16.f / 9.f;
 
 		//TODO(fran): send normal WM_CLOSE and associate messages from caption buttons, having extra msgs is unnecessary
 		HWND close_button = CreateWindowW(L"Button", L"", WS_VISIBLE | WS_CHILD | WS_MAXIMIZEBOX
-			, RECTWIDTH(rc) - button_width - FRAME.right_border, 0, button_width, button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_CLOSE, hInstance, NULL);
+			, (int)(RECTWIDTH(rc) - button_width - FRAME.right_border), 0, (int)button_width, (int)button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_CLOSE, hInstance, NULL);
 		//SetWindowLongPtr(close_button, GWL_USERDATA, CROSS_ICON);
 		SetWindowSubclass(close_button, ControlProcedures::Instance().CaptionButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 		TOOLTIP_REPO::Instance().CreateToolTip(close_button, SCV_LANG_CLOSE);
 
 
 		HWND minimize_button = CreateWindowW(L"Button", L"", WS_VISIBLE | WS_CHILD | WS_MINIMIZEBOX
-			, RECTWIDTH(rc) - button_width*2 - FRAME.right_border, 0, button_width, button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_MINIMIZE, hInstance, NULL);
+			, (int)(RECTWIDTH(rc) - button_width*2 - FRAME.right_border), 0, (int)button_width, (int)button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_MINIMIZE, hInstance, NULL);
 		//SetWindowLongPtr(minimize_button, GWL_USERDATA, MINIMIZE_ICON);
 		SetWindowSubclass(minimize_button, ControlProcedures::Instance().CaptionButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 		TOOLTIP_REPO::Instance().CreateToolTip(minimize_button, SCV_LANG_MINIMIZE);
@@ -498,19 +498,19 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case TB_THUMBTRACK:
 			case TB_TOP:
 				HWND slider = (HWND)lParam;
-				float pos = (float)SendMessage(slider, TBM_GETPOS, 0, 0);
+				int pos = SendMessage(slider, TBM_GETPOS, 0, 0); //TODO(fran): why do I cast to float??
 				if (GetDlgCtrlID(slider) == SCV_MANAGER_TOOLTIP_THRESHOLD_SLIDER) {
 					//TODO(fran): doing enumchildwindows all the time is probably very expensive, we might need to keep a list of important hwnds
 					static int last_thresh_pos = -1; //TODO(fran): I'm not sure this is even better, the problem must be somewhere else
 					if(pos!= last_thresh_pos)
-						SetWindowTextW(get_child_by_id(hWnd,SCV_MANAGER_THRESHOLD_TITLE), fmt::format(RS(SCV_LANG_MGR_THRESHOLD), (int)pos).c_str()); //TODO(fran): implement my own static text control
+						SetWindowTextW(get_child_by_id(hWnd,SCV_MANAGER_THRESHOLD_TITLE), fmt::format(RS(SCV_LANG_MGR_THRESHOLD), pos).c_str()); //TODO(fran): implement my own static text control
 					thread_data.output_mgr.SetThreshold(pos/100.f);
 					last_thresh_pos = pos;
 				}
 				else if (GetDlgCtrlID(slider) == SCV_MANAGER_TOOLTIP_OPACITY_SLIDER) {
 					static int last_opac_pos = -1;
 					if (pos != last_opac_pos)
-						SetWindowTextW(get_child_by_id(hWnd, SCV_MANAGER_OPACITY_TITLE), fmt::format(RS(SCV_LANG_MGR_OPACITY), (int)pos).c_str());
+						SetWindowTextW(get_child_by_id(hWnd, SCV_MANAGER_OPACITY_TITLE), fmt::format(RS(SCV_LANG_MGR_OPACITY), pos).c_str());
 					thread_data.output_mgr.SetOpacity((100-pos) / 100.f);
 					last_opac_pos = pos;
 				}

@@ -1,6 +1,7 @@
 #pragma once
 #include <windows.h>
 #include <map>
+#include "MacroStandard.h"
 
 //Request string
 #define RS(stringID) LANGUAGE_MANAGER::Instance().RequestString(stringID)
@@ -18,21 +19,46 @@ class LANGUAGE_MANAGER
 {
 public://TODO(fran): add lang to the rest of the classes: outmgr,duplmgr,...
 	
+	//------HORRIBLE MACROS ALERT------// I'm open to cleaner solutions to implement reflection while they remain fast and simple
+
+	/// <summary>
+	/// Elements of the enum, you cant choose their values, just the name
+	/// <para> Eg. ENUM_MEMBER(SPANISH)  \ means you'll add the member SPANISH to the enum</para>
+	/// <para> ENUM_MEMBER(SPANISH = 5)  \ is NOT allowed</para>
+	/// </summary>
+	#define SCV_FOREACH_LANGUAGE(ENUM_MEMBER) \
+					ENUM_MEMBER(ENGLISH)  \
+					ENUM_MEMBER(SPANISH)  \
 	/// <summary>
 	/// All the languages supported by the application
 	/// </summary>
-	enum LANGUAGE //TODO(fran): should probably start with 1 since NULL==0 and things can go wrong there with other objects sending with NULL code
+	enum class LANGUAGE 
 	{
-		ENGLISH = 0, SPANISH
-	}; //TODO(fran): we need some sort of enum constructor to check that a valid lang is passed
+		SCV_FOREACH_LANGUAGE(SCV_GENERATE_ENUM_MEMBER)
+	};
 
-	static LANGUAGE GetValidLanguage(int lang) {//TODO(fran): simpler way to check for valid enum without having to add each lang here
+	//TODO(fran): I think I might be able to just use the contents of this string in each place, and not carry the extra load from having it on run time
+	/// <summary>
+	/// All the languages supported by the application, in string form
+	/// </summary>
+	constexpr static const wchar_t* LANGUAGE_STRING[] = { //const is not required but I feel it's clearer
+		SCV_FOREACH_LANGUAGE(SCV_GENERATE_STRING_FROM_ENUM_MEMBER)
+	};
+
+	static bool IsValidLanguage(LANGUAGE lang) {
+	#define SCV_LANG_CASE_TRUE(MEMBER) case LANGUAGE::MEMBER:return true;
+
 		switch (lang) {
-		case LANGUAGE::ENGLISH: return LANGUAGE::ENGLISH;
-		case LANGUAGE::SPANISH: return LANGUAGE::SPANISH;
-		default: return LANGUAGE::ENGLISH;
+			SCV_FOREACH_LANGUAGE(SCV_LANG_CASE_TRUE)
 		}
+		return false;
+
+	#undef SCV_LANG_CASE_TRUE
 	}
+
+	//------HORRIBLE MACROS END------//
+
+	constexpr static LANGUAGE GetDefaultLanguage() { return LANGUAGE::ENGLISH; }
 
 	/// <summary>
 	/// Retrieves the current instance of the Language Manager

@@ -69,6 +69,12 @@
     <ClInclude Include="ImagePresentation.h">
       <Filter>Header files</Filter>
     </ClInclude>
+    <ClInclude Include="Serialization.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="MacroStandard.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SmartVeil.rc">

@@ -2,8 +2,10 @@
 
 #include <Windows.h>
 #include "Settings.h"
+#include "MacroStandard.h"
+#include <string>
+#include <map>
 
-//TODO(fran): indicate what each define refers to
 /// <summary>
 /// The first id from which to send messages , each one counts up by one from this starting position
 /// </summary>
@@ -39,47 +41,40 @@
 #define MGR_SLIDER_SAFE 80
 
 
-/// <summary>
-/// All the keys to associate with the values of the MANAGER struct
-/// </summary>
-const struct MANAGER_TEXT {
-	std::wstring is_turned_on = L"is_turned_on";
-	std::wstring slider_threshold_pos = L"slider_threshold_pos";
-	std::wstring slider_opacity_pos = L"slider_opacity_pos";
-	std::wstring previous_manager_position_x = L"manager_pos_x";
-	std::wstring previous_manager_position_y = L"manager_pos_y";
-	std::wstring previous_screen_size_x = L"screen_size_x";
-	std::wstring previous_screen_size_y = L"screen_size_y";
-};
-
 /// /// <summary>
 /// All the information the manager needs to start up
 /// </summary>
 struct MANAGER {
-	BOOL is_turned_on				= TRUE; // Tells at any time if the veil is on or off
-	int slider_threshold_pos		= 80;
-	int slider_opacity_pos			= 10;
-	POINT previous_manager_position	= { LONG_MAX , LONG_MAX };
-	SIZE previous_screen_size		= { LONG_MAX, LONG_MAX };//To check that screen size didnt change and therefore the position of the manager will be good, otherwise do not use previous_manager_position
+	
+	#define SCV_FOREACH_MANAGER_MEMBER(STRUCT_MEMBER) \
+			STRUCT_MEMBER(BOOL, is_turned_on, TRUE) \
+			STRUCT_MEMBER(int, slider_threshold_pos, 80) \
+			STRUCT_MEMBER(int, slider_opacity_pos, 10)   \
+			STRUCT_MEMBER(POINT,previous_manager_position,{LONG_MAX SCV_COMMA LONG_MAX})\
+			STRUCT_MEMBER(SIZE, previous_screen_size, { LONG_MAX SCV_COMMA LONG_MAX })	\
+
+	SCV_FOREACH_MANAGER_MEMBER(SCV_GENERATE_STRUCT_MEMBER);
+
+	//is_turned_on: Tells at any time if the veil is on or off
+	//previous_screen_size: To check that screen size didnt change and therefore the position of the manager will be good, otherwise do not use previous_manager_position
+
+	//TODO(fran): move out of SETTINGS struct? It's pretty big: size = number of elements * 4(size of pointer)
+	/// <summary>
+	/// All the variable names contained in the struct, in string form
+	/// </summary>
+	constexpr static const wchar_t* MANAGER_STRING[] = { //const is not required but I feel it's clearer
+			SCV_FOREACH_MANAGER_MEMBER(SCV_GENERATE_STRING_FROM_STRUCT_MEMBER)
+	};
 
 	/// <summary>
 	/// Converts a SETTINGS objetc into a proper string map with key value pairs, where the key is the variable name as a string
 	/// <para>and the value is the variable value also converted to string</para>
 	/// </summary>
 	std::map<const std::wstring, std::wstring> to_wstring_map() const {
-		const MANAGER_TEXT var_in_text;
 		std::map<const std::wstring, std::wstring> stringed_struct;
-
-		//TODO(fran): MACROSSS
-		stringed_struct[var_in_text.is_turned_on] = std::to_wstring(is_turned_on);
-		stringed_struct[var_in_text.slider_threshold_pos] = std::to_wstring(slider_threshold_pos);
-		stringed_struct[var_in_text.slider_opacity_pos] = std::to_wstring(slider_opacity_pos);
-		stringed_struct[var_in_text.previous_manager_position_x] = std::to_wstring(previous_manager_position.x);
-		stringed_struct[var_in_text.previous_manager_position_y] = std::to_wstring(previous_manager_position.y);
-		stringed_struct[var_in_text.previous_screen_size_x] = std::to_wstring(previous_screen_size.cx);
-		stringed_struct[var_in_text.previous_screen_size_y] = std::to_wstring(previous_screen_size.cy);
-
-		return std::move(stringed_struct);
+		int i = -1;
+		SCV_FOREACH_MANAGER_MEMBER(i++; stringed_struct[MANAGER_STRING[i]] = SCV_SERIALIZE_STRUCT_MEMBER);
+		return stringed_struct;
 	}
 
 	//INFO IMPORTANT: First load the structs, then you create the objects that need those structs, this way if one structs needs others to be created you
@@ -87,32 +82,26 @@ struct MANAGER {
 
 	//TODO(fran): make this a constructor?
 	MANAGER& from_wstring_map(std::map<const std::wstring, std::wstring> stringed_struct,const SETTINGS& settings /*This will need to be taken out if we make a superclass*/) {
-		MANAGER_TEXT var_in_text;
-		std::wstring value;
-		//TODO(fran): MACROS
-		try { 
-			
-			switch (settings.show_veil_on_startup) {
-			case VEIL_ON_STARTUP::YES: //TODO(fran): using VEIL_ON_STARTUP (create namespaces)
-				is_turned_on = TRUE;
-				break;
-			case VEIL_ON_STARTUP::NO:
-				is_turned_on = FALSE;
-				break;
-			case VEIL_ON_STARTUP::REMEMBER_LAST_STATE:
-			default:
-				value = stringed_struct.at(var_in_text.is_turned_on);
-				is_turned_on = stoi(value);
-				break;
-			}
+		
+		std::wstring potential_string_value;
+		int i = 0;
+		SCV_FOREACH_MANAGER_MEMBER(potential_string_value = stringed_struct[MANAGER_STRING[i]]; i++; SCV_DESERIALIZE_STRUCT_MEMBER); //this ; is not needed but is good to maintain syntax
+		
+		switch (settings.show_veil_on_startup) {
+		case VEIL_ON_STARTUP::YES: //TODO(fran): using VEIL_ON_STARTUP (create namespaces)
+			is_turned_on = TRUE;
+			break;
+		case VEIL_ON_STARTUP::NO:
+			is_turned_on = FALSE;
+			break;
+		case VEIL_ON_STARTUP::REMEMBER_LAST_STATE:
+		default:
+			//Do nothing, just stay with what the variable already has
+			break;
+		}
+		SanitizeSlider(slider_threshold_pos, settings.reduce_dangerous_slider_values);
+		SanitizeSlider(slider_opacity_pos, settings.reduce_dangerous_slider_values);
 
-		} catch(std::out_of_range& o){ } catch(std::invalid_argument& i){ }
-		try { value = stringed_struct.at(var_in_text.slider_threshold_pos); slider_threshold_pos = SanitizeSlider(stoi(value),settings.reduce_dangerous_slider_values);} catch(std::out_of_range& o){ } catch(std::invalid_argument& i){ }
-		try { value = stringed_struct.at(var_in_text.slider_opacity_pos); slider_opacity_pos = SanitizeSlider(stoi(value), settings.reduce_dangerous_slider_values);} catch(std::out_of_range& o){ } catch(std::invalid_argument& i){ }
-		try { value = stringed_struct.at(var_in_text.previous_manager_position_x); previous_manager_position.x = stol(value);} catch(std::out_of_range& o){ } catch(std::invalid_argument& i){ }
-		try { value = stringed_struct.at(var_in_text.previous_manager_position_y); previous_manager_position.y = stol(value);} catch(std::out_of_range& o){ } catch(std::invalid_argument& i){ }
-		try { value = stringed_struct.at(var_in_text.previous_screen_size_x); previous_screen_size.cx = stol(value);} catch(std::out_of_range& o){ } catch(std::invalid_argument& i){ }
-		try { value = stringed_struct.at(var_in_text.previous_screen_size_y); previous_screen_size.cy = stol(value);} catch(std::out_of_range& o){ } catch(std::invalid_argument& i){ }
 		return *this;
 	}
 
@@ -120,11 +109,10 @@ private:
 	/// <summary>
 	/// Makes sure the slider value is between bounds and fixes it if not
 	/// </summary>
-	inline int SanitizeSlider(int val, bool reduce_dangerous) {
+	inline void SanitizeSlider(int& val, bool reduce_dangerous) {
 		if (val > MGR_SLIDER_MAX || val < MGR_SLIDER_MIN)
 			val = (MGR_SLIDER_MAX - MGR_SLIDER_MIN) / 2;
 		if (reduce_dangerous && val > MGR_SLIDER_DANGEROUS) val = MGR_SLIDER_SAFE;
-		return val;
 	}
 };
 

@@ -52,8 +52,8 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	RECT rec;
 	GetMyClientRect(hwnd,frame, &rec);
 
-	float width = RECTWIDTH(rec);
-	float height = RECTHEIGHT(rec);
+	float width = (float)RECTWIDTH(rec);
+	float height = (float)RECTHEIGHT(rec);
 
 	float paddingX = rec.left + width * .05f;
 	float paddingY = height * .01f;
@@ -63,10 +63,10 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	float TextY = height * .08f;//default text height
 
 	POINT checkbox_text;
-	checkbox_text.x = width * .9f;
-	checkbox_text.y = TextY;
+	checkbox_text.x = (LONG)(width * .9f);
+	checkbox_text.y = (LONG)TextY;
 	HWND manager_on_startup = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX
-		, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_MANAGER_ON_STARTUP, hInstance, NULL);
+		, (int)paddingX, (int)paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_MANAGER_ON_STARTUP, hInstance, NULL);
 	AWT(manager_on_startup, SCV_LANG_SETTINGS_SHOW_MGR);
 	//SetWindowLongPtr(manager_on_startup, GWL_USERDATA, CHECKBOX_ICON);
 	SetWindowSubclass(manager_on_startup, ControlProcedures::Instance().CheckboxProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
@@ -76,7 +76,7 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	paddingY += checkbox_text.y + addPaddingY;
 
 	HWND show_tray = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX
-		, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_SHOW_TRAY, hInstance, NULL);
+		, (int)paddingX, (int)paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_SHOW_TRAY, hInstance, NULL);
 	AWT(show_tray, SCV_LANG_SETTINGS_SHOW_TRAY);
 	//SetWindowLongPtr(show_tray, GWL_USERDATA, CHECKBOX_ICON);
 	SetWindowSubclass(show_tray, ControlProcedures::Instance().CheckboxProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
@@ -87,7 +87,7 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 
 	//TODO(fran): move this guy below, after we already said the on startup == on application startup
 	HWND dangerous_slider = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX
-		, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_DANGEROUS_SLIDER, hInstance, NULL);
+		, (int)paddingX, (int)paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_DANGEROUS_SLIDER, hInstance, NULL);
 	AWT(dangerous_slider, SCV_LANG_SETTINGS_REDUCE_SLIDER);
 	//SetWindowLongPtr(dangerous_slider, GWL_USERDATA, CHECKBOX_ICON);
 	SetWindowSubclass(dangerous_slider, ControlProcedures::Instance().CheckboxProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
@@ -100,7 +100,7 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	paddingY += checkbox_text.y + addPaddingY;
 
 	HWND remember_manager_pos = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX
-		, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_MANAGER_POS, hInstance, NULL);
+		, (int)paddingX, (int)paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_MANAGER_POS, hInstance, NULL);
 	AWT(remember_manager_pos, SCV_LANG_SETTINGS_REMEMBER_MGR_POS);
 	//SetWindowLongPtr(remember_manager_pos, GWL_USERDATA, CHECKBOX_ICON);
 	SetWindowSubclass(remember_manager_pos, ControlProcedures::Instance().CheckboxProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
@@ -110,7 +110,7 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	paddingY += checkbox_text.y + addPaddingY;
 
 	HWND show_tooltips = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX
-		, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_SHOW_TOOLTIPS, hInstance, NULL);
+		, (int)paddingX, (int)paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_SHOW_TOOLTIPS, hInstance, NULL);
 	AWT(show_tooltips, SCV_LANG_SETTINGS_SHOW_TOOLTIP);
 	//SetWindowLongPtr(show_tooltips, GWL_USERDATA, CHECKBOX_ICON);
 	SetWindowSubclass(show_tooltips, ControlProcedures::Instance().CheckboxProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
@@ -122,7 +122,7 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	paddingY += checkbox_text.y + addPaddingY;
 
 	HWND start_with_windows = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD | BS_AUTOCHECKBOX
-		, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_START_WITH_WINDOWS, hInstance, NULL);
+		, (int)paddingX, (int)paddingY, checkbox_text.x, checkbox_text.y, hwnd, (HMENU)SCV_SETTINGS_START_WITH_WINDOWS, hInstance, NULL);
 	AWT(start_with_windows, SCV_LANG_SETTINGS_START_WITH_WIN);
 	//SetWindowLongPtr(start_with_windows, GWL_USERDATA, CHECKBOX_ICON);
 	SetWindowSubclass(start_with_windows, ControlProcedures::Instance().CheckboxProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
@@ -132,19 +132,19 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	paddingY += checkbox_text.y + addPaddingY;
 
 	POINT veil_on_startup_text;
-	veil_on_startup_text.x = width * .50f;
-	veil_on_startup_text.y = TextY;
+	veil_on_startup_text.x = (LONG)(width * .50f);
+	veil_on_startup_text.y = (LONG)TextY;
 	//TODO(fran): proper static control text alignment
 	HWND veil_on_startup = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_CENTERIMAGE
-		, paddingX, paddingY, veil_on_startup_text.x, veil_on_startup_text.y, hwnd, NULL, NULL, NULL);
+		, (int)paddingX, (int)paddingY, veil_on_startup_text.x, veil_on_startup_text.y, hwnd, NULL, NULL, NULL);
 	AWT(veil_on_startup, SCV_LANG_SETTINGS_TURN_ON);
 
 	POINT combobox_text;
-	combobox_text.x = width * .315f;
+	combobox_text.x = (LONG)(width * .315f);
 	combobox_text.y = veil_on_startup_text.y;
 
 	HWND veil_on_startup_combo = CreateWindowW(L"ComboBox", NULL, WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST | WS_TABSTOP
-		, paddingX + veil_on_startup_text.x*1.05f, paddingY, combobox_text.x, combobox_text.y, hwnd, (HMENU)SCV_SETTINGS_VEIL_STARTUP_COMBO, hInstance, NULL);
+		, (int)(paddingX + veil_on_startup_text.x*1.05f), (int)paddingY, combobox_text.x, combobox_text.y, hwnd, (HMENU)SCV_SETTINGS_VEIL_STARTUP_COMBO, hInstance, NULL);
 
 	ACT(veil_on_startup_combo, VEIL_ON_STARTUP::YES, SCV_LANG_SETTINGS_TURN_ON_YES);//INFO(fran):this values MUST be lined up with LANGUAGE enum
 	ACT(veil_on_startup_combo, VEIL_ON_STARTUP::NO, SCV_LANG_SETTINGS_TURN_ON_NO);
@@ -156,18 +156,18 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	paddingY += combobox_text.y + addPaddingY;
 
 	POINT language_text;
-	language_text.x = width * .25f;
-	language_text.y = TextY;
+	language_text.x = (LONG)(width * .25f);
+	language_text.y = (LONG)TextY;
 	HWND LanguageText = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_CENTERIMAGE
-		, paddingX, paddingY, language_text.x, language_text.y, hwnd, NULL, NULL, NULL);
+		, (int)paddingX, (int)paddingY, language_text.x, language_text.y, hwnd, NULL, NULL, NULL);
 	AWT(LanguageText, SCV_LANG_SETTINGS_LANG);
 
 	HWND language_combo = CreateWindowW(L"ComboBox", NULL, WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST | WS_TABSTOP
-		, paddingX + language_text.x*1.1f, paddingY, combobox_text.x, combobox_text.y, hwnd, (HMENU)SCV_SETTINGS_LANG_COMBO, hInstance, NULL);
+		, (int)(paddingX + language_text.x*1.1f), (int)paddingY, combobox_text.x, combobox_text.y, hwnd, (HMENU)SCV_SETTINGS_LANG_COMBO, hInstance, NULL);
 
-	SendMessageW(language_combo, CB_ADDSTRING, LANGUAGE_MANAGER::LANGUAGE::ENGLISH, (LPARAM)L"English");//INFO(fran):this values MUST be lined up with LANGUAGE enum
-	SendMessageW(language_combo, CB_ADDSTRING, LANGUAGE_MANAGER::LANGUAGE::SPANISH, (LPARAM)L"Español");//INFO: this strings will not change with langs, each lang will be written like it should
-	SendMessageW(language_combo, CB_SETCURSEL, settings.language, 0);
+	SendMessageW(language_combo, CB_ADDSTRING, (WPARAM)LANGUAGE_MANAGER::LANGUAGE::ENGLISH, (LPARAM)L"English");//INFO(fran):this values MUST be lined up with LANGUAGE enum
+	SendMessageW(language_combo, CB_ADDSTRING, (WPARAM)LANGUAGE_MANAGER::LANGUAGE::SPANISH, (LPARAM)L"Español");//INFO: this strings will not change with langs, each lang will be written like it should
+	SendMessageW(language_combo, CB_SETCURSEL, (WPARAM)settings.language, 0);
 	//SetWindowLongPtr(language_combo, GWL_USERDATA, COMBO_ICON);
 	SetWindowSubclass(language_combo, ControlProcedures::Instance().ComboProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 
@@ -176,7 +176,7 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	//TODO(fran): will this be a shortcut to turn the veil on and off, or to open smart veil manager??
 	//			  or do I make two shortcuts
 	HWND Hotkey_text = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD | SS_CENTERIMAGE
-		, paddingX, paddingY, checkbox_text.x, checkbox_text.y, hwnd, NULL, NULL, NULL);
+		, (int)paddingX, (int)paddingY, checkbox_text.x, checkbox_text.y, hwnd, NULL, NULL, NULL);
 	AWT(Hotkey_text, SCV_LANG_SETTINGS_SHORTCUT);
 	paddingY += checkbox_text.y + addPaddingY;
 
@@ -187,10 +187,10 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	InitCommonControlsEx(&icex); // this loads the Hot Key control class.
 
 	POINT hotkey_value_text;
-	hotkey_value_text.x = width * .6f;
-	hotkey_value_text.y = TextY;
+	hotkey_value_text.x = (LONG)(width * .6f);
+	hotkey_value_text.y = (LONG)(TextY);
 	HWND HotkeyValue = CreateWindowEx(0, HOTKEY_CLASS, TEXT(""), WS_CHILD | WS_VISIBLE
-		, paddingX, paddingY, hotkey_value_text.x, hotkey_value_text.y, hwnd, (HMENU)SCV_SETTINGS_HOTKEY, NULL, NULL);
+		, (int)paddingX, (int)paddingY, hotkey_value_text.x, hotkey_value_text.y, hwnd, (HMENU)SCV_SETTINGS_HOTKEY, NULL, NULL);
 	//TODO(fran): test whether the hotkey string will change automatically depending on the lang or how to do it
 	paddingY += hotkey_value_text.y + addPaddingY;
 
@@ -217,7 +217,7 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 			SendMessageW(HotkeyValue, SCV_HOTKEY_REG_FAILED, 0, 0);
 			//Convert virtual key+modifier into string
 			//http://cottonvibes.blogspot.com/2010/11/virtual-key-code-to-string.html
-			std::wstring HotkeyStr = HotkeyString(settings.hotkey.mods, settings.hotkey.vk);
+			std::wstring HotkeyStr = HotkeyString((WORD)settings.hotkey.mods, (BYTE)settings.hotkey.vk); //TODO(fran): do this conversions mean I originally created the struct with the wrong types?
 			std::wstring hotname = RS(SCV_LANG_SETTINGS_SHORTCUT_REG_FAIL_1);
 			hotname += L" " + HotkeyStr + L"\n" + RS(SCV_LANG_SETTINGS_SHORTCUT_REG_FAIL_2);
 			MessageBoxW(GetWindow(hwnd, GW_OWNER), hotname.c_str(), RCS(SCV_LANG_ERROR_SMARTVEIL), MB_OK | MB_ICONEXCLAMATION);
@@ -233,16 +233,16 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 		// Set the default hot key for this window. 
 		SendMessage(HotkeyValue,
 			HKM_SETHOTKEY,
-			MAKEWORD(settings.hotkey.vk, HotkeyModifiersToHotkeyControlModifiers(settings.hotkey.mods)),
+			MAKEWORD(((WORD)settings.hotkey.vk), HotkeyModifiersToHotkeyControlModifiers(settings.hotkey.mods)),
 			0);
 	}
 
 	//TODO(fran): do we make this the floppy icon?
 	POINT save_text;
-	save_text.x = width * .25f;
-	save_text.y = TextY;
+	save_text.x = (LONG)(width * .25f);
+	save_text.y = (LONG)TextY;
 	HWND Save = CreateWindowW(L"Button", NULL, WS_VISIBLE | WS_CHILD //| BS_OWNERDRAW //| BS_NOTIFY
-		, rec.left + width - save_text.x - paddingX, paddingY, save_text.x, save_text.y, hwnd, (HMENU)SCV_SETTINGS_SAVE, NULL, NULL);
+		, (int)(rec.left + width - save_text.x - paddingX), (int)paddingY, save_text.x, save_text.y, hwnd, (HMENU)SCV_SETTINGS_SAVE, NULL, NULL);
 	AWT(Save, SCV_LANG_SETTINGS_SAVE);
 
 	paddingY += save_text.y + addPaddingY;
@@ -251,13 +251,13 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 
 	//Basic update counter
 	POINT UpdateCounterSize = { MS_UPDATE ? (LONG)(width * .2f) : (LONG)(width * .1f) ,(LONG)(height * .08f) };
-	HWND UpdateCounter = CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD
-		, rec.left, rec.top + height - UpdateCounterSize.y, UpdateCounterSize.x, UpdateCounterSize.y, hwnd, (HMENU)SCV_SETTINGS_UPDATE_COUNTER_TEXT, NULL, NULL);
+	CreateWindowW(L"Static", NULL, WS_VISIBLE | WS_CHILD
+		, rec.left, (int)(rec.top + height - UpdateCounterSize.y), UpdateCounterSize.x, UpdateCounterSize.y, hwnd, (HMENU)SCV_SETTINGS_UPDATE_COUNTER_TEXT, NULL, NULL);
 
 #ifdef _DEBUG
 	POINT UpdateCounterUnitSize = { (LONG)(width *.08f),(LONG)(height*.1f) };
-	HWND UpdateCounterUnit = CreateWindowW(L"Static", MS_UPDATE ? L"ms" : L"fps", WS_VISIBLE | WS_CHILD
-		, rec.left + UpdateCounterSize.x, rec.top + height - UpdateCounterSize.y, UpdateCounterUnitSize.x, UpdateCounterUnitSize.y, hwnd, NULL, NULL, NULL);
+	CreateWindowW(L"Static", MS_UPDATE ? L"ms" : L"fps", WS_VISIBLE | WS_CHILD
+		, rec.left + UpdateCounterSize.x, (int)(rec.top + height - UpdateCounterSize.y), UpdateCounterUnitSize.x, UpdateCounterUnitSize.y, hwnd, NULL, NULL, NULL);
 #endif
 
 	//Font set-up
@@ -404,8 +404,8 @@ inline void SaveCurrentValidSettings(HWND settings_window, SETTINGS* current_set
 	current_settings->show_tray_icon = isChecked(GetDlgItem(settings_window, SCV_SETTINGS_SHOW_TRAY));
 	current_settings->start_with_windows = isChecked(GetDlgItem(settings_window, SCV_SETTINGS_START_WITH_WINDOWS));
 
-	WORD new_hotkey = SendDlgItemMessage(settings_window, SCV_SETTINGS_HOTKEY, HKM_GETHOTKEY, 0, 0);
-	BYTE new_modifs = HotkeyControlModifiersToHotkeyModifiers(HIBYTE(new_hotkey));
+	WORD new_hotkey = (WORD)SendDlgItemMessage(settings_window, SCV_SETTINGS_HOTKEY, HKM_GETHOTKEY, 0, 0);
+	WORD new_modifs = HotkeyControlModifiersToHotkeyModifiers(HIBYTE(new_hotkey));
 	BYTE new_vk = LOBYTE(new_hotkey);
 
 	current_settings->hotkey.mods = new_modifs;
@@ -421,14 +421,14 @@ void RestoreCurrentValidSettingsToControls(HWND settings_window, const SETTINGS&
 
 	if (settings.hotkey.vk) {
 		//If what is written in the hotkey is different from what currentvalidmod/vk has then reset to the valid ones (if not null)
-		WORD hotkey_on_control = SendDlgItemMessage(settings_window, SCV_SETTINGS_HOTKEY, HKM_GETHOTKEY, 0, 0);
-		BYTE modifs_on_control = HotkeyControlModifiersToHotkeyModifiers(HIBYTE(hotkey_on_control));
+		WORD hotkey_on_control = (WORD)SendDlgItemMessage(settings_window, SCV_SETTINGS_HOTKEY, HKM_GETHOTKEY, 0, 0);
+		WORD modifs_on_control = HotkeyControlModifiersToHotkeyModifiers(HIBYTE(hotkey_on_control));
 		BYTE vk_on_control = LOBYTE(hotkey_on_control);
 		if (settings.hotkey.mods != modifs_on_control || settings.hotkey.vk != vk_on_control)
 			SendDlgItemMessage(settings_window, SCV_SETTINGS_HOTKEY, SCV_HOTKEY_RESET_TEXT, (WPARAM)settings.hotkey.vk, (LPARAM)settings.hotkey.mods);
 	}
 
-	SendDlgItemMessage(settings_window, SCV_SETTINGS_LANG_COMBO, CB_SETCURSEL, settings.language, 0);
+	SendDlgItemMessage(settings_window, SCV_SETTINGS_LANG_COMBO, CB_SETCURSEL, (WPARAM)settings.language, 0);
 	SendDlgItemMessage(settings_window, SCV_SETTINGS_VEIL_STARTUP_COMBO, CB_SETCURSEL, settings.show_veil_on_startup, 0);
 
 	SendDlgItemMessage(settings_window, SCV_SETTINGS_DANGEROUS_SLIDER, BM_SETCHECK, settings.reduce_dangerous_slider_values ? BST_CHECKED : BST_UNCHECKED, 0);
@@ -485,11 +485,11 @@ LRESULT CALLBACK SettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		RECT rc;
 		GetWindowRect(hWnd, &rc);
 
-		float button_height = FRAME.caption_height;
+		float button_height = (float)FRAME.caption_height;
 		float button_width = button_height * 16.f / 9.f;
 
 		HWND close_button = CreateWindowW(L"Button", L"", WS_VISIBLE | WS_CHILD | WS_MAXIMIZEBOX
-			, RECTWIDTH(rc) - button_width - FRAME.right_border, 0, button_width, button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_CLOSE, hInstance, NULL);
+			, (int)(RECTWIDTH(rc) - button_width - FRAME.right_border), 0, (int)button_width, (int)button_height, hWnd, (HMENU)SCV_CUSTOMFRAME_CLOSE, hInstance, NULL);
 		//SetWindowLongPtr(close_button, GWL_USERDATA, CROSS_ICON);
 		SetWindowSubclass(close_button, ControlProcedures::Instance().CaptionButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 		TOOLTIP_REPO::Instance().CreateToolTip(close_button, SCV_LANG_CLOSE);

@@ -25,15 +25,15 @@ _KNOWN_WINDOWS KNOWN_WINDOWS; //DEFINITION OF STATIC VARIABLE
 //	|	|				|				|	|
 //	-----------------------------------------
 
+//TODO(fran): set lang at startup from WinMain instead of settings?
+
 /// <summary>
 /// Program entry point, lot's of setup happens here:
 /// <para>-Checking no other instance of the program is running on this session</para>
 /// <para>-Loading startup info</para>
-/// <para>-Language Manager setup</para>
-/// <para>-Tooltip Repo setup</para>
-/// <para>-Mutexes for working with veil's display output thread and starting its thread</para>
 /// <para>-Custom window classes</para>
-/// <para>-Clean when program ends</para>
+/// <para>-Control colors setup</para>
+/// <para>-Cleaning and saving at application end</para>
 /// </summary>
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ INT nCmdShow)
 {
@@ -174,10 +174,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 
 #define SETTINGS_NUMBER_OF_CHECKBOXES 30.f //This scales both mgr and settings windows
-	const float CHECKBOX_SZ = ((float)GetSystemMetrics(SM_CXMENUCHECK))*.8f; //Size of one of our checkboxes that we use for determining window size
+	const float CHECKBOX_SZ = GetSystemMetrics(SM_CXMENUCHECK)*.8f; //Size of one of our checkboxes that we use for determining window size
 	SIZE mgr_wnd_sz; //TODO(fran): make this wnd more compact, and the same for its controls
-	mgr_wnd_sz.cx = CHECKBOX_SZ * (SETTINGS_NUMBER_OF_CHECKBOXES*16.f / 9.f); 
-	mgr_wnd_sz.cy = ((float)mgr_wnd_sz.cx) * 8.f / 16.f;
+	mgr_wnd_sz.cx = (LONG)(CHECKBOX_SZ * (SETTINGS_NUMBER_OF_CHECKBOXES*16.f / 9.f)); 
+	mgr_wnd_sz.cy = (LONG)(mgr_wnd_sz.cx * 8.f / 16.f);
 	//SUPERTODO(fran): I have no idea why on virtual machine with width to minimum the window starts to stretch and position is wrong
 	//TODO(fran): what we can do is in case this values are bigger than the screen then we use the other method
 
@@ -254,8 +254,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		ShowWindow(mgr_wnd, SW_HIDE);
 
 	SIZE settings_wnd_sz;
-	settings_wnd_sz.cx = CHECKBOX_SZ *SETTINGS_NUMBER_OF_CHECKBOXES;
-	settings_wnd_sz.cy = settings_wnd_sz.cx * 11 / 9;
+	settings_wnd_sz.cx = (LONG)(CHECKBOX_SZ *SETTINGS_NUMBER_OF_CHECKBOXES);
+	settings_wnd_sz.cy = (LONG)(settings_wnd_sz.cx * 11.f / 9.f);
 
 	//Create Settings window
 	HWND settings_wnd = CreateWindowExW(WS_EX_TOPMOST, settings_class.c_str(), NULL,

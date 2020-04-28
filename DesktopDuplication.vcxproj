@@ -85,6 +85,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(OutDir)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -120,6 +122,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>$(OutDir)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
@@ -189,9 +193,11 @@
     <ClInclude Include="fmt\format.h" />
     <ClInclude Include="ImagePresentation.h" />
     <ClInclude Include="LANGUAGE_MANAGER.h" />
+    <ClInclude Include="MacroStandard.h" />
     <ClInclude Include="Manager.h" />
     <ClInclude Include="OutputManager.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Serialization.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="ThreadManager.h" />
     <ClInclude Include="TOOLTIP_REPO.h" />

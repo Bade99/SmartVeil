@@ -44,7 +44,8 @@ DWORD WINAPI WorkerThread(void* Param) {
 	double CounterVal;
 #endif
 
-	while (WaitForSingleObject(data->next_frame_mutex, INFINITE) == WAIT_OBJECT_0) {
+	while (WaitForSingleObject(data->next_frame_mutex, INFINITE) == WAIT_OBJECT_0) { //TODO(fran): can we remove the mutex? maybe do thread 
+																					 //creation and destruction each time the veil gets turned on or off
 
 		if (data->terminate) {//TODO(fran): this is a bit botched
 			//TODO(fran): cleanup of the other threads?

@@ -288,6 +288,7 @@ inline void RemoveWhiteSpace(std::wstring &text) {
 
 /// <summary>
 /// Creates a map with Key-Value pairs
+/// <para>If any whitespace is found it is removed</para>
 /// </summary>
 /// <param name="s"></param>
 /// <param name="separator">Character that separates the Key from the Value</param>
@@ -301,7 +302,7 @@ inline std::map<const std::wstring, std::wstring> mappify(std::wstring const& s,
 
 	while (std::getline(std::getline(iss, key, separator) >> std::ws, val)) {
 		RemoveWhiteSpace(key);
-		RemoveWhiteSpace(val);//TODO(fran): it seems like the string to int/other functions already check for whitespace, do we take this one out?
+		RemoveWhiteSpace(val);
 		m[key] = val;
 	}
 
@@ -440,12 +441,12 @@ inline void GetTrayWndRect(LPRECT lpTrayRect)
 /// <param name="milliseconds">Duration of the animation</param>
 /// <returns></returns>
 inline void WindowToTray(HWND hWnd, POINT from, POINT to, int milliseconds) {
-	double frametime = (1. / 120.)*1000.; //TODO(fran): this should be 2x monitor refresh rate
+	float frametime = (1.f / 120.f)*1000.f; //TODO(fran): this should be 2x monitor refresh rate
 	float frames = milliseconds / frametime;
 	RECT rc = { from.x,from.y,to.x,to.y };
 	SIZE offset;
-	offset.cx = RECTWIDTH(rc) / frames;
-	offset.cy = RECTHEIGHT(rc) / frames;
+	offset.cx = (LONG)(RECTWIDTH(rc) / frames);
+	offset.cy = (LONG)(RECTHEIGHT(rc) / frames);
 	POINT sign;
 	sign.x = (from.x >= to.x) ? -1 : 1;
 	sign.y = (from.y >= to.y) ? -1 : 1;
@@ -458,7 +459,7 @@ inline void WindowToTray(HWND hWnd, POINT from, POINT to, int milliseconds) {
 	SetWindowLong(hWnd,	GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
 
 	for (int i = 1; i <= frames; i++) {
-		SetLayeredWindowAttributes(hWnd, NULL, (255 * (100 - alphaChange * i)) / 100, LWA_ALPHA);
+		SetLayeredWindowAttributes(hWnd, NULL, (BYTE)((255 * (100 - alphaChange * i)) / 100), LWA_ALPHA);
 		SetWindowPos(hWnd, NULL, from.x + sign.x*offset.cx*i, from.y + sign.y*offset.cy*i, 0, 0, SWP_NOZORDER | SWP_NOREDRAW | SWP_NOSIZE);
 		Sleep((int)floor(frametime));//good enough
 	}
@@ -479,12 +480,12 @@ inline void WindowToTray(HWND hWnd, POINT from, POINT to, int milliseconds) {
 /// <param name="to">Window destination, aka the top left corner of where the window was before minimizing, or wherever you want</param>
 /// <param name="milliseconds">Duration of the animation</param>
 inline void TrayToWindow(HWND hWnd, POINT from, POINT to, int milliseconds) {
-	double frametime = (1. / 120.)*1000.; //TODO(fran): this should be 2x monitor refresh rate
+	float frametime = (1.f / 120.f)*1000.f; //TODO(fran): this should be 2x monitor refresh rate
 	float frames = milliseconds / frametime;
 	RECT rc = { from.x,from.y,to.x,to.y };
 	SIZE offset;
-	offset.cx = RECTWIDTH(rc) / frames;
-	offset.cy = RECTHEIGHT(rc) / frames;
+	offset.cx = (LONG)(RECTWIDTH(rc) / frames);
+	offset.cy = (LONG)(RECTHEIGHT(rc) / frames);
 	POINT sign;
 	sign.x = (from.x >= to.x) ? -1 : 1;
 	sign.y = (from.y >= to.y) ? -1 : 1;
@@ -496,7 +497,7 @@ inline void TrayToWindow(HWND hWnd, POINT from, POINT to, int milliseconds) {
 	ShowWindow(hWnd, SW_SHOW);
 
 	for (int i = 1; i <= frames; i++) {
-		SetLayeredWindowAttributes(hWnd, NULL, (255 * (alphaChange * i)) / 100, LWA_ALPHA);
+		SetLayeredWindowAttributes(hWnd, NULL, (BYTE)((255 * (alphaChange * i)) / 100), LWA_ALPHA);
 		SetWindowPos(hWnd, NULL, from.x + sign.x*offset.cx*i, from.y + sign.y*offset.cy*i, 0, 0, SWP_NOZORDER | SWP_NOREDRAW | SWP_NOSIZE);
 		Sleep((int)floor(frametime));//good enough
 	}
@@ -663,7 +664,7 @@ inline int GetBasicWindowCaptionHeight(HINSTANCE hInstance, POINT aprox_pos) {//
 
 	//First see what the sizing border is for the bottom part
 
-	int border = ((float)(RECTWIDTH(rw) - RECTWIDTH(rc))) / 2.f;
+	int border = (int)((RECTWIDTH(rw) - RECTWIDTH(rc)) / 2.f);
 
 	int caption_height = RECTHEIGHT(rw) - RECTHEIGHT(rc) - border;
 
@@ -680,7 +681,7 @@ inline int GetBasicWindowCaptionHeight(HINSTANCE hInstance, POINT aprox_pos) {//
 /// <returns>The number as a string</returns>
 inline std::wstring first_number_in_string(std::wstring const & str)
 {
-https://stackoverflow.com/questions/30073839/c-extract-number-from-the-middle-of-a-string
+//Thanks to https://stackoverflow.com/questions/30073839/c-extract-number-from-the-middle-of-a-string
 	std::size_t const n = str.find_first_of(L"0123456789");
 	if (n != std::wstring::npos)
 	{
