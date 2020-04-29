@@ -36,13 +36,10 @@ _KNOWN_WINDOWS KNOWN_WINDOWS; //DEFINITION OF STATIC VARIABLE
 /// <para>-Control colors setup</para>
 /// <para>-Cleaning and saving at application end</para>
 /// </summary>
-int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ INT nCmdShow)
+int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*/, _In_ LPSTR /*lpCmdLine*/, _In_ INT nCmdShow)
 {
-	UNREFERENCED_PARAMETER(hPrevInstance);
-	UNREFERENCED_PARAMETER(lpCmdLine);
-
-	std::wstring VeilClassName = L"Smart Veil Franco Badenas Abal";
-	std::wstring VeilName = L"Smart Veil, the veil itself";
+	const TCHAR* VeilClassName = L"Smart Veil Franco Badenas Abal";
+	const TCHAR* VeilName = L"Smart Veil, the veil itself";
 
 	//Check that no instance is already running on this user session
 	//TODO(fran): from my tests this system is user session independent, check that's true for every case, 
@@ -51,10 +48,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	if (single_instance_mutex == NULL || GetLastError() == ERROR_ALREADY_EXISTS) {
 		//If an instance already exists try to show its manager to the user
 		//INFO: other ways of solving the hwnd finding: http://www.flounder.com/nomultiples.htm
-		HWND existingApp = FindWindow(VeilClassName.c_str(), VeilName.c_str());
+		HWND existingApp = FindWindow(VeilClassName, VeilName);
 		if (existingApp) PostMessage(existingApp, SCV_VEIL_SHOW_MGR, 0, 0);
 		return 0; // Exit the app
 	}
+	defer{ ReleaseMutex(single_instance_mutex);	CloseHandle(single_instance_mutex); };
 
 	// Load resources for class registration
 	HCURSOR Cursor = LoadCursor(nullptr, IDC_ARROW);
@@ -63,9 +61,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 		ShowLastError(RCS(SCV_LANG_ERROR_CURSOR_LOAD), RCS(SCV_LANG_ERROR_SMARTVEIL));
 		return 0;
 	}
+	defer{ DestroyCursor(Cursor); };
+
 	HICON logo_icon, logo_icon_small;
 	LoadIconMetric(hInstance, MAKEINTRESOURCE(LOGO_ICON), LIM_LARGE, &logo_icon);
 	LoadIconMetric(hInstance, MAKEINTRESOURCE(LOGO_ICON), LIM_SMALL, &logo_icon_small);
+	defer{ if (logo_icon) DestroyIcon(logo_icon); if (logo_icon_small) DestroyIcon(logo_icon_small); };
 
 	//Define colors for controls
 	ControlProcedures::Instance().Set_BackgroundColor(RGB(0, 0, 0));
@@ -89,16 +90,16 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	Wc.hCursor = Cursor;
 	Wc.hbrBackground = nullptr;
 	Wc.lpszMenuName = nullptr;
-	Wc.lpszClassName = VeilClassName.c_str();
+	Wc.lpszClassName = VeilClassName;
 	Wc.hIconSm = logo_icon_small;
-	if (!RegisterClassExW(&Wc))
+	const ATOM veil_class = RegisterClassExW(&Wc);
+	if (!veil_class)
 	{
 		ShowLastError(RCS(SCV_LANG_ERROR_WINDOWCLASS_REG), RCS(SCV_LANG_ERROR_SMARTVEIL));
 		return 0;
 	}
 
 	//Register Manager class
-	std::wstring appManagerClassName = L"Smart Veil Manager Franco Badenas Abal";
 	WNDCLASSEXW WMc;
 	WMc.cbSize = sizeof(WNDCLASSEXW);
 	WMc.style = CS_HREDRAW | CS_VREDRAW;
@@ -110,16 +111,16 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	WMc.hCursor = Cursor;
 	WMc.hbrBackground = ControlProcedures::Instance().Get_BackgroundBrush();
 	WMc.lpszMenuName = nullptr;
-	WMc.lpszClassName = appManagerClassName.c_str();
+	WMc.lpszClassName = L"Smart Veil Manager Franco Badenas Abal";
 	WMc.hIconSm = logo_icon_small;
-	if (!RegisterClassExW(&WMc))
+	const ATOM manager_class = RegisterClassExW(&WMc);
+	if (!manager_class)
 	{
 		ShowLastError(RCS(SCV_LANG_ERROR_WINDOWCLASS_REG), RCS(SCV_LANG_ERROR_SMARTVEIL));
 		return 0;
 	}
 
 	//Register Settings class
-	std::wstring settings_class = L"Smart Veil Settings Franco Badenas Abal";
 	WNDCLASSEXW WSc;
 	WSc.cbSize = sizeof(WNDCLASSEXW);
 	WSc.style = CS_HREDRAW | CS_VREDRAW;
@@ -131,9 +132,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	WSc.hCursor = Cursor;
 	WSc.hbrBackground = ControlProcedures::Instance().Get_BackgroundBrush();
 	WSc.lpszMenuName = nullptr;
-	WSc.lpszClassName = settings_class.c_str();
+	WSc.lpszClassName = L"Smart Veil Settings Franco Badenas Abal";
 	WSc.hIconSm = logo_icon_small;
-	if (!RegisterClassExW(&WSc))
+	const ATOM settings_class = RegisterClassExW(&WSc);
+	if (!settings_class)
 	{
 		ShowLastError(RCS(SCV_LANG_ERROR_WINDOWCLASS_REG), RCS(SCV_LANG_ERROR_SMARTVEIL)); //INFO TODO(fran): for the next project change naming convention for my strings, this is hard to read, for starters make them lower case
 		return 0;
@@ -152,15 +154,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	info_path.info_file = L"startup_info";
 	info_path.info_extension = L"txt";//just so the user doesnt even have to open the file manually on windows
 
-	std::wstring info_file_path = info_path.known_folder + L"\\" + info_path.info_folder + L"\\" + info_path.info_file + L"." + info_path.info_extension;
-
-	STARTUP_INFO startup_info;
-
-	startup_info = read_startup_info_file(info_file_path);
+	STARTUP_INFO startup_info = read_startup_info_file(info_path.known_folder + L"\\" + info_path.info_folder + L"\\" + info_path.info_file + L"." + info_path.info_extension);
 
 	// Create Veil window
-	HWND veil_wnd = CreateWindowExW(WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
-		VeilClassName.c_str(), VeilName.c_str(),
+	HWND veil_wnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
+		(LPCWSTR)MAKELONG(veil_class,0), VeilName,
 		WS_POPUP,
 		0, 0, 100, 100, //INFO: size and position don't matter since the veil is always maximized
 		nullptr, nullptr, hInstance, nullptr);
@@ -188,8 +186,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 #if 0 //test different sizes and aspect ratios
 	{
 		float WINDOW_REDUCTION = 4;
-		width = 1024 / WINDOW_REDUCTION;//INFO(fran): remember now we are starting to use values given by windows for the specific screen, so things wont change even if the resolution does
-		height = 768 / WINDOW_REDUCTION;
+		mgr_wnd_sz.cx = 1024 / WINDOW_REDUCTION;//INFO(fran): remember now we are starting to use values given by windows for the specific screen, so things wont change even if the resolution does
+		mgr_wnd_sz.cy = 768 / WINDOW_REDUCTION;
 	}
 #endif
 
@@ -204,27 +202,16 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 	//Definition of custom frame
 	//INFO: All in pixels
-	//SM_CXBORDER : width of window border, equivalent to SM_CXEDGE for windows with 3D look
-	//SM_CXFIXEDFRAME : thickness of frame around window with caption but not sizable, is the height of the horizontal border. SM_CYFIXEDFRAME is width of vertical border
-	//SM_CXEDGE : width of 3D border. SM_CYEDGE
-	//SM_CXPADDEDBORDER : border padding for captioned windows
-	//SM_CXSIZE : width of button in window caption
-	//SM_CXSIZEFRAME : thickness of sizing border of window that can be resized, is the width of horizontal border SM_CYSIZEFRAME is the height of vertical border
-	//SM_CXSMSIZE : width of small caption buttons
-	//SM_CYCAPTION : height of caption area
-	//SM_CYSMCAPTION : height of small caption
+	//SM_CXBORDER SM_CXFIXEDFRAME SM_CYFIXEDFRAME SM_CXEDGE SM_CYEDGE SM_CXPADDEDBORDER SM_CXSIZE SM_CXSIZEFRAME SM_CYSIZEFRAME SM_CXSMSIZE SM_CYCAPTION SM_CYSMCAPTION
 
-	FRAME.caption_height = GetBasicWindowCaptionHeight(hInstance, mgr_wnd_pos);//INFO: I think this is dpi aware
-	if (FRAME.caption_height <= 0) {//INFO: menor igual me permite semi salvarla para multi-monitor //TODO(fran): is this neccessary???
-		//FRAME.caption_height = GetSystemMetrics(SM_CYCAPTION);
+	FRAME.caption_height = GetBasicWindowCaptionHeight(hInstance, mgr_wnd_pos);//INFO: I think this is dpi aware //TODO(fran): faster simpler method
+	if (FRAME.caption_height <= 0) //INFO: menor igual me permite semi salvarla para multi-monitor //TODO(fran): is this neccessary???
 		FRAME.caption_height = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CXPADDEDBORDER);//INFO: this is not dpi aware
-	}
-	FRAME.bottom_border = 0;//We will have no borders, also be dont support resizing
-	FRAME.left_border = 0;
-	FRAME.right_border = 0;
+	FRAME.bottom_border = FRAME.left_border = FRAME.right_border = 0;//We will have no borders, also we dont support resizing
 	FRAME.caption_bk_brush = (HBRUSH)GetStockObject(DKGRAY_BRUSH); //TODO(fran): take this out of FRAME and just use the one in ControlProcedures
 	FRAME.logo_icon = LOGO_ICON;
 	FRAME.caption_font = CreateMyFont((LONG)(-FRAME.caption_height * .5));
+	defer{ DeleteObject(FRAME.caption_font); }; //TODO(fran): should this be in the destructor for FRAME?
 	FRAME.caption_text_color = ControlProcedures::Instance().Get_HighlightColor();
 
 	//More Controls' color setup that should not be here
@@ -233,13 +220,13 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	ControlProcedures::Instance().Set_CaptionBackgroundColor(lb.lbColor); //TODO(fran): will I use FRAME's or ControlProcedures' color?
 
 	//Create Manager window
-	HWND mgr_wnd = CreateWindowExW(WS_EX_TOPMOST | WS_EX_APPWINDOW, appManagerClassName.c_str(), NULL,
+	HWND mgr_wnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_APPWINDOW, (LPCWSTR)MAKELONG(manager_class,0), NULL,
 		WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MINIMIZEBOX ^ WS_MAXIMIZEBOX
 		, mgr_wnd_pos.x, mgr_wnd_pos.y, mgr_wnd_sz.cx, mgr_wnd_sz.cy, veil_wnd, NULL, hInstance, &startup_info.manager);
 	//INFO TODO(fran): it seems that when you create a window that is bigger than the screen in some axis, that axis gets automatically reduced,
 	//therefore in those cases the x and y position are actually wrong, maybe we should re-position on wm_create
 	if (!mgr_wnd) {
-
+		//TODO(fran): previously created windows should also be destroyed, how to do it? the problem with defer is it will also be called on normal program execution and we could destroy an HWND that has been assigned to someone else
 		ShowLastError(RCS(SCV_LANG_ERROR_WINDOW_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL));
 		return 0;
 	}
@@ -259,7 +246,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	settings_wnd_sz.cy = (LONG)(settings_wnd_sz.cx * 11.f / 9.f);
 
 	//Create Settings window
-	HWND settings_wnd = CreateWindowExW(WS_EX_TOPMOST, settings_class.c_str(), NULL,
+	HWND settings_wnd = CreateWindowEx(WS_EX_TOPMOST, (LPCWSTR)MAKELONG(settings_class,0), NULL,
 		WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MINIMIZEBOX ^ WS_MAXIMIZEBOX
 		, mgr_wnd_pos.x, mgr_wnd_pos.y,
 		settings_wnd_sz.cx, settings_wnd_sz.cy
@@ -267,6 +254,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 	if (!settings_wnd) {
 		ShowLastError(RCS(SCV_LANG_ERROR_WINDOW_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL));
+		//TODO(fran): all this errors should cleanup what's above, defer?
 		return 0;
 	}
 	KNOWN_WINDOWS.settings = settings_wnd;
@@ -277,16 +265,11 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 	// Message loop
 	MSG msg = { 0 };
-
 	BOOL bRet;
 
 	while ((bRet = GetMessage(&msg, nullptr, 0, 0)) != 0)
 	{
-		if (bRet == -1)
-		{
-			// handle the error and possibly exit
-			Assert(0);
-		}
+		if (bRet == -1) { Assert(0);/*handle the error and possibly exit*/ }
 		else
 		{
 			TranslateMessage(&msg);
@@ -297,27 +280,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	//Save startup_info
 
 	//TODO(fran): Main should try to save even if someone threw an exception/error in the loop, I think, maybe it should check the values are valid
-	//TODO(fran): this is annoying, does the struct really need 4 strings?
-	std::wstring info_directory_path = info_path.known_folder + L"\\" + info_path.info_folder;
-	std::wstring info_file_name = info_path.info_file + L"." + info_path.info_extension;
-
-	SaveStartupInfo(startup_info, info_directory_path, info_file_name);
-
-	//Cleanup before exiting
-
-	//TODO(fran): should I unregister my wnd classes?
-
-	ReleaseMutex(single_instance_mutex);
-	CloseHandle(single_instance_mutex);
-
-	//TODO(fran): can I destroy this right after window creation???
-	if(Cursor)DestroyCursor(Cursor); 
-	if (logo_icon) DestroyIcon(logo_icon); 
-	if (logo_icon_small) DestroyIcon(logo_icon_small);
-
-	//TODO(fran): do destructors work with global objects?
-	DeleteObject(FRAME.caption_font); //TODO(fran): destructor, or maybe not, what if someone else were still using the font?
 	
+	//TODO(fran): this is annoying, does the struct really need 4 strings?
+	SaveStartupInfo(startup_info, info_path.known_folder + L"\\" + info_path.info_folder, info_path.info_file + L"." + info_path.info_extension);
+
 	if (msg.message == WM_QUIT) // For a WM_QUIT message the wParam is the exit code
 		return static_cast<INT>(msg.wParam);
 

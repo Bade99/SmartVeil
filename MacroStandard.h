@@ -72,3 +72,32 @@
 //Refer to Settings.h for information on the messages sent and received by this window procedure
 #define SCV_SETTINGS_FIRST_MESSAGE (WM_USER+1000)
 #define SCV_SETTINGS_FIRST_INTERNAL_MESSAGE (WM_USER+1200)
+
+//-----
+//Defer (usage: defer{block of code;};)
+//-----
+//Thanks to https://handmade.network/forums/t/1273-post_your_c_c++_macro_tricks/3
+
+template <typename F>
+struct Defer {
+	Defer(F f) : f(f) {}
+	~Defer() { f(); }
+	F f;
+};
+
+template <typename F>
+Defer<F> makeDefer(F f) {
+	return Defer<F>(f);
+};
+
+#define __defer( line ) defer_ ## line
+#define _defer( line ) __defer( line )
+
+struct defer_dummy { };
+template<typename F>
+Defer<F> operator+(defer_dummy, F&& f)
+{
+	return makeDefer<F>(std::forward<F>(f));
+}
+
+#define defer auto _defer( __LINE__ ) = defer_dummy( ) + [ & ]( )
