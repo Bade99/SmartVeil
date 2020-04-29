@@ -7,6 +7,7 @@
 
 #include "utils.cpp"
 #include "Startup.cpp"
+#include "Veil.h"
 #include "Common.h"
 #include "LANGUAGE_MANAGER.h"
 #include "ControlProcedures.h"
@@ -302,7 +303,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 	SaveStartupInfo(startup_info, info_directory_path, info_file_name);
 
-	//Cleanup
+	//Cleanup before exiting
 
 	//TODO(fran): should I unregister my wnd classes?
 

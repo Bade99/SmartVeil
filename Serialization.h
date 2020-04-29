@@ -5,7 +5,7 @@
 #include "Settings.h"
 
 //--------------------------------------------------------
-//Defines serialization and deserialization for every type
+//Defines serialization and deserialization for every type (preferably ones not expected to change, for complex structs go to MacroStandard.h "Reflection for serialization")
 //--------------------------------------------------------
 
 //-Assumes that the encoded variable is in a std::wstring all by itself, no whitespaces

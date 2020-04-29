@@ -7,11 +7,6 @@
 #include <map>
 
 /// <summary>
-/// The first id from which to send messages , each one counts up by one from this starting position
-/// </summary>
-#define SCV_MANAGER_FIRST_MESSAGE (WM_USER+0)
-
-/// <summary>
 /// Identifies messages sent from the manager's tray icon
 /// </summary>
 #define SCV_MANAGER_TRAY (SCV_MANAGER_FIRST_MESSAGE+1)
@@ -30,10 +25,6 @@
 /// <para>lParam = unused</para>
 /// </summary>
 #define SCV_MANAGER_MODIFY_TRAY (SCV_MANAGER_FIRST_MESSAGE+4)
-
-#define SCV_VEIL_FIRST_MESSAGE (WM_USER+500)
-
-#define SCV_VEIL_SHOW_MGR (SCV_VEIL_FIRST_MESSAGE+1)
 
 #define MGR_SLIDER_MAX 99
 #define MGR_SLIDER_MIN 0
@@ -115,16 +106,6 @@ private:
 		if (reduce_dangerous && val > MGR_SLIDER_DANGEROUS) val = MGR_SLIDER_SAFE;
 	}
 };
-
-/// <summary>
-/// The Veil's window procedure
-/// </summary>
-/// <param name="hWnd"></param>
-/// <param name="message"></param>
-/// <param name="wParam"></param>
-/// <param name="lParam"></param>
-/// <returns></returns>
-LRESULT CALLBACK VeilProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 /// <summary>
 /// Window procedure for the Manager window

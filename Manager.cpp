@@ -30,14 +30,14 @@
 #pragma comment (lib,"Version.lib") //for VerQueryValue
 
 //Definition of child control ids and internal messages
-#define SCV_MANAGER_THRESHOLD_TITLE 1 //The static text control that shows the threshold slider's current value
-#define SCV_MANAGER_OPACITY_TITLE 2 //The static text control that shows the opacity slider's current value
-#define SCV_MANAGER_SECRET_ABOUT 3 //Button for showing about information
-#define SCV_MANAGER_SETTINGS 4 //Button to launch the settings
-#define SCV_MANAGER_LANG_DYNAMIC_UPDATE 5 //Identifier for the LanguageManager to call the manager when dynamic windows (ones where the text constantly changes) need text updates
-#define SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF 6 //Msg sent by the manager to itself to update the turn on-off button when it's pressed and on language change
-#define SCV_MANAGER_UPDATE_THRESHOLD_OPACITY 7 //Msg sent by the manager to itself to update the sliders' text when there's a language change
-#define SCV_MANAGER_TOOLTIP_THRESHOLD_SLIDER 8 //The Slider control for the threshold
+#define SCV_MANAGER_THRESHOLD_TITLE (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+1) //The static text control that shows the threshold slider's current value
+#define SCV_MANAGER_OPACITY_TITLE (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+2) //The static text control that shows the opacity slider's current value
+#define SCV_MANAGER_SECRET_ABOUT (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+3) //Button for showing about information
+#define SCV_MANAGER_SETTINGS (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+4) //Button to launch the settings
+#define SCV_MANAGER_LANG_DYNAMIC_UPDATE (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+5) //Identifier for the LanguageManager to call the manager when dynamic windows (ones where the text constantly changes) need text updates
+#define SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+6) //Msg sent by the manager to itself to update the turn on-off button when it's pressed and on language change
+#define SCV_MANAGER_UPDATE_THRESHOLD_OPACITY (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+7) //Msg sent by the manager to itself to update the sliders' text when there's a language change
+#define SCV_MANAGER_TOOLTIP_THRESHOLD_SLIDER (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+8) //The Slider control for the threshold
 
 
 
@@ -89,22 +89,6 @@
 
 //THANKs:
 //·Micaela Zabatta (1st tester)
-
-LRESULT CALLBACK VeilProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch (message)
-    {
-	case SCV_VEIL_SHOW_MGR://Only used in case of multiple instances so the new one can tell the one already running to show the manager
-	{
-		ShowWindow(KNOWN_WINDOWS.mgr, SW_SHOW);
-		break;
-	}
-    default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-
-    return 0;
-}
 
 /// <summary>
 /// Full control setup for the Manager window
@@ -501,18 +485,18 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				int pos = SendMessage(slider, TBM_GETPOS, 0, 0); //TODO(fran): why do I cast to float??
 				if (GetDlgCtrlID(slider) == SCV_MANAGER_TOOLTIP_THRESHOLD_SLIDER) {
 					//TODO(fran): doing enumchildwindows all the time is probably very expensive, we might need to keep a list of important hwnds
-					static int last_thresh_pos = -1; //TODO(fran): I'm not sure this is even better, the problem must be somewhere else
-					if(pos!= last_thresh_pos)
+					//static int last_thresh_pos = -1; //TODO(fran): I'm not sure this is even better, the problem must be somewhere else
+					//if(pos!= last_thresh_pos)
 						SetWindowTextW(get_child_by_id(hWnd,SCV_MANAGER_THRESHOLD_TITLE), fmt::format(RS(SCV_LANG_MGR_THRESHOLD), pos).c_str()); //TODO(fran): implement my own static text control
 					thread_data.output_mgr.SetThreshold(pos/100.f);
-					last_thresh_pos = pos;
+					//last_thresh_pos = pos;
 				}
 				else if (GetDlgCtrlID(slider) == SCV_MANAGER_TOOLTIP_OPACITY_SLIDER) {
-					static int last_opac_pos = -1;
-					if (pos != last_opac_pos)
+					//static int last_opac_pos = -1;
+					//if (pos != last_opac_pos)
 						SetWindowTextW(get_child_by_id(hWnd, SCV_MANAGER_OPACITY_TITLE), fmt::format(RS(SCV_LANG_MGR_OPACITY), pos).c_str());
 					thread_data.output_mgr.SetOpacity((100-pos) / 100.f);
-					last_opac_pos = pos;
+					//last_opac_pos = pos;
 				}
 				break;
 		}

@@ -12,17 +12,17 @@
 #include "Manager.h" //TODO(fran): I need this just for one #define, lets move all those to a common file
 
 //Definition of child control ids and internal messages
-#define SCV_SETTINGS_LANG_COMBO 1 //The combobox that contains the language selection
-#define SCV_SETTINGS_DANGEROUS_SLIDER 2 //The checkbox that contains the "reduce dangerous sliders" option
-#define SCV_SETTINGS_MANAGER_POS 3 //The checkbox that contains the "remember mgr pos" option
-#define SCV_SETTINGS_MANAGER_ON_STARTUP 4 //The checkbox that contains the "show mgr on application startup" option
-#define SCV_SETTINGS_SHOW_TOOLTIPS 5 //The checkbox that contains the "show tooltips" option
-#define SCV_SETTINGS_SHOW_TRAY 6 //The checkbox that contains the "show tray icon" option
-#define SCV_SETTINGS_VEIL_STARTUP_COMBO 7 //The combobox that contains the "turn on veil on startup" selection
-#define SCV_SETTINGS_START_WITH_WINDOWS 8 //The checkbox that contains the "start with windows" option
-#define SCV_SETTINGS_SAVE 9 //Save button
-#define SCV_SETTINGS_HOTKEY 10 //Hotkey control
-#define SCV_SETTINGS_UPDATE_COUNTER_TEXT 11 //Static text control that shows the veil update rate - DEBUG ONLY
+#define SCV_SETTINGS_LANG_COMBO (SCV_SETTINGS_FIRST_INTERNAL_MESSAGE+1) //The combobox that contains the language selection
+#define SCV_SETTINGS_DANGEROUS_SLIDER (SCV_SETTINGS_FIRST_INTERNAL_MESSAGE+2) //The checkbox that contains the "reduce dangerous sliders" option
+#define SCV_SETTINGS_MANAGER_POS (SCV_SETTINGS_FIRST_INTERNAL_MESSAGE+3) //The checkbox that contains the "remember mgr pos" option
+#define SCV_SETTINGS_MANAGER_ON_STARTUP (SCV_SETTINGS_FIRST_INTERNAL_MESSAGE+4) //The checkbox that contains the "show mgr on application startup" option
+#define SCV_SETTINGS_SHOW_TOOLTIPS (SCV_SETTINGS_FIRST_INTERNAL_MESSAGE+5) //The checkbox that contains the "show tooltips" option
+#define SCV_SETTINGS_SHOW_TRAY (SCV_SETTINGS_FIRST_INTERNAL_MESSAGE+6) //The checkbox that contains the "show tray icon" option
+#define SCV_SETTINGS_VEIL_STARTUP_COMBO (SCV_SETTINGS_FIRST_INTERNAL_MESSAGE+7) //The combobox that contains the "turn on veil on startup" selection
+#define SCV_SETTINGS_START_WITH_WINDOWS (SCV_SETTINGS_FIRST_INTERNAL_MESSAGE+8) //The checkbox that contains the "start with windows" option
+#define SCV_SETTINGS_SAVE (SCV_SETTINGS_FIRST_INTERNAL_MESSAGE+9) //Save button
+#define SCV_SETTINGS_HOTKEY (SCV_SETTINGS_FIRST_INTERNAL_MESSAGE+10) //Hotkey control
+#define SCV_SETTINGS_UPDATE_COUNTER_TEXT (SCV_SETTINGS_FIRST_INTERNAL_MESSAGE+11) //Static text control that shows the veil update rate - DEBUG ONLY
 
 
 /// <summary>

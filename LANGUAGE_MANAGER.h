@@ -3,6 +3,8 @@
 #include <map>
 #include "MacroStandard.h"
 
+//TODO(fran): dangerously short names for a macro
+
 //Request string
 #define RS(stringID) LANGUAGE_MANAGER::Instance().RequestString(stringID)
 
@@ -29,7 +31,8 @@ public://TODO(fran): add lang to the rest of the classes: outmgr,duplmgr,...
 	#define SCV_FOREACH_LANGUAGE(ENUM_MEMBER) \
 					ENUM_MEMBER(ENGLISH)  \
 					ENUM_MEMBER(SPANISH)  \
-	/// <summary>
+	
+	/// /// <summary>
 	/// All the languages supported by the application
 	/// </summary>
 	enum class LANGUAGE 

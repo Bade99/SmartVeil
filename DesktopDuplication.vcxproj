@@ -180,6 +180,7 @@
     <ClCompile Include="TOOLTIP_REPO.cpp" />
     <ClCompile Include="TRAY_HANDLER.cpp" />
     <ClCompile Include="utils.cpp" />
+    <ClCompile Include="Veil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
@@ -202,6 +203,7 @@
     <ClInclude Include="ThreadManager.h" />
     <ClInclude Include="TOOLTIP_REPO.h" />
     <ClInclude Include="TRAY_HANDLER.h" />
+    <ClInclude Include="Veil.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="PixelShader.hlsl">

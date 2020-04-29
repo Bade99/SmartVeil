@@ -41,8 +41,7 @@ BOOL TRAY_HANDLER::DestroyTrayIcon(HWND hwnd, UINT uID)
 		this->TrayElements.erase(std::make_pair(hwnd, uID));
 		return ret;
 	}
-	catch (const std::out_of_range& oor) { return FALSE; }
-	return FALSE;
+	catch (...) { return FALSE; } //.at() throws
 }
 
 BOOL TRAY_HANDLER::UpdateTrayTips()

@@ -56,3 +56,19 @@
 #define SCV_GENERATE_STRING_FROM_ENUM_MEMBER(MEMBER) L#MEMBER,
 
 //Usage is similar to STRUCT, go to LANGUAGE_MANAGER.h for more info, and other methods that are allowed thanks to reflection
+
+//---------------------------------
+//Starting index of window messages
+//---------------------------------
+
+//Refer to Manager.h for information on the messages sent and received by this window procedure
+#define SCV_MANAGER_FIRST_MESSAGE (WM_USER+0)
+#define SCV_MANAGER_FIRST_INTERNAL_MESSAGE (WM_USER+200)
+
+//Refer to Veil.h for information on the messages sent and received by this window procedure
+#define SCV_VEIL_FIRST_MESSAGE (WM_USER+500)
+#define SCV_VEIL_FIRST_INTERNAL_MESSAGE (WM_USER+700)
+
+//Refer to Settings.h for information on the messages sent and received by this window procedure
+#define SCV_SETTINGS_FIRST_MESSAGE (WM_USER+1000)
+#define SCV_SETTINGS_FIRST_INTERNAL_MESSAGE (WM_USER+1200)

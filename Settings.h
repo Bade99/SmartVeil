@@ -7,9 +7,6 @@
 #include "LANGUAGE_MANAGER.h"
 #include "MacroStandard.h" //TODO(fran): should this be in the cpp somehow?
 
-///First index from which windows messages will be sent
-#define SCV_SETTINGS_FIRST_MESSAGE (WM_USER+1000)
-
 /// <summary>
 /// Message to send to the Settings Window to retrieve its settings
 /// <para>wParam = pointer to a SETTINGS structure for storing the current settings</para>
