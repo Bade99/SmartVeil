@@ -36,7 +36,7 @@ _KNOWN_WINDOWS KNOWN_WINDOWS; //DEFINITION OF STATIC VARIABLE
 /// <para>-Control colors setup</para>
 /// <para>-Cleaning and saving at application end</para>
 /// </summary>
-int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*/, _In_ LPSTR /*lpCmdLine*/, _In_ INT nCmdShow)
+int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*/, _In_ LPSTR /*lpCmdLine*/, _In_ INT /*nShowCmd*/)
 {
 	const TCHAR* VeilClassName = L"Smart Veil Franco Badenas Abal";
 	const TCHAR* VeilName = L"Smart Veil, the veil itself";
@@ -177,8 +177,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*
 	SIZE mgr_wnd_sz; //TODO(fran): make this wnd more compact, and the same for its controls
 	mgr_wnd_sz.cx = (LONG)(CHECKBOX_SZ * (SETTINGS_NUMBER_OF_CHECKBOXES*16.f / 9.f)); 
 	mgr_wnd_sz.cy = (LONG)(mgr_wnd_sz.cx * 8.f / 16.f);
-	//SUPERTODO(fran): I have no idea why on virtual machine with width to minimum the window starts to stretch and position is wrong
-	//TODO(fran): what we can do is in case this values are bigger than the screen then we use the other method
+	//TODO(fran): when you create a window that is bigger than the screen in some axis, that axis gets automatically reduced, (we should check and resize-reposition accordingly)
 
 	RECT desktopRect;
 	GetWindowRect(GetDesktopWindow(), &desktopRect);
@@ -200,8 +199,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*
 	else
 		mgr_wnd_pos = { (RECTWIDTH(desktopRect)) / 2 - mgr_wnd_sz.cx / 2 , (RECTHEIGHT(desktopRect)) / 2 - mgr_wnd_sz.cy / 2 };
 
-	//Definition of custom frame
-	//INFO: All in pixels
+	//Definition of custom frame (all in pixels)
 	//SM_CXBORDER SM_CXFIXEDFRAME SM_CYFIXEDFRAME SM_CXEDGE SM_CYEDGE SM_CXPADDEDBORDER SM_CXSIZE SM_CXSIZEFRAME SM_CYSIZEFRAME SM_CXSMSIZE SM_CYCAPTION SM_CYSMCAPTION
 
 	FRAME.caption_height = GetBasicWindowCaptionHeight(hInstance, mgr_wnd_pos);//INFO: I think this is dpi aware //TODO(fran): faster simpler method
@@ -215,16 +213,17 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*
 	FRAME.caption_text_color = ControlProcedures::Instance().Get_HighlightColor();
 
 	//More Controls' color setup that should not be here
-	LOGBRUSH lb;
-	GetObject(FRAME.caption_bk_brush, sizeof(LOGBRUSH), &lb);
-	ControlProcedures::Instance().Set_CaptionBackgroundColor(lb.lbColor); //TODO(fran): will I use FRAME's or ControlProcedures' color?
+	{
+		LOGBRUSH lb;
+		GetObject(FRAME.caption_bk_brush, sizeof(LOGBRUSH), &lb);
+		ControlProcedures::Instance().Set_CaptionBackgroundColor(lb.lbColor); //TODO(fran): will I use FRAME's or ControlProcedures' color?
+	}
 
 	//Create Manager window
 	HWND mgr_wnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_APPWINDOW, (LPCWSTR)MAKELONG(manager_class,0), NULL,
 		WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MINIMIZEBOX ^ WS_MAXIMIZEBOX
 		, mgr_wnd_pos.x, mgr_wnd_pos.y, mgr_wnd_sz.cx, mgr_wnd_sz.cy, veil_wnd, NULL, hInstance, &startup_info.manager);
-	//INFO TODO(fran): it seems that when you create a window that is bigger than the screen in some axis, that axis gets automatically reduced,
-	//therefore in those cases the x and y position are actually wrong, maybe we should re-position on wm_create
+	
 	if (!mgr_wnd) {
 		//TODO(fran): previously created windows should also be destroyed, how to do it? the problem with defer is it will also be called on normal program execution and we could destroy an HWND that has been assigned to someone else
 		ShowLastError(RCS(SCV_LANG_ERROR_WINDOW_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL));
@@ -235,7 +234,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*
 
 	UpdateWindow(mgr_wnd); //I do update first to semi-solve the ugly default ui problem
 	
-	ShowWindow(mgr_wnd, nCmdShow);
 	if(startup_info.settings.show_manager_on_startup)
 		ShowWindow(mgr_wnd, SW_SHOW);
 	else
@@ -277,10 +275,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*
 		}
 	}
 
-	//Save startup_info
+	//Save startup_info //TODO(fran): should we save even if someone threw an exception/error in the loop?
 
-	//TODO(fran): Main should try to save even if someone threw an exception/error in the loop, I think, maybe it should check the values are valid
-	
 	//TODO(fran): this is annoying, does the struct really need 4 strings?
 	SaveStartupInfo(startup_info, info_path.known_folder + L"\\" + info_path.info_folder, info_path.info_file + L"." + info_path.info_extension);
 
