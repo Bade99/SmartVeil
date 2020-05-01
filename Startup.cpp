@@ -44,9 +44,11 @@ inline void ReadStartupInfoString(std::map<const std::wstring, std::wstring>stri
 
 	//Hack to check that every parameter is being initialized, since some members need information from others we cant do macro iteration
 	//Update the number each time a new member is added or removed from STARTUP_INFO ! and initialize the new member
-#define SCV_CHECK_STRUCT_MEMBER_COUNT(type,name,default_value) -1
+#ifdef _DEBUG
+	#define SCV_CHECK_STRUCT_MEMBER_COUNT(type,name,default_value) -1
 	static_assert(!(2 SCV_FOREACH_STARTUP_INFO(SCV_CHECK_STRUCT_MEMBER_COUNT)), "Some member of STARTUP_INFO struct is not being initialized, you probably need to add another .from_wstring_map() and update the counter");
-#undef  SCV_CHECK_STRUCT_MEMBER_COUNT
+	#undef  SCV_CHECK_STRUCT_MEMBER_COUNT
+#endif
 }
 
 inline STARTUP_INFO read_startup_info_file(std::wstring file) {

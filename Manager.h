@@ -64,6 +64,7 @@ struct MANAGER {
 	std::map<const std::wstring, std::wstring> to_wstring_map() const {
 		std::map<const std::wstring, std::wstring> stringed_struct;
 		int i = -1;
+#pragma warning(suppress : 4002)
 		SCV_FOREACH_MANAGER_MEMBER(i++; stringed_struct[MANAGER_STRING[i]] = SCV_SERIALIZE_STRUCT_MEMBER);
 		return stringed_struct;
 	}
@@ -76,6 +77,7 @@ struct MANAGER {
 		
 		std::wstring potential_string_value;
 		int i = 0;
+#pragma warning(suppress : 4002)
 		SCV_FOREACH_MANAGER_MEMBER(potential_string_value = stringed_struct[MANAGER_STRING[i]]; i++; SCV_DESERIALIZE_STRUCT_MEMBER); //this ; is not needed but is good to maintain syntax
 		
 		switch (settings.show_veil_on_startup) {

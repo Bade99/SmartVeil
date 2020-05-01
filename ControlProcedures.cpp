@@ -17,7 +17,7 @@ ControlProcedures::~ControlProcedures()
 	if (this->CaptionBackground) DeleteObject(this->CaptionBackground);
 }
 
-LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, UINT_PTR /*uIdSubclass*/, DWORD_PTR dwRefData) {
 	static BOOL MouseOver = false;
 	static HWND CurrentMouseOverButton;
 
@@ -60,7 +60,7 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 		RECT rc; GetClientRect(hWnd, &rc);
 		//int controlID = GetDlgCtrlID(hWnd);
 
-		WORD ButtonState = SendMessageW(hWnd, BM_GETSTATE, 0, 0);
+		WORD ButtonState = (WORD)SendMessageW(hWnd, BM_GETSTATE, 0, 0);
 		if (ButtonState & BST_PUSHED) {
 			LOGBRUSH lb;
 			GetObject(pthis->BackgroundPush, sizeof(LOGBRUSH), &lb);
@@ -88,7 +88,7 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 #else 
 		//BorderColor = pthis->Highlight;// (HBRUSH)GetStockObject(WHITE_BRUSH);
 #endif
-		int borderSize = max(1, RECTHEIGHT(rc)*.06f);
+		int borderSize = (int)(max(1, RECTHEIGHT(rc)*.06f));
 						// = max(1,GetSystemMetrics(SM_CXSIZEFRAME)-1); //TODO(fran): this doesnt look as good, we need a combination between RECTHEIGHT and GetSystemMetrics
 						//other alternatives are SM_CXPADDEDBORDER and SM_CXEDGE
 #if 1
@@ -152,14 +152,14 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 			//TODO: should probably use inflaterect
 
 			//INFO: everybody MUST be on the same process for this hinstance to work
-			HICON icon = (HICON)LoadImage((HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE), MAKEINTRESOURCE(icon_id), IMAGE_ICON, icon_size.x, icon_size.y, LR_SHARED);
+			HICON icon = (HICON)LoadImage((HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE), MAKEINTRESOURCE(icon_id), IMAGE_ICON, (int)icon_size.x, (int)icon_size.y, LR_SHARED);
 
 			if (icon) {
 				//TODO(fran): icon position isnt perfectly centered, probably due to precision error + even versus odd rect and icon sizes
 
 #if 1
-				DrawIconEx(hdc, .5f*(((float)RECTWIDTH(rc)) - (icon_size.x-1.f)), .5f*(((float)RECTHEIGHT(rc)) - (icon_size.y-1.f)),
-					icon, icon_size.x, icon_size.y, 0, NULL, DI_NORMAL);//INFO: changing that NULL gives the option of "flicker free" icon drawing, if I need
+				DrawIconEx(hdc, (int)(.5f*(RECTWIDTH(rc) - (icon_size.x-1.f))), (int)(.5f*(RECTHEIGHT(rc) - (icon_size.y-1.f))),
+					icon, (int)icon_size.x, (int)icon_size.y, 0, NULL, DI_NORMAL);//INFO: changing that NULL gives the option of "flicker free" icon drawing, if I need
 				//INFO: using DI_MASK the button could have an interesting look
 #else
 				RECT icon_rc = rc;
@@ -211,7 +211,7 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 	return 0;
 }
 
-LRESULT CALLBACK ControlProcedures::ComboProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+LRESULT CALLBACK ControlProcedures::ComboProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, UINT_PTR /*uIdSubclass*/, DWORD_PTR dwRefData) {
 	static BOOL MouseOverCombo = FALSE;
 	static HWND CurrentMouseOverCombo;
 
@@ -278,7 +278,7 @@ LRESULT CALLBACK ControlProcedures::ComboProc(HWND hWnd, UINT Msg, WPARAM wParam
 		GetClientRect(hWnd, &client_rec);
 
 		//TODO
-		HPEN pen = CreatePen(PS_SOLID, max(1, (RECTHEIGHT(client_rec))*.01f), ColorFromBrush(pthis->Highlight)); //For the border
+		HPEN pen = CreatePen(PS_SOLID, (int)(max(1, (RECTHEIGHT(client_rec))*.01f)), ColorFromBrush(pthis->Highlight)); //For the border
 
 		HBRUSH oldbrush = (HBRUSH)SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));//For the insides
 		HPEN oldpen = (HPEN)SelectObject(hdc, pen);
@@ -314,7 +314,7 @@ LRESULT CALLBACK ControlProcedures::ComboProc(HWND hWnd, UINT Msg, WPARAM wParam
 		RECT r;
 		SIZE icon_size;
 		GetClientRect(hWnd, &r);
-		icon_size.cy = (r.bottom - r.top)*.6f;
+		icon_size.cy = (LONG)((r.bottom - r.top)*.6f);
 		icon_size.cx = icon_size.cy;
 
 		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE); 
@@ -348,7 +348,7 @@ LRESULT CALLBACK ControlProcedures::ComboProc(HWND hWnd, UINT Msg, WPARAM wParam
 	return DefSubclassProc(hWnd, Msg, wParam, lParam);
 }
 
-LRESULT CALLBACK ControlProcedures::CheckboxProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+LRESULT CALLBACK ControlProcedures::CheckboxProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, UINT_PTR /*uIdSubclass*/, DWORD_PTR dwRefData) {
 	static BOOL MouseOverCheck = FALSE;
 	static HWND CurrentMouseOverCheck = NULL;
 
@@ -403,7 +403,7 @@ LRESULT CALLBACK ControlProcedures::CheckboxProc(HWND hWnd, UINT Msg, WPARAM wPa
 		modified_rc.top = (height - CheckboxWidth) / 2;
 		modified_rc.bottom = modified_rc.top + CheckboxWidth;
 
-		WORD ButtonState = SendMessageW(hWnd, BM_GETSTATE, 0, 0);
+		WORD ButtonState = (WORD)SendMessageW(hWnd, BM_GETSTATE, 0, 0);
 		if (ButtonState & BST_PUSHED) {
 			SetBkColor(hdc, ColorFromBrush(pthis->BackgroundPush));
 			FillRect(hdc, &modified_rc, pthis->BackgroundPush);
@@ -421,7 +421,7 @@ LRESULT CALLBACK ControlProcedures::CheckboxProc(HWND hWnd, UINT Msg, WPARAM wPa
 		GetClientRect(hWnd, &client_rec);
 
 		//TODO
-		HPEN pen = CreatePen(PS_SOLID, max(1, (RECTHEIGHT(client_rec))*.01f), ColorFromBrush(pthis->Highlight)); //para el borde
+		HPEN pen = CreatePen(PS_SOLID, (int)(max(1, (RECTHEIGHT(client_rec))*.01f)), ColorFromBrush(pthis->Highlight)); //para el borde
 
 		HBRUSH oldbrush = (HBRUSH)SelectObject(hdc, (HBRUSH)GetStockObject(HOLLOW_BRUSH));//para lo de adentro
 		HPEN oldpen = (HPEN)SelectObject(hdc, pen);
@@ -436,7 +436,7 @@ LRESULT CALLBACK ControlProcedures::CheckboxProc(HWND hWnd, UINT Msg, WPARAM wPa
 		RECT icon_rc = modified_rc;
 
 		//TODO
-		int deflation = -max(1, CheckboxWidth * .2f);
+		int deflation = (int)( -max(1, CheckboxWidth * .2f) );
 		InflateRect(&icon_rc, deflation, deflation);
 		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE); 
 		//LONG icon_id = GetWindowLongPtr(hWnd, GWL_USERDATA); 
@@ -462,7 +462,7 @@ LRESULT CALLBACK ControlProcedures::CheckboxProc(HWND hWnd, UINT Msg, WPARAM wPa
 		GetClientRect(hWnd, &unmodified_rc);
 		int yPos = (unmodified_rc.bottom + unmodified_rc.top - tm.tmHeight) / 2;
 
-		int xPos = modified_rc.right*1.5f;
+		int xPos = (int)(modified_rc.right*1.5f);
 		LOGBRUSH background_lb;
 		GetObject(pthis->Background, sizeof(LOGBRUSH), &background_lb);
 
@@ -487,7 +487,7 @@ LRESULT CALLBACK ControlProcedures::CheckboxProc(HWND hWnd, UINT Msg, WPARAM wPa
 	return DefSubclassProc(hWnd, Msg, wParam, lParam);
 }
 
-LRESULT CALLBACK ControlProcedures::CaptionButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+LRESULT CALLBACK ControlProcedures::CaptionButtonProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR /*uIdSubclass*/, DWORD_PTR dwRefData) {
 	static BOOL MouseOver = false;
 	static HWND CurrentMouseOverButton;
 
@@ -534,7 +534,7 @@ LRESULT CALLBACK ControlProcedures::CaptionButtonProc(HWND hwnd, UINT message, W
 		RECT rc; GetClientRect(hwnd, &rc);
 		//int controlID = GetDlgCtrlID(hWnd);
 
-		WORD ButtonState = SendMessageW(hwnd, BM_GETSTATE, 0, 0);
+		WORD ButtonState = (WORD)SendMessageW(hwnd, BM_GETSTATE, 0, 0);
 		if (ButtonState & BST_PUSHED) {
 			SetBkColor(hdc, ColorFromBrush(pthis->BackgroundPush));
 			FillRect(hdc, &rc, pthis->BackgroundPush);
@@ -569,13 +569,13 @@ LRESULT CALLBACK ControlProcedures::CaptionButtonProc(HWND hwnd, UINT message, W
 
 		if (icon_id) {
 			SIZE icon_size;
-			icon_size.cx = RECTHEIGHT(rc)*.55f;
+			icon_size.cx = (LONG)(RECTHEIGHT(rc)*.55f);
 			icon_size.cy = icon_size.cx;
 
 			HICON icon = (HICON)LoadImage((HINSTANCE)GetWindowLongPtr(hwnd, GWL_HINSTANCE), MAKEINTRESOURCE(icon_id), IMAGE_ICON, icon_size.cx, icon_size.cy, LR_SHARED);
 
 			if (icon) {
-				DrawIconEx(hdc, .5f*(RECTWIDTH(rc) - icon_size.cx), .5f*(RECTHEIGHT(rc) - icon_size.cy),
+				DrawIconEx(hdc, (int)(.5f*(RECTWIDTH(rc) - icon_size.cx)), (int)(.5f*(RECTHEIGHT(rc) - icon_size.cy)),
 					icon, icon_size.cx, icon_size.cy, 0, NULL, DI_NORMAL);
 				DestroyIcon(icon);
 			}
@@ -591,7 +591,7 @@ LRESULT CALLBACK ControlProcedures::CaptionButtonProc(HWND hwnd, UINT message, W
 	return 0;
 }
 
-LRESULT CALLBACK ControlProcedures::SecretButtonProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+LRESULT CALLBACK ControlProcedures::SecretButtonProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, UINT_PTR /*uIdSubclass*/, DWORD_PTR dwRefData) {
 	switch (Msg) {
 	case WM_ERASEBKGND: return 1;
 	case WM_PAINT:
@@ -618,7 +618,7 @@ LRESULT CALLBACK ControlProcedures::SecretButtonProc(HWND hWnd, UINT Msg, WPARAM
 // to do it, as this control detects already registerd hotkeys and bans them, even your own
 //SUPER TODO(fran): Man I hate this control, let me write what I want, later when I want to apply you can decide if you let me or not
 
-LRESULT CALLBACK ControlProcedures::HotkeyProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+LRESULT CALLBACK ControlProcedures::HotkeyProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, UINT_PTR /*uIdSubclass*/, DWORD_PTR dwRefData) {
 
 	//TODO(fran): if we put multiple hotkey controls this has to change
 	static BOOL accepted_hotkey = FALSE;
@@ -700,7 +700,7 @@ LRESULT CALLBACK ControlProcedures::HotkeyProc(HWND hWnd, UINT Msg, WPARAM wPara
 		GetClientRect(hWnd, &client_rec);
 
 		//TODO
-		HPEN pen = CreatePen(PS_SOLID, max(1, (RECTHEIGHT(client_rec))*.01f), ColorFromBrush(pthis->Highlight)); //para el borde
+		HPEN pen = CreatePen(PS_SOLID, (int)max(1, (RECTHEIGHT(client_rec))*.01f), ColorFromBrush(pthis->Highlight)); //para el borde
 
 		HPEN old_pen = (HPEN)SelectObject(hotframedc, pen);
 		Rectangle(hotframedc, RW.left, RW.top, RW.right, RW.bottom);
@@ -745,7 +745,7 @@ LRESULT CALLBACK ControlProcedures::HotkeyProc(HWND hWnd, UINT Msg, WPARAM wPara
 
 		FillRect(hotdc, &paint.rcPaint, (HBRUSH)GetStockObject(BLACK_BRUSH));
 
-		WORD hotkey = SendMessage(hWnd, HKM_GETHOTKEY, 0, 0);
+		WORD hotkey = (WORD)SendMessage(hWnd, HKM_GETHOTKEY, 0, 0);
 		BYTE vk = LOBYTE(hotkey);
 		BYTE mods = HIBYTE(hotkey);
 

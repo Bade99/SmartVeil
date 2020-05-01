@@ -437,7 +437,7 @@ DUPL_RETURN OUTPUTMANAGER::CreateSharedSurf(INT SingleOutput, _Out_ UINT* OutCou
 //
 // Present to the application window
 //
-DUPL_RETURN OUTPUTMANAGER::UpdateApplicationWindow(_In_ PTR_INFO* PointerInfo)
+DUPL_RETURN OUTPUTMANAGER::UpdateApplicationWindow(_In_ PTR_INFO* /*PointerInfo*/) //TODO(fran): unnecessary parameter, can we take something from it or we just remove it?
 {
 	HRESULT hr;
 	DUPL_RETURN Ret;
@@ -477,14 +477,10 @@ DUPL_RETURN OUTPUTMANAGER::UpdateApplicationWindow(_In_ PTR_INFO* PointerInfo)
     Ret = DrawFrame();
 #if 0
     if (Ret == DUPL_RETURN_SUCCESS)
-    {
         // We have keyed mutex so we can access the mouse info
         if (PointerInfo->Visible)
-        {
             // Draw mouse into texture
             Ret = DrawMouse(PointerInfo);
-        }
-    }
 #endif
 
 
@@ -492,10 +488,7 @@ DUPL_RETURN OUTPUTMANAGER::UpdateApplicationWindow(_In_ PTR_INFO* PointerInfo)
     // Release keyed mutex
     hr = m_KeyMutex->ReleaseSync(0);
     if (FAILED(hr))
-    {
         return ProcessFailure(m_Device, L"Failed to Release Keyed mutex in OUTPUTMANAGER", L"Error", hr, SystemTransitionsExpectedErrors);
-    }
-
 
 
     // Present to window if all worked

@@ -220,8 +220,8 @@ DUPL_RETURN DISPLAYMANAGER::CopyMove(_Inout_ ID3D11Texture2D* SharedSurf, _In_re
 //
 // Sets up vertices for dirty rects for rotated desktops
 //
-#pragma warning(push)
-#pragma warning(disable:__WARNING_USING_UNINIT_VAR) // false positives in SetDirtyVert due to tool bug
+//#pragma warning(push)
+//#pragma warning(disable:__WARNING_USING_UNINIT_VAR) // false positives in SetDirtyVert due to tool bug
 
 void DISPLAYMANAGER::SetDirtyVert(_Out_writes_(NUMVERTICES) VERTEX* Vertices, _In_ RECT* Dirty, INT OffsetX, INT OffsetY, _In_ DXGI_OUTPUT_DESC* DeskDesc, _In_ D3D11_TEXTURE2D_DESC* FullDesc, _In_ D3D11_TEXTURE2D_DESC* ThisDesc)
 {
@@ -309,7 +309,7 @@ void DISPLAYMANAGER::SetDirtyVert(_Out_writes_(NUMVERTICES) VERTEX* Vertices, _I
     Vertices[4].TexCoord = Vertices[1].TexCoord;
 }
 
-#pragma warning(pop) // re-enable __WARNING_USING_UNINIT_VAR
+//#pragma warning(pop) // re-enable __WARNING_USING_UNINIT_VAR
 
 //
 // Copies dirty rectangles

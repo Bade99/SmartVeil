@@ -104,7 +104,7 @@ void THREADMANAGER::CleanDx(_Inout_ DX_RESOURCES* Data)
 //
 // Start up threads for DDA
 //
-DUPL_RETURN THREADMANAGER::Initialize(INT SingleOutput, UINT OutputCount, HANDLE UnexpectedErrorEvent, HANDLE ExpectedErrorEvent, HANDLE TerminateThreadsEvent, HANDLE SharedHandle, _In_ RECT* DesktopDim)
+DUPL_RETURN THREADMANAGER::Initialize(INT SingleOutput, UINT OutputCount, bool* UnexpectedErrorEvent, bool* ExpectedErrorEvent, bool* TerminateThreadsEvent, HANDLE SharedHandle, _In_ RECT* DesktopDim)
 {
     m_ThreadCount = OutputCount;
     m_ThreadHandles = new (std::nothrow) HANDLE[m_ThreadCount];

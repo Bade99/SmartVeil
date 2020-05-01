@@ -47,7 +47,7 @@ HFONT CreateMyFont(LONG height) {
 		HDC hdc = GetDC(GetDesktopWindow()); //You can use any hdc, but not NULL
 		std::vector<std::wstring> fontnames;
 		EnumFontFamiliesEx(hdc, NULL
-			, [](const LOGFONT *lpelfe, const TEXTMETRIC *lpntme, DWORD FontType, LPARAM lParam)->int {((std::vector<std::wstring>*)lParam)->push_back(lpelfe->lfFaceName); return TRUE; }
+			, [](const LOGFONT *lpelfe, const TEXTMETRIC * /*lpntme*/, DWORD /*FontType*/, LPARAM lParam)->int {((std::vector<std::wstring>*)lParam)->push_back(lpelfe->lfFaceName); return TRUE; }
 		, (LPARAM)&fontnames, NULL);
 
 		const WCHAR* requested_fontname[] = { TEXT("Segoe UI"), TEXT("Arial Unicode MS"), TEXT("Microsoft YaHei"), TEXT("Microsoft YaHei UI")
@@ -60,7 +60,8 @@ HFONT CreateMyFont(LONG height) {
 	};
 
 	//INFO: by default if I dont set faceName it uses "Modern", looks good but it lacks some charsets
-	wcsncpy(lf.lfFaceName, GetFontFaceName(), ARRAYSIZE(lf.lfFaceName));
+	//wcsncpy(lf.lfFaceName, GetFontFaceName(), ARRAYSIZE(lf.lfFaceName));
+	wcsncpy_s(lf.lfFaceName, GetFontFaceName(), ARRAYSIZE(lf.lfFaceName));
 	return CreateFontIndirectW(&lf);
 
 }
@@ -106,7 +107,7 @@ LRESULT PaintCaption(HWND hWnd, CUSTOM_FRAME frame) {
 	//Draw logo icon
 	SIZE logo_size;
 	//TODO(fran): better to use getsystemmetric?
-	logo_size.cx = frame.caption_height*.6f;
+	logo_size.cx = (LONG)(frame.caption_height*.6f);
 	logo_size.cy = logo_size.cx;
 	HICON logo_icon = (HICON)LoadImage((HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE), MAKEINTRESOURCE(frame.logo_icon), IMAGE_ICON
 		, logo_size.cx, logo_size.cy, LR_SHARED);
@@ -135,7 +136,7 @@ LRESULT PaintCaption(HWND hWnd, CUSTOM_FRAME frame) {
 	return 0;
 }
 
-LRESULT HitTestNCA(HWND hWnd, WPARAM wParam, LPARAM lParam,CUSTOM_FRAME frame)
+LRESULT HitTestNCA(HWND hWnd, WPARAM /*wParam*/, LPARAM lParam,CUSTOM_FRAME frame)
 {
 	// Get the point coordinates for the hit test.
 	POINT ptMouse = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };

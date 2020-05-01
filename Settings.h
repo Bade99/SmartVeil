@@ -77,11 +77,15 @@ inline void deserialize(HOTKEY& v, const std::wstring& s) { //TODO(fran): use re
 		v = temp;
 	}
 	catch (...) {}
-	//Allows anything that contains {number,number} somewhere in its string, eg: }}}}}{51,12}}{}{12,}{ is valid
+	//TODO(fran): stricter? Allows anything that contains {number,number} somewhere in its string, eg: }}}}}{51,12}}{}{12,}{ is valid
 }
 
-
-
+//TODO(fran): how bad and dangerous is it to use this to remove the warning for too many args because of initializer lists on reflection struct macros?
+//		#pragma warning(push)
+//		#pragma warning(disable : 4002)
+//		{code goes here}
+//		#pragma warning(pop)
+//INFO: I can also use #pragma warning (supress : 4002) to apply to only one line of code
 
 /// <summary>
 /// Structure that contains all the current valid values from the Settings window
@@ -125,6 +129,7 @@ struct SETTINGS {
 		
 		std::map<const std::wstring, std::wstring> stringed_struct;
 		int i = -1;
+#pragma warning(suppress : 4002) //TODO(fran): I'm not too convinced with this, it's to supress the unnecessary warning on initilizer lists but we are supressing for every other error that could actually affect us
 		SCV_FOREACH_SETTINGS_MEMBER(i++; stringed_struct[SETTINGS_STRING[i]] = SCV_SERIALIZE_STRUCT_MEMBER);
 		return stringed_struct;
 	}
@@ -134,6 +139,7 @@ struct SETTINGS {
 	SETTINGS& from_wstring_map(std::map<const std::wstring, std::wstring> stringed_struct) { //deserialize //TODO(fran): is it ok to call this a constructor?
 		std::wstring potential_string_value;
 		int i = 0;
+#pragma warning(suppress : 4002)
 		SCV_FOREACH_SETTINGS_MEMBER(potential_string_value = stringed_struct[SETTINGS_STRING[i]]; i++; SCV_DESERIALIZE_STRUCT_MEMBER); //this ; is not needed but is good to maintain syntax
 		return *this;
 	}

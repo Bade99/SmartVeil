@@ -80,13 +80,13 @@ typedef struct _DX_RESOURCES
 typedef struct _THREAD_DATA
 {
     // Used to indicate abnormal error condition
-    HANDLE UnexpectedErrorEvent;
+    bool* UnexpectedErrorEvent; //TODO(fran): I can just make this bool and pass the pointer to thread data struct, so everyone has the same bool
 
     // Used to indicate a transition event occurred e.g. PnpStop, PnpStart, mode change, TDR, desktop switch and the application needs to recreate the duplication interface
-    HANDLE ExpectedErrorEvent;
+    bool* ExpectedErrorEvent;
 
     // Used by WinProc to signal to threads to exit
-    HANDLE TerminateThreadsEvent;
+    bool* TerminateThreadsEvent;
 
     HANDLE TexSharedHandle;
     UINT Output;

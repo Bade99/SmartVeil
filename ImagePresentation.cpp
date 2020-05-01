@@ -20,6 +20,11 @@ DWORD WINAPI WorkerThread(void* Param) {
 	//TODO(fran): should I use it straight instead of copying it?
 	WORKER_THREAD_INIT* data = (WORKER_THREAD_INIT*)Param; //TODO(fran): check this copies everything right
 
+	//Error events
+	bool UnexpectedErrorEvent = false;
+	bool ExpectedErrorEvent = false;
+	bool TerminateThreadsEvent = false;
+
 	UINT OutputCount;
 	RECT DeskBounds;
 	INT SingleOutput= -1;
@@ -44,11 +49,13 @@ DWORD WINAPI WorkerThread(void* Param) {
 	double CounterVal;
 #endif
 
-	while (WaitForSingleObject(data->next_frame_mutex, INFINITE) == WAIT_OBJECT_0) { //TODO(fran): can we remove the mutex? maybe do thread 
-																					 //creation and destruction each time the veil gets turned on or off
+	while (WaitForSingleObject(data->next_frame_mutex, INFINITE) == WAIT_OBJECT_0) { //TODO(fran): remove this mutex. do thread creation and 
+																					 //destruction each time the veil gets turned on or off
 
 		if (data->terminate) {//TODO(fran): this is a bit botched
 			//TODO(fran): cleanup of the other threads?
+			TerminateThreadsEvent = true;
+			data->thread_mgr.WaitForThreadTermination();
 			ReleaseMutex(data->next_frame_mutex);
 			ReleaseMutex(data->worker_finished_mutex);
 			return 0;
@@ -59,9 +66,11 @@ DWORD WINAPI WorkerThread(void* Param) {
 #endif
 
 		Ret = DUPL_RETURN_SUCCESS;
-		if (WaitForSingleObjectEx(data->events.UnexpectedErrorEvent, 0, FALSE) == WAIT_OBJECT_0)
+		if (UnexpectedErrorEvent) //TODO(fran): this is stupid, shared memory is simpler and faster, this does NOT need mutex capability
 		{
 			// Unexpected error occurred so exit the application
+			TerminateThreadsEvent = true;
+			data->thread_mgr.WaitForThreadTermination();
 			ReleaseMutex(data->next_frame_mutex);
 			ReleaseMutex(data->worker_finished_mutex);
 			std::wstring error_msg = RS(SCV_LANG_ERROR_UNEXPECTED);
@@ -71,16 +80,17 @@ DWORD WINAPI WorkerThread(void* Param) {
 			DestroyWindow(data->output_wnd); //TODO(fran): this doesnt make any sense here
 			return 1;
 		}
-		else if (FirstTime || WaitForSingleObjectEx(data->events.ExpectedErrorEvent, 0, FALSE) == WAIT_OBJECT_0)
+		else if (FirstTime || ExpectedErrorEvent)
 		{
 			//All thread setup for execution runs here, I think
 			if (!FirstTime)
 			{
 				// Terminate other threads
-				SetEvent(data->events.TerminateThreadsEvent);
-				data->thread_mgr.WaitForThreadTermination();
-				ResetEvent(data->events.TerminateThreadsEvent);
-				ResetEvent(data->events.ExpectedErrorEvent);
+				TerminateThreadsEvent=true; //TODO(fran): this is the only place this gets set -> pointless to have mutex capability
+				data->thread_mgr.WaitForThreadTermination(); //also all the other threads are killed, so NO races
+
+				TerminateThreadsEvent=false; //This is the only place that resets this two -> pointless to have mutex capability,
+				ExpectedErrorEvent = false;
 
 				// Clean up
 				data->thread_mgr.Clean();
@@ -103,8 +113,8 @@ DWORD WINAPI WorkerThread(void* Param) {
 				HANDLE SharedHandle = data->output_mgr.GetSharedHandle();
 				if (SharedHandle)
 				{
-					Ret = data->thread_mgr.Initialize(SingleOutput, OutputCount, data->events.UnexpectedErrorEvent, data->events.ExpectedErrorEvent,
-														data->events.TerminateThreadsEvent, SharedHandle, &DeskBounds);
+					Ret = data->thread_mgr.Initialize(SingleOutput, OutputCount, &UnexpectedErrorEvent, &ExpectedErrorEvent,
+														&TerminateThreadsEvent, SharedHandle, &DeskBounds);
 				}
 				else
 				{
@@ -132,11 +142,13 @@ DWORD WINAPI WorkerThread(void* Param) {
 			if (Ret == DUPL_RETURN_ERROR_EXPECTED)
 			{
 				// Some type of system transition is occurring so retry
-				SetEvent(data->events.ExpectedErrorEvent);
+				ExpectedErrorEvent=true;
 			}
 			else
 			{
 				// Unexpected error so exit
+				TerminateThreadsEvent = true;
+				data->thread_mgr.WaitForThreadTermination();
 				ReleaseMutex(data->next_frame_mutex);
 				ReleaseMutex(data->worker_finished_mutex);
 				std::wstring error_msg = RS(SCV_LANG_ERROR_UNEXPECTED);
@@ -147,7 +159,7 @@ DWORD WINAPI WorkerThread(void* Param) {
 				return 1;
 			}
 		}
-		ReleaseMutex(data->next_frame_mutex);
+		ReleaseMutex(data->next_frame_mutex); //TODO(fran) why cant this be on top of the while?
 
 #if LIMIT_UPDATE
 		if (CounterVal < TargetMs)
@@ -155,6 +167,8 @@ DWORD WINAPI WorkerThread(void* Param) {
 #endif
 	}
 
+	TerminateThreadsEvent = true;
+	data->thread_mgr.WaitForThreadTermination(); //TODO(fran): I dont know if all this that I put on every function exit are really necessary
 	ReleaseMutex(data->worker_finished_mutex);
 	return 0;
 }
@@ -179,7 +193,7 @@ DWORD WINAPI DDProc(_In_ void* Param)
 	if (!CurrentDesktop)
 	{
 		// We do not have access to the desktop so request a retry
-		SetEvent(TData->ExpectedErrorEvent);
+		*TData->ExpectedErrorEvent=true;
 		Ret = DUPL_RETURN_ERROR_EXPECTED;
 		goto Exit;
 	}
@@ -229,7 +243,7 @@ DWORD WINAPI DDProc(_In_ void* Param)
 	bool WaitToProcessCurrentFrame = false;
 	FRAME_DATA CurrentData;
 
-	while ((WaitForSingleObjectEx(TData->TerminateThreadsEvent, 0, FALSE) == WAIT_TIMEOUT))
+	while (!*TData->TerminateThreadsEvent)
 	{
 		if (!WaitToProcessCurrentFrame)
 		{
@@ -253,7 +267,7 @@ DWORD WINAPI DDProc(_In_ void* Param)
 
 		// We have a new frame so try and process it
 		// Try to acquire keyed mutex in order to access shared surface
-		hr = KeyMutex->AcquireSync(0, 1000);
+		hr = KeyMutex->AcquireSync(0, 1000);//TODO(fran): I'd put 100
 		if (hr == static_cast<HRESULT>(WAIT_TIMEOUT))
 		{
 			// Can't use shared surface right now, try again later
@@ -314,12 +328,12 @@ Exit:
 		if (Ret == DUPL_RETURN_ERROR_EXPECTED)
 		{
 			// The system is in a transition state so request the duplication be restarted
-			SetEvent(TData->ExpectedErrorEvent);
+			*TData->ExpectedErrorEvent=true;
 		}
 		else
 		{
 			// Unexpected error so exit the application
-			SetEvent(TData->UnexpectedErrorEvent);
+			*TData->UnexpectedErrorEvent=true;
 		}
 	}
 

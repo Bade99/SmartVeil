@@ -324,37 +324,8 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			Assert(0);
 		}
 
-		// Request ownership of mutex.
-		//DWORD mut_ret = WaitForSingleObject(thread_data.output_wnd_ready_mutex, INFINITE);
-		//if (mut_ret != WAIT_OBJECT_0) {
-		//	ShowClosingAppError(SCV_LANG_ERROR_ACQUIREMUTEX);
-		//	Assert(0);
-		//}
+		//thread_data.events.UnexpectedErrorEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr); //INFO: NO error on implicit conversion from HANDLE to bool, bools are dangerous
 
-		// Event used by the threads to signal an unexpected error and we want to quit the app
-		thread_data.events.UnexpectedErrorEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-		if (!thread_data.events.UnexpectedErrorEvent)
-		{
-			ShowLastError(RCS(SCV_LANG_ERROR_UNEXPECTEDERROREVENT_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL));
-			Assert(0);
-		}
-
-		// Event for when a thread encounters an expected error
-		thread_data.events.ExpectedErrorEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-		if (!thread_data.events.ExpectedErrorEvent)
-		{
-			ShowLastError(RCS(SCV_LANG_ERROR_EXPECTEDERROREVENT_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL));
-			Assert(0);
-		}
-
-		// Event to tell spawned threads to quit
-		thread_data.events.TerminateThreadsEvent = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-		if (!thread_data.events.TerminateThreadsEvent)
-		{
-			ShowLastError(RCS(SCV_LANG_ERROR_TERMINATETHREADSEVENT_CREATE), RCS(SCV_LANG_ERROR_SMARTVEIL));
-			Assert(0); //TODO(fran): resolve leaks
-		}
-		
 		//Create worker thread that will generate the image to display
 		DWORD ThreadID;
 		worker_thread_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WorkerThread, &thread_data, 0, &ThreadID);
@@ -695,15 +666,13 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			CloseHandle(thread_data.worker_finished_mutex);
 
 			// Make sure all other threads have exited
-			if (SetEvent(thread_data.events.TerminateThreadsEvent))
-			{
-				thread_data.thread_mgr.WaitForThreadTermination();
-			}
+			//thread_data.events.TerminateThreadsEvent = true; //TODO(fran): pointless?
+			thread_data.thread_mgr.WaitForThreadTermination();//TODO(fran): this should not be here
 
 			// Clean up
-			CloseHandle(thread_data.events.UnexpectedErrorEvent);
-			CloseHandle(thread_data.events.ExpectedErrorEvent);
-			CloseHandle(thread_data.events.TerminateThreadsEvent);
+			//CloseHandle(thread_data.events.UnexpectedErrorEvent);
+			//CloseHandle(thread_data.events.ExpectedErrorEvent);
+			//CloseHandle(thread_data.events.TerminateThreadsEvent);
 
 			CloseHandle(worker_thread_handle);
 			CloseHandle(thread_data.next_frame_mutex);
