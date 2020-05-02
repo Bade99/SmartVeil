@@ -234,7 +234,7 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 		// Set the default hot key for this window. 
 		SendMessage(HotkeyValue,
 			HKM_SETHOTKEY,
-			MAKEWORD((WORD)settings.hotkey.vk, HotkeyModifiersToHotkeyControlModifiers(settings.hotkey.mods)),
+			MAKEWORD((WORD)settings.hotkey.vk, HotkeyModifiersToHotkeyControlModifiers((WORD)settings.hotkey.mods)),
 			0);
 	}
 
@@ -338,27 +338,28 @@ BOOL Settings_ApplyHotkey(HWND mgr, HWND settings,const SETTINGS* _settings) {
 /// Registers program to start with the user session
 /// </summary>
 /// <returns>ERROR_SUCCESS if succeeded, otherwise error code, use FormatMessage with FORMAT_MESSAGE_FROM_SYSTEM to get error description</returns>
-LSTATUS RegisterProgramOnStartup(std::wstring exe_path) {
+LSTATUS RegisterProgramOnStartup(const std::wstring& exe_path) {
 
-	WCHAR exe_stored_path[32767];
-	DWORD string_size = 32767 * sizeof(wchar_t);
+	WCHAR exe_stored_path[MAX_PATH]; //We assume most users have short paths
+	DWORD string_size = ARRAYSIZE(exe_stored_path)*sizeof(exe_stored_path[0]);
 	//INFO: when reggetvalue returns this dword will be the length of the copied string, if the buffer is not large enough this dword will be the
 	// required size
 	LSTATUS res = RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", L"Smart Veil",
 		RRF_RT_REG_SZ, NULL, exe_stored_path, &string_size);//add RRF_ZEROONFAILURE?
-	BOOL UpdateReg = FALSE;
+	bool UpdateReg = false;
 
 	if (res == ERROR_SUCCESS) {
-		if (wcscmp(exe_path.c_str(), exe_stored_path) != 0) UpdateReg = TRUE;
+		if (wcscmp(exe_path.c_str(), exe_stored_path) != 0) UpdateReg = true;
 	}
 	else if (res == ERROR_MORE_DATA) {
-		//INFO IMPORTANT: we know that our max array size in GetExePath is 32767 so if something bigger is in the registry
-		// that means it's never gonna be the same
-		UpdateReg = TRUE;
+		//The string is using an extended length path
+		//At this point doing all the checks necessary to retrieve the string with the correct size is probably just as slow as following with the normal function execution
+		// new -> reggetvalue -> wcscmp
+		UpdateReg = true;
 	}
 	else {
 		//function failed and res_get = some error code
-		UpdateReg = TRUE;
+		UpdateReg = true;
 	}
 	if (UpdateReg) {
 		HKEY OnStartup = NULL;
@@ -468,7 +469,11 @@ LRESULT CALLBACK SettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 		if (CurrentValidSettings->start_with_windows) {
 			//Always check that the value stored in the registry is the same as the value of this exe
-			RegisterProgramOnStartup(GetExePath());
+			const std::wstring path = GetExePath();
+			if (path != L"")
+				RegisterProgramOnStartup(path);
+			else
+				ShowError(L"Couldn't register program on startup", RS(SCV_LANG_ERROR_SMARTVEIL)); //TODO(fran): maybe it is better to signal errors from GetExePath, and later if we also want to say that we cant reg on startup send another error
 		}
 
 		//Initialize Tray Icon	
@@ -595,7 +600,11 @@ LRESULT CALLBACK SettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 			if (previous_settings.start_with_windows != CurrentValidSettings->start_with_windows) {
 				if (CurrentValidSettings->start_with_windows) {
-					LSTATUS reg_res = RegisterProgramOnStartup(GetExePath());
+					const std::wstring exe_path = GetExePath();
+					if (exe_path != L"")
+						LSTATUS reg_res = RegisterProgramOnStartup(exe_path);
+					else
+					ShowError(L"Couldn't register program on startup", RS(SCV_LANG_ERROR_SMARTVEIL)); //TODO(fran): maybe it is better to signal errors from GetExePath, and later if we also want to say that we cant reg on startup send another error
 				}
 				else {
 					LSTATUS unreg_res = UnregisterProgramFromStartup();

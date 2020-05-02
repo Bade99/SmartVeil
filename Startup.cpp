@@ -57,11 +57,13 @@ inline STARTUP_INFO read_startup_info_file(std::wstring file) {
 		, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (info_file_handle != INVALID_HANDLE_VALUE) {
-#define INFO_FILE_SIZE 5000 //TODO(fran): cleaner solution?
+#define INFO_FILE_SIZE 2000 //TODO(fran): cleaner solution?
 		WCHAR buf[INFO_FILE_SIZE];
+		buf[INFO_FILE_SIZE - 1] = 0;
 		DWORD bytes_read;
-		BOOL read_res = ReadFile(info_file_handle, buf, INFO_FILE_SIZE, &bytes_read, NULL);
+		BOOL read_res = ReadFile(info_file_handle, buf, (INFO_FILE_SIZE-1)*sizeof(buf[0]), &bytes_read, NULL);
 #undef INFO_FILE_SIZE 
+		CloseHandle(info_file_handle);
 
 		if (read_res) {
 
@@ -69,7 +71,6 @@ inline STARTUP_INFO read_startup_info_file(std::wstring file) {
 			ReadStartupInfoString(info_mapped, &startup_info);
 		}
 
-		CloseHandle(info_file_handle);
 	}
 	return startup_info; //TODO(fran): move constructor
 }

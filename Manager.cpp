@@ -670,16 +670,9 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			thread_data.thread_mgr.WaitForThreadTermination();//TODO(fran): this should not be here
 
 			// Clean up
-			//CloseHandle(thread_data.events.UnexpectedErrorEvent);
-			//CloseHandle(thread_data.events.ExpectedErrorEvent);
-			//CloseHandle(thread_data.events.TerminateThreadsEvent);
 
 			CloseHandle(worker_thread_handle);
 			CloseHandle(thread_data.next_frame_mutex);
-
-			//WaitForSingleObject(thread_data.output_wnd_ready_mutex, INFINITE);
-			//ReleaseMutex(thread_data.output_wnd_ready_mutex);
-			//CloseHandle(thread_data.output_wnd_ready_mutex);
 
 			//
 

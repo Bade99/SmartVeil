@@ -632,7 +632,7 @@ LRESULT CALLBACK ControlProcedures::HotkeyProc(HWND hWnd, UINT Msg, WPARAM wPara
 		//INFO: receives the modifiers in the normal format, so a conversion to the one used by the control is needed
 		SendMessage(hWnd,
 			HKM_SETHOTKEY,
-			MAKEWORD((UINT)wParam, HotkeyModifiersToHotkeyControlModifiers((UINT)lParam)),
+			MAKEWORD((UINT)wParam, HotkeyModifiersToHotkeyControlModifiers((WORD)lParam)),
 			0);
 		break;
 	}

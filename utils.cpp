@@ -62,18 +62,25 @@ inline std::wstring HRESULTToString(HRESULT h) { //TODO(fran): use wstring and a
 /// </summary>
 /// <param name="extra_info">Allows you to add a larger explanation of the problem</param>
 /// <param name="title">MessageBox's title</param>
-inline void ShowLastError(std::wstring extra_info, std::wstring title)
+inline void ShowLastError(const std::wstring& extra_info, const std::wstring& title)
 {
-	UINT flags = MB_OK | MB_TOPMOST;
+	const UINT flags = MB_OK | MB_TOPMOST;
 
-	std::wstring last_err = GetLastErrorAsString();
+	const std::wstring last_err = GetLastErrorAsString();
 
-	std::wstring hresult = HRESULTToString(HRESULT_FROM_WIN32(GetLastError()));
+	const std::wstring hresult = HRESULTToString(HRESULT_FROM_WIN32(GetLastError()));
 
 	std::wstring msg = extra_info!=L""? extra_info + L"\n" + last_err : last_err;
 	msg += hresult;
 
 	MessageBoxW(nullptr, msg.c_str(), title.c_str(), flags);
+}
+
+/// <summary>
+/// Creates a Topmost MessageBox shodwing the error and the title
+/// </summary>
+inline void ShowError(const std::wstring& error, const std::wstring& title) {
+	MessageBoxW(nullptr, error.c_str(), title.c_str(), MB_OK | MB_TOPMOST);
 }
 
 /// <summary>
@@ -132,11 +139,10 @@ inline std::wstring GetVersionInfo(HMODULE hLib, UINT versionID, WCHAR* csEntry)
 				BOOL res = VerQueryValue(versionInfo, fileEntry, &retbuf, (UINT *)&vLen);
 				if (res)
 					csRet = (wchar_t*)retbuf;
+				UnlockResource(hGlobal); //unnecessary
 			}
+			FreeResource(hGlobal);//unnecessary
 		}
-
-		UnlockResource(hGlobal);
-		FreeResource(hGlobal);
 	}
 
 	return csRet;
@@ -601,15 +607,19 @@ inline COLORREF ColorFromBrush(HBRUSH br) {
 }
 
 /// <summary>
-/// Returns full path to the program's exe
+/// Returns full path to the program's exe, or L"" on failure
 /// </summary>
 inline std::wstring GetExePath() {
 	WCHAR exe_path[MAX_PATH];
 	GetModuleFileNameW(NULL, exe_path, MAX_PATH);//INFO: last param is size of buffer in TCHAR
 	if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
 		//path is too long for the buffer, it must be using the \\?\ prefix
-		WCHAR long_exe_path[32767];//INFO: documentation says this max value is approximate
+		WCHAR* long_exe_path = new (std::nothrow) WCHAR(32767);//INFO: documentation says this max value is approximate
+		if (!long_exe_path) return L"";
 		GetModuleFileNameW(NULL, long_exe_path, 32767);//TODO(fran): check whether this works or needs something extra
+		if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) { delete[] long_exe_path; return L""; }
+		std::wstring long_path = long_exe_path;
+		delete[] long_exe_path;
 		return long_exe_path;
 	}
 	return exe_path;

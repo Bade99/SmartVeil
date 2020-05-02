@@ -48,7 +48,6 @@ DWORD WINAPI WorkerThread(void* Param) {
 	__int64 CounterStart = 0;
 	double CounterVal;
 #endif
-
 	while (WaitForSingleObject(data->next_frame_mutex, INFINITE) == WAIT_OBJECT_0) { //TODO(fran): remove this mutex. do thread creation and 
 																					 //destruction each time the veil gets turned on or off
 
@@ -76,8 +75,8 @@ DWORD WINAPI WorkerThread(void* Param) {
 			std::wstring error_msg = RS(SCV_LANG_ERROR_UNEXPECTED);
 			error_msg += L"\n";
 			error_msg += RS(SCV_LANG_ERROR_CLOSING_APP);
-			MessageBoxW(NULL, error_msg.c_str(), RCS(SCV_LANG_ERROR_SMARTVEIL), NULL);
-			DestroyWindow(data->output_wnd); //TODO(fran): this doesnt make any sense here
+			MessageBoxW(NULL, error_msg.c_str(), RCS(SCV_LANG_ERROR_SMARTVEIL), NULL); //TODO(fran): notify manager window that we died
+			//DestroyWindow(data->output_wnd); //TODO(fran): this doesnt make any sense here
 			return 1;
 		}
 		else if (FirstTime || ExpectedErrorEvent)
@@ -154,8 +153,8 @@ DWORD WINAPI WorkerThread(void* Param) {
 				std::wstring error_msg = RS(SCV_LANG_ERROR_UNEXPECTED);
 				error_msg += L"\n";
 				error_msg += RS(SCV_LANG_ERROR_CLOSING_APP);
-				MessageBoxW(NULL, error_msg.c_str(), RCS(SCV_LANG_ERROR_SMARTVEIL), NULL);
-				DestroyWindow(data->output_wnd); //TODO(fran): this doesnt make any sense here
+				MessageBoxW(NULL, error_msg.c_str(), RCS(SCV_LANG_ERROR_SMARTVEIL), NULL); //TODO(fran): notify manager window that we died
+				//DestroyWindow(data->output_wnd); //TODO(fran): this doesnt make any sense here
 				return 1;
 			}
 		}
