@@ -32,14 +32,8 @@ DWORD WINAPI WorkerThread(void* Param) {
 	DYNAMIC_WAIT DynamicWait;
 	bool FirstTime = true;
 	DUPL_RETURN Ret;
-	DWORD mut_ret;
-	//TODO(fran): check this mutex can be left unused
-	//DWORD mut_ret = WaitForSingleObject(data.output_wnd_ready_mutex, INFINITE);
-	//Assert(mut_ret == WAIT_OBJECT_0);
-	//ReleaseMutex(data.output_wnd_ready_mutex);
-	//Now we know the HWND is properly initialized and we can start working with it
 
-	mut_ret = WaitForSingleObject(data->worker_finished_mutex, INFINITE);//Mutex that will be released when the thread finishes
+	const DWORD mut_ret = WaitForSingleObject(data->worker_finished_mutex, INFINITE);//Mutex that will be released when the thread finishes
 	Assert(mut_ret == WAIT_OBJECT_0);
 
 	//Basic update rate checking system https://stackoverflow.com/questions/1739259/how-to-use-queryperformancecounter
@@ -48,41 +42,25 @@ DWORD WINAPI WorkerThread(void* Param) {
 	__int64 CounterStart = 0;
 	double CounterVal;
 #endif
-	while (WaitForSingleObject(data->next_frame_mutex, INFINITE) == WAIT_OBJECT_0) { //TODO(fran): remove this mutex. do thread creation and 
-																					 //destruction each time the veil gets turned on or off
-
-		if (data->terminate) {//TODO(fran): this is a bit botched
-			//TODO(fran): cleanup of the other threads?
-			TerminateThreadsEvent = true;
-			data->thread_mgr.WaitForThreadTermination();
-			ReleaseMutex(data->next_frame_mutex);
-			ReleaseMutex(data->worker_finished_mutex);
-			return 0;
-		}
+	while (!data->terminate) {
 
 #ifdef _DEBUG
 		StartCounter(CounterStart);
 #endif
-
 		Ret = DUPL_RETURN_SUCCESS;
-		if (UnexpectedErrorEvent) //TODO(fran): this is stupid, shared memory is simpler and faster, this does NOT need mutex capability
+		if (UnexpectedErrorEvent) // Unexpected error occurred so exit the application
 		{
-			// Unexpected error occurred so exit the application
 			TerminateThreadsEvent = true;
 			data->thread_mgr.WaitForThreadTermination();
-			ReleaseMutex(data->next_frame_mutex);
+			data->thread_mgr.Clean();
+			data->output_mgr.CleanRefs();
 			ReleaseMutex(data->worker_finished_mutex);
-			std::wstring error_msg = RS(SCV_LANG_ERROR_UNEXPECTED);
-			error_msg += L"\n";
-			error_msg += RS(SCV_LANG_ERROR_CLOSING_APP);
-			MessageBoxW(NULL, error_msg.c_str(), RCS(SCV_LANG_ERROR_SMARTVEIL), NULL); //TODO(fran): notify manager window that we died
-			//DestroyWindow(data->output_wnd); //TODO(fran): this doesnt make any sense here
+			ShowError(RS(SCV_LANG_ERROR_UNEXPECTED) + L"\n" + RS(SCV_LANG_ERROR_CLOSING_APP), RS(SCV_LANG_ERROR_SMARTVEIL));
 			return 1;
 		}
-		else if (FirstTime || ExpectedErrorEvent)
+		else if (FirstTime || ExpectedErrorEvent) //On first time through the loop initialization happens, otherwise on error we clean up
 		{
-			//All thread setup for execution runs here, I think
-			if (!FirstTime)
+			if (!FirstTime) //Cleanup on expected error
 			{
 				// Terminate other threads
 				TerminateThreadsEvent=true; //TODO(fran): this is the only place this gets set -> pointless to have mutex capability
@@ -91,7 +69,6 @@ DWORD WINAPI WorkerThread(void* Param) {
 				TerminateThreadsEvent=false; //This is the only place that resets this two -> pointless to have mutex capability,
 				ExpectedErrorEvent = false;
 
-				// Clean up
 				data->thread_mgr.Clean();
 				data->output_mgr.CleanRefs();
 
@@ -101,8 +78,7 @@ DWORD WINAPI WorkerThread(void* Param) {
 			}
 			else
 			{
-				// First time through the loop so nothing to clean up
-				FirstTime = false;
+				FirstTime = false; // First time through the loop so nothing to clean up
 			}
 
 			// Re-initialize
@@ -111,54 +87,42 @@ DWORD WINAPI WorkerThread(void* Param) {
 			{
 				HANDLE SharedHandle = data->output_mgr.GetSharedHandle();
 				if (SharedHandle)
-				{
 					Ret = data->thread_mgr.Initialize(SingleOutput, OutputCount, &UnexpectedErrorEvent, &ExpectedErrorEvent,
 														&TerminateThreadsEvent, SharedHandle, &DeskBounds);
-				}
 				else
-				{
-					ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_SHARED_SURF_HANDLE_GET), RCS(SCV_LANG_ERROR_SMARTVEIL), E_UNEXPECTED);
-					Ret = DUPL_RETURN_ERROR_UNEXPECTED;
-				}
+					Ret = ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_SHARED_SURF_HANDLE_GET), RCS(SCV_LANG_ERROR_SMARTVEIL), E_UNEXPECTED);
 			}
-
 		}
 
 		//TODO(fran): could it be that some of the flickering is produced cause we havent yet updated our current surface?
 		// if that were happening then we would be presenting the one from two frames ago
 
-		// Nothing else to do, so try to present to write out to window
+		// Draw to our window (veil)
 		Ret = data->output_mgr.UpdateApplicationWindow(data->thread_mgr.GetPointerInfo());
 
 #ifdef _DEBUG
 		CounterVal = GetCounter(CounterStart, PCFreq);
-		PostMessage(KNOWN_WINDOWS.settings, SCV_SETTINGS_UPDATE_COUNTER, (WPARAM)(float)CounterVal, 0);//this is clearly not great cause we dont know when we are gonna read this value
+		PostMessage(KNOWN_WINDOWS.settings, SCV_SETTINGS_UPDATE_COUNTER, (WPARAM)(float)CounterVal, 0);
 #endif
 
-		// Check if for errors
-		if (Ret != DUPL_RETURN_SUCCESS)
+		if (Ret != DUPL_RETURN_SUCCESS) // Check for errors
 		{
 			if (Ret == DUPL_RETURN_ERROR_EXPECTED)
 			{
-				// Some type of system transition is occurring so retry
-				ExpectedErrorEvent=true;
+				ExpectedErrorEvent=true; // Some type of system transition is occurring so retry
 			}
 			else
 			{
 				// Unexpected error so exit
 				TerminateThreadsEvent = true;
 				data->thread_mgr.WaitForThreadTermination();
-				ReleaseMutex(data->next_frame_mutex);
+				data->thread_mgr.Clean();
+				data->output_mgr.CleanRefs();
 				ReleaseMutex(data->worker_finished_mutex);
-				std::wstring error_msg = RS(SCV_LANG_ERROR_UNEXPECTED);
-				error_msg += L"\n";
-				error_msg += RS(SCV_LANG_ERROR_CLOSING_APP);
-				MessageBoxW(NULL, error_msg.c_str(), RCS(SCV_LANG_ERROR_SMARTVEIL), NULL); //TODO(fran): notify manager window that we died
-				//DestroyWindow(data->output_wnd); //TODO(fran): this doesnt make any sense here
+				ShowError(RS(SCV_LANG_ERROR_UNEXPECTED) + L"\n" + RS(SCV_LANG_ERROR_CLOSING_APP), RS(SCV_LANG_ERROR_SMARTVEIL)); //TODO(fran): closing app part
 				return 1;
 			}
 		}
-		ReleaseMutex(data->next_frame_mutex); //TODO(fran) why cant this be on top of the while?
 
 #if LIMIT_UPDATE
 		if (CounterVal < TargetMs)
@@ -166,9 +130,14 @@ DWORD WINAPI WorkerThread(void* Param) {
 #endif
 	}
 
+	//Cleanup before exiting
 	TerminateThreadsEvent = true;
 	data->thread_mgr.WaitForThreadTermination(); //TODO(fran): I dont know if all this that I put on every function exit are really necessary
+	data->thread_mgr.Clean();
+	data->output_mgr.CleanRefs();
 	ReleaseMutex(data->worker_finished_mutex);
+
+	//INFO(fran): go to CommonTypes.h to define-undef (turn on-off) directx debugging (_DX_DEBUG_LAYER)
 	return 0;
 }
 

@@ -62,13 +62,13 @@ void OUTPUTMANAGER::WindowResize()
 
 void OUTPUTMANAGER::SetThreshold(float threshold)
 {
-	if (threshold < 0 || threshold>1) { Assert(0); }
+	Assert(threshold >= 0 || threshold <= 1);
 	Threshold = threshold;
 }
 
 void OUTPUTMANAGER::SetOpacity(float opacity)
 {
-	if (opacity < 0 || opacity>1) { Assert(0); }
+	Assert(opacity >= 0 || opacity <= 1);
 	Opacity = opacity;
 }
 
@@ -110,7 +110,12 @@ DUPL_RETURN OUTPUTMANAGER::InitOutput(HWND Window, INT SingleOutput, _Out_ UINT*
     // Create device
     for (UINT DriverTypeIndex = 0; DriverTypeIndex < NumDriverTypes; ++DriverTypeIndex)
     {
-        hr = D3D11CreateDevice(nullptr, DriverTypes[DriverTypeIndex], nullptr, 0, FeatureLevels, NumFeatureLevels,
+        hr = D3D11CreateDevice(nullptr, DriverTypes[DriverTypeIndex], nullptr, 
+			0
+			#ifdef _DX_DEBUG_LAYER 
+			| D3D11_CREATE_DEVICE_DEBUG
+			#endif
+			, FeatureLevels, NumFeatureLevels,
         D3D11_SDK_VERSION, &m_Device, &FeatureLevel, &m_DeviceContext);
         if (SUCCEEDED(hr))
         {
@@ -122,6 +127,10 @@ DUPL_RETURN OUTPUTMANAGER::InitOutput(HWND Window, INT SingleOutput, _Out_ UINT*
     {
         return ProcessFailure(m_Device, L"Device creation in OUTPUTMANAGER failed", L"Error", hr, SystemTransitionsExpectedErrors);
     }
+#ifdef _DX_DEBUG_LAYER
+	const char m_DeviceName[] = "OUTMGR_m_Device";
+	m_Device->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof(m_DeviceName) - 1, m_DeviceName);
+#endif
 
     // Get DXGI factory
     IDXGIDevice* DxgiDevice = nullptr;
@@ -198,8 +207,19 @@ DUPL_RETURN OUTPUTMANAGER::InitOutput(HWND Window, INT SingleOutput, _Out_ UINT*
 
 	hr = m_Device->CreateTexture2D(&textureDesc, nullptr, &manual_Backbuffer[0]);
 	if (FAILED(hr)) { return ProcessFailure(nullptr, L"Failed to create the frontbuffer texture for the output", L"Error", hr); }
+
+#ifdef _DX_DEBUG_LAYER
+	const char manual_BackbufferName0[] = "OUTMGR_manual_Backbuffer0";
+	manual_Backbuffer[0]->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof(manual_BackbufferName0) - 1, manual_BackbufferName0);
+#endif
+
 	hr = m_Device->CreateTexture2D(&textureDesc, nullptr, &manual_Backbuffer[1]);
 	if (FAILED(hr)) { return ProcessFailure(nullptr, L"Failed to create the backbuffer texture for the output", L"Error", hr); }
+
+#ifdef _DX_DEBUG_LAYER
+	const char manual_BackbufferName1[] = "OUTMGR_manual_Backbuffer1";
+	manual_Backbuffer[1]->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof(manual_BackbufferName1) - 1, manual_BackbufferName1);
+#endif
 
 #endif
 
@@ -260,6 +280,10 @@ DUPL_RETURN OUTPUTMANAGER::InitOutput(HWND Window, INT SingleOutput, _Out_ UINT*
 	ThresholdData.SysMemSlicePitch = 0;
 	hr = m_Device->CreateBuffer(&ThresholdDesc, &ThresholdData, &ThresholdOpacityBuffer);
 	if (FAILED(hr)) { return ProcessFailure(nullptr, L"Failed to load threshold and opacity data to the GPU", L"Error", hr); }
+#ifdef _DX_DEBUG_LAYER
+	const char ThresholdOpacityBufferName[] = "OUT_MGR_ThresholdOpacityBuffer";
+	ThresholdOpacityBuffer->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof(ThresholdOpacityBufferName) - 1, ThresholdOpacityBufferName);
+#endif
     // Create the blend state
 #if 0
     D3D11_BLEND_DESC BlendStateDesc; 
@@ -423,6 +447,10 @@ DUPL_RETURN OUTPUTMANAGER::CreateSharedSurf(INT SingleOutput, _Out_ UINT* OutCou
             return ProcessFailure(m_Device, L"Failed to create shared texture", L"Error", hr, SystemTransitionsExpectedErrors);
         }
     }
+#ifdef _DX_DEBUG_LAYER
+	const char m_SharedSurfName[] = "OUTMGR_m_SharedSurf";
+	m_SharedSurf->SetPrivateData(WKPDID_D3DDebugObjectName, sizeof(m_SharedSurfName) - 1, m_SharedSurfName);
+#endif
 
     // Get keyed mutex
     hr = m_SharedSurf->QueryInterface(__uuidof(IDXGIKeyedMutex), reinterpret_cast<void**>(&m_KeyMutex));
@@ -791,6 +819,9 @@ DUPL_RETURN OUTPUTMANAGER::MakeRTV()
     }
 
     // Set new render target
+	ID3D11ShaderResourceView *const pSRV[1] = { NULL };
+	m_DeviceContext->PSSetShaderResources(0, 1, pSRV);
+	m_DeviceContext->PSSetShaderResources(1, 1, pSRV);
     m_DeviceContext->OMSetRenderTargets(1, &m_RTV, nullptr);
 
     return DUPL_RETURN_SUCCESS;
@@ -915,6 +946,7 @@ void OUTPUTMANAGER::SwitchBuffers()
 	ID3D11Texture2D* tex = manual_Backbuffer[0];
 	manual_Backbuffer[0] = manual_Backbuffer[1];
 	manual_Backbuffer[1] = tex;
+	manual_Backbuffer[1]->Release();
 }
 
 //
@@ -922,6 +954,10 @@ void OUTPUTMANAGER::SwitchBuffers()
 //
 void OUTPUTMANAGER::CleanRefs()
 {
+	if (ThresholdOpacityBuffer) { //INFO IMPORTANT(fran): ThresholdOpacityBuffer was keeping a ref to the Device that created it, so when we release it we are also lower its device's ref count
+		ThresholdOpacityBuffer->Release();
+		ThresholdOpacityBuffer = nullptr;
+	}
 	if (manual_Backbuffer[0]) {
 		manual_Backbuffer[0]->Release();
 		manual_Backbuffer[0] = nullptr;
@@ -971,12 +1007,13 @@ void OUTPUTMANAGER::CleanRefs()
         m_DeviceContext->Release();
         m_DeviceContext = nullptr;
     }
-
+#ifndef _DX_DEBUG_LAYER
     if (m_Device)
     {
         m_Device->Release();
         m_Device = nullptr;
     }
+#endif
 #if 0
     if (m_SwapChain)
     {
@@ -1007,6 +1044,12 @@ void OUTPUTMANAGER::CleanRefs()
         m_Factory->Release();
         m_Factory = nullptr;
     }
+#ifdef _DX_DEBUG_LAYER
+	//IDXGIDebug* m_d3dDebug;
+	ID3D11Debug* d;
+	m_Device->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&d));
+	d->ReportLiveDeviceObjects(D3D11_RLDO_SUMMARY | D3D11_RLDO_DETAIL);
+#endif
 }
 
 //

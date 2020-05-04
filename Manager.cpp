@@ -303,18 +303,18 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		Assert(KNOWN_WINDOWS.veil);
 		thread_data.output_wnd = KNOWN_WINDOWS.veil; //TODO(fran): check the veil exists, otherwise wait for it. We could also just say veil always starts before manager
 
-		thread_data.next_frame_mutex = CreateMutex(NULL, FALSE, NULL);
+		//thread_data.next_frame_mutex = CreateMutex(NULL, FALSE, NULL);
 
-		if (thread_data.next_frame_mutex == NULL)
-		{
-			ShowClosingAppError(SCV_LANG_ERROR_CREATEMUTEX);
-			Assert(0);
-		}
+		//if (thread_data.next_frame_mutex == NULL)
+		//{
+		//	ShowClosingAppError(SCV_LANG_ERROR_CREATEMUTEX);
+		//	Assert(0);
+		//}
 
-		if (!mgr_data->is_turned_on) {
-			DWORD mut_ret = WaitForSingleObject(thread_data.next_frame_mutex, INFINITE);
-			Assert(mut_ret == WAIT_OBJECT_0);
-		}
+		//if (!mgr_data->is_turned_on) {
+		//	DWORD mut_ret = WaitForSingleObject(thread_data.next_frame_mutex, INFINITE);
+		//	Assert(mut_ret == WAIT_OBJECT_0);
+		//}
 
 		thread_data.worker_finished_mutex = CreateMutex(NULL, FALSE, NULL);
 
@@ -327,9 +327,16 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		//thread_data.events.UnexpectedErrorEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr); //INFO: NO error on implicit conversion from HANDLE to bool, bools are dangerous
 
 		//Create worker thread that will generate the image to display
-		DWORD ThreadID;
-		worker_thread_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WorkerThread, &thread_data, 0, &ThreadID);
+		//DWORD ThreadID;
+		//worker_thread_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WorkerThread, &thread_data, 0, &ThreadID);
+
 		//
+		//INFO: thread_data.events.UnexpectedErrorEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr); //REMEMBER: NO error on implicit conversion from HANDLE to bool, bools are dangerous
+		thread_data.terminate = false;
+		if (mgr_data->is_turned_on) {
+			worker_thread_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WorkerThread, &thread_data, 0, NULL);
+		}
+
 
 		break;
 	}
@@ -518,18 +525,25 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case SCV_MANAGER_TURN_ON_OFF: //Show/Hide the Veil
 		{
 			mgr_data->is_turned_on = !mgr_data->is_turned_on;
-			if (mgr_data->is_turned_on) {
+			if (mgr_data->is_turned_on) { //Turn on
 				//TODO(fran): could it ever happen that we didnt already own the mutex?
-				ReleaseMutex(thread_data.next_frame_mutex);
+				//ReleaseMutex(thread_data.next_frame_mutex);
+				worker_thread_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WorkerThread, &thread_data, 0, NULL);//TODO(check return value is not NULL)
 				ShowWindow(GetWindow(hWnd,GW_OWNER), SW_SHOW);
 			}
-			else {
+			else {//Turn off
 				ShowWindow(GetWindow(hWnd, GW_OWNER), SW_HIDE);
-				thread_data.output_mgr.RestartTextures();
-
-				//TODO(fran): could it ever happen that we already had the mutex owned?
-				DWORD mut_ret = WaitForSingleObject(thread_data.next_frame_mutex, INFINITE);
-				Assert(mut_ret == WAIT_OBJECT_0);
+				//thread_data.output_mgr.RestartTextures(); //TODO(fran): I think this is not needed anymore------------------------------------------------------------------------------
+				thread_data.terminate = true;
+				DWORD mut_ret = WaitForSingleObject(thread_data.worker_finished_mutex, INFINITE);
+				if (mut_ret != WAIT_OBJECT_0) {
+					if (mut_ret == WAIT_FAILED) ShowLastError(L"WaitForSingleObject failed", RS(SCV_LANG_ERROR_SMARTVEIL));
+					else ShowError(L"Unknown error while waiting for mutex for worker thread termination", RS(SCV_LANG_ERROR_SMARTVEIL));
+				}
+				thread_data.terminate = false;
+				ReleaseMutex(thread_data.worker_finished_mutex);
+				//DWORD mut_ret = WaitForSingleObject(thread_data.next_frame_mutex, INFINITE);
+				//Assert(mut_ret == WAIT_OBJECT_0);
 
 			}
 			SendMessage(hWnd, SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF, 0, 0); 
@@ -640,7 +654,7 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_DESTROY: 
 	{
 		static BOOL already_destroyed=FALSE;
-		if (!already_destroyed) {
+		if (!already_destroyed) {//refer to the bottom of this if statement to understand the why of this garbage
 			already_destroyed = TRUE;
 			//Save MANAGER* //TODO(fran): this should be done when things change, aka during the duration of the window, NOT here at the end
 			RECT rec;
@@ -658,21 +672,33 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//TODO(fran): Establish this as the only application exit path
 			//INFO(fran): here destroy everything and close the app
 			//Wait for image processing thread to exit
-			thread_data.terminate = TRUE;
+			//thread_data.terminate = TRUE;
 
-			if (!mgr_data->is_turned_on) ReleaseMutex(thread_data.next_frame_mutex);
-			WaitForSingleObject(thread_data.worker_finished_mutex, INFINITE);
-			ReleaseMutex(thread_data.worker_finished_mutex);
+			if (mgr_data->is_turned_on) {
+				thread_data.terminate = true;
+				DWORD mut_ret = WaitForSingleObject(thread_data.worker_finished_mutex, INFINITE); //TODO(fran): some way to avoid this code repetition from turn_on_off message?
+				if (mut_ret != WAIT_OBJECT_0) {
+					if (mut_ret == WAIT_FAILED) ShowLastError(L"WaitForSingleObject failed", RS(SCV_LANG_ERROR_SMARTVEIL));
+					else ShowError(L"Unknown error while waiting for mutex for worker thread termination", RS(SCV_LANG_ERROR_SMARTVEIL));
+				}
+				thread_data.terminate = false;
+				ReleaseMutex(thread_data.worker_finished_mutex);
+			}
+
+
+			//if (!mgr_data->is_turned_on) ReleaseMutex(thread_data.next_frame_mutex);
+			//WaitForSingleObject(thread_data.worker_finished_mutex, INFINITE);
+			//ReleaseMutex(thread_data.worker_finished_mutex);
 			CloseHandle(thread_data.worker_finished_mutex);
 
 			// Make sure all other threads have exited
 			//thread_data.events.TerminateThreadsEvent = true; //TODO(fran): pointless?
-			thread_data.thread_mgr.WaitForThreadTermination();//TODO(fran): this should not be here
+			//thread_data.thread_mgr.WaitForThreadTermination();//TODO(fran): this should not be here
 
 			// Clean up
 
 			CloseHandle(worker_thread_handle);
-			CloseHandle(thread_data.next_frame_mutex);
+			//CloseHandle(thread_data.next_frame_mutex);
 
 			//
 

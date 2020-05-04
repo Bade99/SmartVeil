@@ -20,7 +20,6 @@ class OUTPUTMANAGER
 		void SetThreshold(float threshold); // Receives a value normalized between 0 and 1
 		void SetOpacity(float opacity); // Receives a value normalized between 0 and 1
 		void RestartTextures();
-
     private:
     // Methods
         DUPL_RETURN ProcessMonoMask(bool IsMono, _Inout_ PTR_INFO* PtrInfo, _Out_ INT* PtrWidth, _Out_ INT* PtrHeight, _Out_ INT* PtrLeft, _Out_ INT* PtrTop, _Outptr_result_bytebuffer_(*PtrHeight * *PtrWidth * BPP) BYTE** InitBuffer, _Out_ D3D11_BOX* Box);
@@ -37,11 +36,10 @@ class OUTPUTMANAGER
 		void SwitchBuffers();
     // Vars
 		ID3D11Texture2D* manual_Backbuffer[2]; //the one at position 0 will always be the output and the other will be the previous output
-
+		ID3D11Device* m_Device;
 #if 0
         IDXGISwapChain1* m_SwapChain;
 #endif
-        ID3D11Device* m_Device;
         IDXGIFactory2* m_Factory;
         ID3D11DeviceContext* m_DeviceContext;
         ID3D11RenderTargetView* m_RTV;

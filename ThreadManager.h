@@ -24,7 +24,7 @@ class THREADMANAGER
         DUPL_RETURN InitializeDx(_Out_ DX_RESOURCES* Data);
         void CleanDx(_Inout_ DX_RESOURCES* Data);
 
-        PTR_INFO m_PtrInfo;
+        PTR_INFO m_PtrInfo; //TODO(fran): we probably dont need this
         UINT m_ThreadCount;
         _Field_size_(m_ThreadCount) HANDLE* m_ThreadHandles;
         _Field_size_(m_ThreadCount) THREAD_DATA* m_ThreadData;

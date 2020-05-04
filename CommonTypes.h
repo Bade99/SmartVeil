@@ -15,6 +15,17 @@
 #include "PixelShader.h"
 #include "VertexShader.h"
 
+#ifdef _DEBUG
+//Used to debug directx components of the application, ID3D11Devices should not be destroyed to allow debugging after destructors have been called, at least for now
+//#define _DX_DEBUG_LAYER
+#endif
+
+#ifdef _DX_DEBUG_LAYER
+#include <dxgidebug.h>
+#pragma comment( lib, "dxguid.lib") //_WKPDID_D3DDebugObjectName
+
+#endif
+
 #define NUMVERTICES 6
 #define BPP         4
 

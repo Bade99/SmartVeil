@@ -10,9 +10,11 @@
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 //This file defines useful functions and definitions that are for general use, not directly dependent or related to anything specified by this program
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-
+#ifdef _DEBUG
 #define Assert(assertion) if(!(assertion))*(int*)NULL=0
-
+#else
+#define Assert(assertion)  
+#endif
 
 inline std::wstring GetLastErrorAsString()
 {

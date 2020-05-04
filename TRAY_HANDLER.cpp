@@ -32,7 +32,7 @@ BOOL TRAY_HANDLER::CreateTrayIcon(HWND hwnd, UINT uID, LONG iconID, UINT uCallba
 	return ret;
 }
 
-BOOL TRAY_HANDLER::DestroyTrayIcon(HWND hwnd, UINT uID)
+BOOL TRAY_HANDLER::DestroyTrayIcon(HWND hwnd, UINT uID) //TODO(fran): should go in destructor too
 {
 	try {
 		std::pair<NOTIFYICONDATA,WORD> notif_msg = this->TrayElements.at(std::make_pair(hwnd,uID));

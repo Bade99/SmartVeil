@@ -64,11 +64,13 @@ void THREADMANAGER::Clean()
 //
 void THREADMANAGER::CleanDx(_Inout_ DX_RESOURCES* Data)
 {
+#ifndef _DX_DEBUG_LAYER
     if (Data->Device)
     {
         Data->Device->Release();
         Data->Device = nullptr;
     }
+#endif
 
     if (Data->Context)
     {
@@ -99,6 +101,11 @@ void THREADMANAGER::CleanDx(_Inout_ DX_RESOURCES* Data)
         Data->SamplerLinear->Release();
         Data->SamplerLinear = nullptr;
     }
+#ifdef _DX_DEBUG_LAYER
+	ID3D11Debug* d;
+	Data->Device->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&d));
+	d->ReportLiveDeviceObjects(D3D11_RLDO_SUMMARY | D3D11_RLDO_DETAIL);
+#endif
 }
 
 //
@@ -176,7 +183,12 @@ DUPL_RETURN THREADMANAGER::InitializeDx(_Out_ DX_RESOURCES* Data)
     // Create device
     for (UINT DriverTypeIndex = 0; DriverTypeIndex < NumDriverTypes; ++DriverTypeIndex)
     {
-        hr = D3D11CreateDevice(nullptr, DriverTypes[DriverTypeIndex], nullptr, 0, FeatureLevels, NumFeatureLevels,
+        hr = D3D11CreateDevice(nullptr, DriverTypes[DriverTypeIndex], nullptr, 
+			0
+#ifdef _DX_DEBUG_LAYER 
+			| D3D11_CREATE_DEVICE_DEBUG
+#endif
+			, FeatureLevels, NumFeatureLevels,
                                 D3D11_SDK_VERSION, &Data->Device, &FeatureLevel, &Data->Context);
         if (SUCCEEDED(hr))
         {

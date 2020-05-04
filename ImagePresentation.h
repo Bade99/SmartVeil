@@ -17,7 +17,7 @@ struct WORKER_THREAD_INIT { //TODO(fran): probably some of this are unnecessary
 	HWND output_wnd=nullptr;
 	//HANDLE output_wnd_ready_mutex=nullptr;//(start_mutex) //indicates when the output window is ready to show image data
 	HANDLE worker_finished_mutex = nullptr;//(thread_finished_mutex) //signaled when the worker thread is done with its work and all cleaned up
-	HANDLE next_frame_mutex = nullptr;//(process_next_frame_mutex) //signaled when new frames are required
+	//HANDLE next_frame_mutex = nullptr;//(process_next_frame_mutex) //signaled when new frames are required
 	bool terminate = false;//(ProgramFinished) //the thread has to terminate //TODO(fran): is it better to use BOOL for alignment reasons?
 	THREADMANAGER thread_mgr;
 	OUTPUTMANAGER output_mgr;
