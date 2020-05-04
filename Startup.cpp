@@ -97,15 +97,14 @@ inline std::wstring WriteStartupInfoString(const STARTUP_INFO& startup_info) {
 /// </summary>
 /// <param name="directory">Do not put slash at the end, eg C:\Users\User\AppData\SmartVeil</param>
 /// <param name="filename">Should also contain extesion, eg info.txt</param>
-inline void SaveStartupInfo(const STARTUP_INFO& startup_info, std::wstring directory, std::wstring filename) {
+/// <returns>TRUE on success, FALSE on failure, call GetLastError() for more info</returns>
+inline bool SaveStartupInfo(const STARTUP_INFO& startup_info, std::wstring directory, std::wstring filename) {
 	std::wstring info_buf=WriteStartupInfoString(startup_info);
 
 	//INFO: the folder MUST have been created previously, CreateFile doesnt do it
 	BOOL dir_ret = CreateDirectoryW((LPWSTR)directory.c_str(), NULL);
 
-	if (!dir_ret) {
-		Assert(GetLastError() != ERROR_PATH_NOT_FOUND);
-	}
+	if (!dir_ret && (GetLastError() != ERROR_ALREADY_EXISTS)) return false;
 
 	std::wstring full_file_path = directory + L'\\' + filename;
 	HANDLE info_file_handle = CreateFileW(full_file_path.c_str(), GENERIC_WRITE, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE
@@ -114,9 +113,9 @@ inline void SaveStartupInfo(const STARTUP_INFO& startup_info, std::wstring direc
 		DWORD bytes_written;
 		BOOL write_res = WriteFile(info_file_handle, (LPWSTR)info_buf.c_str(), info_buf.size() * sizeof(wchar_t), &bytes_written, NULL);
 		CloseHandle(info_file_handle);
+		return write_res;
 	}
 	else {
-
+		return false;
 	}
-	//TODO(fran): do we do something if couldnt create/write the file?
 }

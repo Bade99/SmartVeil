@@ -30,7 +30,7 @@ inline void deserialize(bool& v, const std::wstring& s) { try { v = stoi(s); } c
 //LANGUAGE_MANAGER::LANGUAGE
 inline std::wstring serialize(LANGUAGE_MANAGER::LANGUAGE v) { 
 	if (LANGUAGE_MANAGER::Instance().IsValidLanguage(v)) return LANGUAGE_MANAGER::LANGUAGE_STRING[(int)v]; 
-	else return LANGUAGE_MANAGER::LANGUAGE_STRING[(int)LANGUAGE_MANAGER::LANGUAGE::ENGLISH];
+	else return LANGUAGE_MANAGER::LANGUAGE_STRING[(int)LANGUAGE_MANAGER::GetDefaultLanguage()];
 }
 inline void deserialize(LANGUAGE_MANAGER::LANGUAGE& v, const std::wstring& s) {
 	for (int i = 0; i < ARRAYSIZE(LANGUAGE_MANAGER::LANGUAGE_STRING); i++)

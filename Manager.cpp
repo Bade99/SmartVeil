@@ -9,9 +9,6 @@
 #include <Windowsx.h>
 //#include <vssym32.h>
 
-#include "DisplayManager.h"
-#include "DuplicationManager.h"
-
 #include "ImagePresentation.h"
 
 #include "Common.h"
@@ -22,13 +19,6 @@
 #include "LANGUAGE_MANAGER.h"
 #include "ControlProcedures.h"
 
-
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"") 
-#pragma comment(lib,"comctl32.lib")
-#pragma comment(lib,"UxTheme.lib")// setwindowtheme
-#pragma comment (lib,"Dwmapi.lib")
-#pragma comment (lib,"Version.lib") //for VerQueryValue
-
 //Definition of child control ids and internal messages
 #define SCV_MANAGER_THRESHOLD_TITLE (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+1) //The static text control that shows the threshold slider's current value
 #define SCV_MANAGER_OPACITY_TITLE (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+2) //The static text control that shows the opacity slider's current value
@@ -38,57 +28,6 @@
 #define SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+6) //Msg sent by the manager to itself to update the turn on-off button when it's pressed and on language change
 #define SCV_MANAGER_UPDATE_THRESHOLD_OPACITY (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+7) //Msg sent by the manager to itself to update the sliders' text when there's a language change
 #define SCV_MANAGER_TOOLTIP_THRESHOLD_SLIDER (SCV_MANAGER_FIRST_INTERNAL_MESSAGE+8) //The Slider control for the threshold
-
-
-
-
-//TODOs:
-//CREATE NAMESPACES
-//·Icons on buttons are not correctly centered
-//·Create one big square for the tooltips of threshold and opacity each one encompassing the area from the beginning of the text to the end of the slider?
-//·When sliders are pressed there is a white border around it, why?, also the thingy that moves the slider is now white when moved, why? looks better though
-//·When the veil gets turned on it starts slowly taking mem to around 11.5MB and then stops, what is happening there?
-//·When no language was found on settings file use the system default if we support it, otherwise english
-//·Need to manage erasebkgrnd on buttonproc, getting white backgrounds some times, probably there's some other bug too
-//·From what I read basic tooltips have an 80 character limit, what do we do? other langs could go over that
-//·We are setting the lang on per thread basis, what happens when thread from outmgr,threadmgr,dispmgr requests a string??
-//·Compile 64 bit ? 
-//·Change mouse icon to a hand for controls that arent entirely obvious the user can click on or use them
-//·Allow the user to decide the update rate of the veil, also useful to know it for testing
-//·Button press must only be accepted if when released mouse is inside button area, also we are doing the same thing wrong when we draw
-//·Sliders should go to 100%
-// and always put a % after the number
-//?·Add an information icon (that little circle with a i) next to threshold, so the user can click and better understand?
-//·Give the user the option to write the threshold/opacity value, if they click over the number ?
-//·Copyright? I want it open source though
-//·Painting the hotkey green and red isnt color blind helpful, ideas? - I could show a tooltip that says it failed or succeeded
-//·A simpler name instead of threshold for the text control
-//·Automatic opacity increase in a time interval? eg from 0:00 to 4:00
-//·Settings: save button greyed out until something is changed
-//·Find out why just the mouse movement is causing the highest of cpu and gpu usage, look into the other cpp files
-//·IMPORTANT: the fact that we update our veil means there is a new frame that windows has to present, therefore we are always generating more
-// and more frames non stop, can we fix this somehow? ie skip one frame update each time
-//LOOKs:
-//·Make minimize animation go towards tray when tray icon is enabled
-//·When the user changes to another window we could slightly change the color to indicate that we are not the focused window anymore
-//·I like how the settings icon looks without the white border, we could also make light-blue only inside the icon
-//·Make the icon have a hidden design that can only be viewed in the tray when the threshold & opacity are at some point x
-//·Change mouse icon when manager is open, to one that only has white borders, and the inside transparent or black?
-//·Application icon, and assign it to both the veil and the manager, to the settings I dont know
-//·Flip the combobox button icon when displaying the list
-
-//INFO:
-//
-//·Buddy windows: links controls together! could try to use it to auto update position on lang change, dont yet know if they have update properties
-//·Paint title bar: http://www.it-quants.com/Blogs/tabid/83/EntryId/53/Win32-SDK-how-to-change-the-title-bar-color-title.aspx
-//·Custom draw?: https://docs.microsoft.com/en-us/windows/win32/controls/custom-draw
-//·Custom frame, looks like guaranteed suffering: https://docs.microsoft.com/en-us/windows/win32/dwm/customframe#extending-the-client-frame
-//·How to add icons to visual studio: create default icon, change name to your icon's, copy your icon in the same folder, done! thanks vs
-
-// )appdata roaming( , in a way I like those inverse parenthesis
-
-//THANKs:
-//·Micaela Zabatta (1st tester)
 
 /// <summary>
 /// Full control setup for the Manager window

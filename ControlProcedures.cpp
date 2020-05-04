@@ -611,7 +611,6 @@ LRESULT CALLBACK ControlProcedures::SecretButtonProc(HWND hWnd, UINT Msg, WPARAM
 	}
 	default: return DefSubclassProc(hWnd, Msg, wParam, lParam);
 	}
-	return 0;
 }
 
 //TODO(fran): if the user wants to write his/her own key again after say, testing how the control works, he/she wont be able

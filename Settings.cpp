@@ -165,9 +165,11 @@ void SetupSettings(HWND hwnd, HINSTANCE hInstance,const CUSTOM_FRAME& frame, con
 	HWND language_combo = CreateWindowW(L"ComboBox", NULL, WS_VISIBLE | WS_CHILD | CBS_DROPDOWNLIST | WS_TABSTOP
 		, (int)(paddingX + language_text.x*1.1f), (int)paddingY, combobox_text.x, combobox_text.y, hwnd, (HMENU)SCV_SETTINGS_LANG_COMBO, hInstance, NULL);
 
-	//TODO(fran): either we iterate over the enums or static_assert the count (only ifdef _DEBUG)
-	SendMessageW(language_combo, CB_ADDSTRING, (WPARAM)LANGUAGE_MANAGER::LANGUAGE::ENGLISH, (LPARAM)L"English");//INFO(fran):this values MUST be lined up with LANGUAGE enum
-	SendMessageW(language_combo, CB_ADDSTRING, (WPARAM)LANGUAGE_MANAGER::LANGUAGE::SPANISH, (LPARAM)L"Español");//INFO: this strings will not change with langs, each lang will be written like it should
+#define SCV_LOAD_ENUM_MEMBER_TO_COMBO(MEMBER) SendMessageW(language_combo, CB_ADDSTRING, (WPARAM)LANGUAGE_MANAGER::LANGUAGE::MEMBER, (LPARAM)L#MEMBER);
+	SCV_FOREACH_LANGUAGE(SCV_LOAD_ENUM_MEMBER_TO_COMBO)
+#undef SCV_LOAD_ENUM_MEMBER_TO_COMBO
+	//SendMessageW(language_combo, CB_ADDSTRING, (WPARAM)LANGUAGE_MANAGER::LANGUAGE::ENGLISH, (LPARAM)L"English");//INFO(fran):this values MUST be lined up with LANGUAGE enum
+	//SendMessageW(language_combo, CB_ADDSTRING, (WPARAM)LANGUAGE_MANAGER::LANGUAGE::ESPAÑOL, (LPARAM)L"Español");//INFO: this strings will not change with langs, each lang will be written like it should
 	SendMessageW(language_combo, CB_SETCURSEL, (WPARAM)settings.language, 0);
 	//SetWindowLongPtr(language_combo, GWL_USERDATA, COMBO_ICON);
 	SetWindowSubclass(language_combo, ControlProcedures::Instance().ComboProc, 0, (DWORD_PTR)&ControlProcedures::Instance());

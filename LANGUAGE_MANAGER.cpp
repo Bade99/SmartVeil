@@ -94,10 +94,14 @@ inline BOOL LANGUAGE_MANAGER::UpdateCombo(HWND hwnd, UINT ID, UINT stringID)
 
 LCID LANGUAGE_MANAGER::GetLCID(LANGUAGE lang)
 {
+	//TODO(fran): do we ask for this values on enum construction?
+#ifdef _DEBUG
+	static_assert(2 == ARRAYSIZE(LANGUAGE_STRING), "New languages not mapped to an LCID, add it and update the number after the assert");
+#endif
 	switch (lang) {
-	case LANGUAGE::ENGLISH:
+	case LANGUAGE::English:
 		return MAKELCID(MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), SORT_DEFAULT);
-	case LANGUAGE::SPANISH:
+	case LANGUAGE::Español:
 		return MAKELCID(MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH), SORT_DEFAULT);
 	default:
 		return NULL;
@@ -106,11 +110,16 @@ LCID LANGUAGE_MANAGER::GetLCID(LANGUAGE lang)
 
 LANGID LANGUAGE_MANAGER::GetLANGID(LANGUAGE lang)
 {
+#ifdef _DEBUG
+#define SCV_CHECK_ENUM_MEMBER_COUNT(member) -1
+	static_assert(2 == ARRAYSIZE(LANGUAGE_STRING), "New languages not mapped to a LANGID, add it and update the number after the assert");
+#undef  SCV_CHECK_ENUM_MEMBER_COUNT
+#endif
 	//INFO: https://docs.microsoft.com/en-us/windows/win32/intl/language-identifier-constants-and-strings
 	switch (lang) {
-	case LANGUAGE::ENGLISH:
+	case LANGUAGE::English:
 		return MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
-	case LANGUAGE::SPANISH:
+	case LANGUAGE::Español:
 		return MAKELANGID(LANG_SPANISH, SUBLANG_SPANISH);
 	default:
 		return NULL;

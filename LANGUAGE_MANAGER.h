@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <windows.h>
 #include <map>
 #include "MacroStandard.h"
@@ -29,8 +29,8 @@ public://TODO(fran): add lang to the rest of the classes: outmgr,duplmgr,...
 	/// <para> ENUM_MEMBER(SPANISH = 5)  \ is NOT allowed</para>
 	/// </summary>
 	#define SCV_FOREACH_LANGUAGE(ENUM_MEMBER) \
-					ENUM_MEMBER(ENGLISH)  \
-					ENUM_MEMBER(SPANISH)  \
+					ENUM_MEMBER(English)  \
+					ENUM_MEMBER(EspaÃ±ol)  \
 	
 	/// /// <summary>
 	/// All the languages supported by the application
@@ -61,7 +61,7 @@ public://TODO(fran): add lang to the rest of the classes: outmgr,duplmgr,...
 
 	//------HORRIBLE MACROS END------//
 
-	constexpr static LANGUAGE GetDefaultLanguage() { return LANGUAGE::ENGLISH; }
+	constexpr static LANGUAGE GetDefaultLanguage() { return LANGUAGE::English; }
 
 	/// <summary>
 	/// Retrieves the current instance of the Language Manager
@@ -78,24 +78,24 @@ public://TODO(fran): add lang to the rest of the classes: outmgr,duplmgr,...
 
 	//INFO: all Add... functions send the text update message when called, for dynamic hwnds you should create everything first and only then add it
 
-	//·Adds the hwnd to the list of managed hwnds and sets its text corresponding to stringID and the current language
-	//·Many hwnds can use the same stringID
-	//·Next time there is a language change the window will be automatically updated
-	//·Returns FALSE if invalid hwnd or stringID //TODO(fran): do the stringID check
+	//Â·Adds the hwnd to the list of managed hwnds and sets its text corresponding to stringID and the current language
+	//Â·Many hwnds can use the same stringID
+	//Â·Next time there is a language change the window will be automatically updated
+	//Â·Returns FALSE if invalid hwnd or stringID //TODO(fran): do the stringID check
 	BOOL AddWindowText(HWND hwnd, UINT stringID);
 
-	//·Updates all managed objects to the new language, all the ones added after this call will also use the new language
-	//·On success returns the new LANGID (language) //TODO(fran): should I return the previous langid? it feels more useful
-	//·On failure returns (LANGID)-3 if failed to change the language
+	//Â·Updates all managed objects to the new language, all the ones added after this call will also use the new language
+	//Â·On success returns the new LANGID (language) //TODO(fran): should I return the previous langid? it feels more useful
+	//Â·On failure returns (LANGID)-3 if failed to change the language
 	LANGID ChangeLanguage(LANGUAGE newLang);
 
-	//·Returns the requested string in the current language
-	//·If stringID is invalid returns L"" //TODO(fran): check this is true
+	//Â·Returns the requested string in the current language
+	//Â·If stringID is invalid returns L"" //TODO(fran): check this is true
 	//INFO: uses temporary string that lives till the end of the full expression it appears in
 	std::wstring RequestString(UINT stringID);
 
-	//·Adds the hwnd to the list of managed comboboxes and sets its text for the specified ID(element in the list) corresponding to stringID and the current language
-	//·Next time there is a language change the window will be automatically updated
+	//Â·Adds the hwnd to the list of managed comboboxes and sets its text for the specified ID(element in the list) corresponding to stringID and the current language
+	//Â·Next time there is a language change the window will be automatically updated
 	BOOL AddComboboxText(HWND hwnd, UINT ID, UINT stringID);
 
 	//Set the hinstance from where the string resources will be retrieved
