@@ -33,7 +33,7 @@ inline std::wstring serialize(LANGUAGE_MANAGER::LANGUAGE v) {
 	else return LANGUAGE_MANAGER::LANGUAGE_STRING[(int)LANGUAGE_MANAGER::GetDefaultLanguage()];
 }
 inline void deserialize(LANGUAGE_MANAGER::LANGUAGE& v, const std::wstring& s) {
-	for (int i = 0; i < ARRAYSIZE(LANGUAGE_MANAGER::LANGUAGE_STRING); i++)
+	for (int i = 0; i < ARRAYSIZE(LANGUAGE_MANAGER::LANGUAGE_STRING); i++) //TODO(fran): faster than iteration over all elements
 		if (!wcscmp(s.c_str(), *(LANGUAGE_MANAGER::LANGUAGE_STRING + i)))
 		{ v = (LANGUAGE_MANAGER::LANGUAGE)i; return; }
 }
@@ -44,13 +44,14 @@ inline std::wstring serialize(SIZE v) {
 	return L"{"s + std::to_wstring(v.cx) + L","s + std::to_wstring(v.cy) + L"}"s;
 }
 inline void deserialize(SIZE& v, const std::wstring& s) { //TODO(fran): use regex?
-	size_t open = 0, comma = 0, close = 0;
-	open = s.find(L'{', open);
-	comma = s.find(L',', open + 1);
+	if (!s.size()) return; //TODO(fran): I do this to not check s[0] directly, is it guaranteed that strings dont throw/crash?
+	size_t comma = 0, close = 0;
+	if (s[0] != L'{') return;
+	comma = s.find(L',', 1);
 	close = s.find(L'}', comma + 1);
-	if (open == std::wstring::npos || comma == std::wstring::npos || close == std::wstring::npos)
-		return;
-	std::wstring cx = s.substr(open + 1, comma - open);
+	if (comma == std::wstring::npos || close == std::wstring::npos) return;
+	if (comma >= close) return;
+	std::wstring cx = s.substr(1, comma);
 	std::wstring cy = s.substr(comma + 1, close - comma);
 	SIZE temp;
 	try 
@@ -60,7 +61,6 @@ inline void deserialize(SIZE& v, const std::wstring& s) { //TODO(fran): use rege
 		v = temp;
 	}
 	catch (...) {}
-	//Allows anything that contains {number,number} somewhere in its string, eg: }}}}}{51,12}}{}{12,}{ is valid
 }
 
 //POINT
@@ -69,13 +69,14 @@ inline std::wstring serialize(POINT v) {
 	return L"{"s + std::to_wstring(v.x) + L","s + std::to_wstring(v.y) + L"}"s;
 }
 inline void deserialize(POINT& v, const std::wstring& s) { //TODO(fran): use regex?
-	size_t open = 0, comma = 0, close = 0;
-	open = s.find(L'{', open);
-	comma = s.find(L',', open + 1);
+	if (!s.size()) return; //TODO(fran): I do this to not check s[0] directly, is it guaranteed that strings dont throw/crash?
+	size_t comma = 0, close = 0;
+	if (s[0] != L'{') return;
+	comma = s.find(L',', 1);
 	close = s.find(L'}', comma + 1);
-	if (open == std::wstring::npos || comma == std::wstring::npos || close == std::wstring::npos)
-		return;
-	std::wstring x = s.substr(open + 1, comma - open);
+	if (comma == std::wstring::npos || close == std::wstring::npos) return;
+	if (comma >= close) return;
+	std::wstring x = s.substr(1, comma);
 	std::wstring y = s.substr(comma + 1, close - comma);
 	POINT temp;
 	try
