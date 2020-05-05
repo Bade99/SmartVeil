@@ -16,17 +16,13 @@ using namespace DirectX;
 // Constructor NULLs out all pointers & sets appropriate var vals
 //
 OUTPUTMANAGER::OUTPUTMANAGER() :
-#if 0
-								 m_SwapChain(nullptr), 
-#endif
+								 //m_SwapChain(nullptr), 
                                  m_Device(nullptr),
-                                 m_Factory(nullptr),
+                                 //m_Factory(nullptr),
                                  m_DeviceContext(nullptr),
                                  m_RTV(nullptr),
                                  m_SamplerLinear(nullptr),
-#if 0
-                                 m_BlendState(nullptr),
-#endif
+                                 //m_BlendState(nullptr),
                                  m_VertexShader(nullptr),
                                  m_PixelShader(nullptr),
                                  m_InputLayout(nullptr),
@@ -34,11 +30,11 @@ OUTPUTMANAGER::OUTPUTMANAGER() :
                                  m_KeyMutex(nullptr),
                                  m_WindowHandle(nullptr),
                                  m_NeedsResize(false),
-                                 m_OcclusionCookie(0),
+                                 //m_OcclusionCookie(0),
 								 Threshold(.7f),
 								 Opacity(.1f),
-								 ThresholdOpacityBuffer(nullptr),
-								 needsClearing(false)
+								 ThresholdOpacityBuffer(nullptr)
+								 //needsClearing(false)
 {
 	manual_Backbuffer[0] = nullptr;
 	manual_Backbuffer[1] = nullptr;
@@ -72,10 +68,10 @@ void OUTPUTMANAGER::SetOpacity(float opacity)
 	Opacity = opacity;
 }
 
-void OUTPUTMANAGER::RestartTextures()
-{
-	needsClearing = true;
-}
+//void OUTPUTMANAGER::RestartTextures()
+//{
+//	needsClearing = true;
+//}
 
 //
 // Initialize all state
@@ -133,29 +129,29 @@ DUPL_RETURN OUTPUTMANAGER::InitOutput(HWND Window, INT SingleOutput, _Out_ UINT*
 #endif
 
     // Get DXGI factory
-    IDXGIDevice* DxgiDevice = nullptr;
-    hr = m_Device->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(&DxgiDevice));
-    if (FAILED(hr))
-    {
-        return ProcessFailure(nullptr, L"Failed to QI for DXGI Device", L"Error", hr, nullptr);
-    }
+    //IDXGIDevice* DxgiDevice = nullptr;
+    //hr = m_Device->QueryInterface(__uuidof(IDXGIDevice), reinterpret_cast<void**>(&DxgiDevice));
+    //if (FAILED(hr))
+    //{
+    //    return ProcessFailure(nullptr, L"Failed to QI for DXGI Device", L"Error", hr, nullptr);
+    //}
 
-    IDXGIAdapter* DxgiAdapter = nullptr;
-    hr = DxgiDevice->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void**>(&DxgiAdapter));
-    DxgiDevice->Release();
-    DxgiDevice = nullptr;
-    if (FAILED(hr))
-    {
-        return ProcessFailure(m_Device, L"Failed to get parent DXGI Adapter", L"Error", hr, SystemTransitionsExpectedErrors);
-    }
+    //IDXGIAdapter* DxgiAdapter = nullptr;
+    //hr = DxgiDevice->GetParent(__uuidof(IDXGIAdapter), reinterpret_cast<void**>(&DxgiAdapter));
+    //DxgiDevice->Release();
+    //DxgiDevice = nullptr;
+    //if (FAILED(hr))
+    //{
+    //    return ProcessFailure(m_Device, L"Failed to get parent DXGI Adapter", L"Error", hr, SystemTransitionsExpectedErrors);
+    //}
 
-    hr = DxgiAdapter->GetParent(__uuidof(IDXGIFactory2), reinterpret_cast<void**>(&m_Factory));
-    DxgiAdapter->Release();
-    DxgiAdapter = nullptr;
-    if (FAILED(hr))
-    {
-        return ProcessFailure(m_Device, L"Failed to get parent DXGI Factory", L"Error", hr, SystemTransitionsExpectedErrors);
-    }
+    //hr = DxgiAdapter->GetParent(__uuidof(IDXGIFactory2), reinterpret_cast<void**>(&m_Factory));
+    //DxgiAdapter->Release();
+    //DxgiAdapter = nullptr;
+    //if (FAILED(hr))
+    //{
+    //    return ProcessFailure(m_Device, L"Failed to get parent DXGI Factory", L"Error", hr, SystemTransitionsExpectedErrors);
+    //}
 
     // Register for occlusion status windows message
 #if 0
@@ -465,7 +461,7 @@ DUPL_RETURN OUTPUTMANAGER::CreateSharedSurf(INT SingleOutput, _Out_ UINT* OutCou
 //
 // Present to the application window
 //
-DUPL_RETURN OUTPUTMANAGER::UpdateApplicationWindow(_In_ PTR_INFO* /*PointerInfo*/) //TODO(fran): unnecessary parameter, can we take something from it or we just remove it?
+DUPL_RETURN OUTPUTMANAGER::UpdateApplicationWindow(/*_In_ PTR_INFO* PointerInfo*/) //TODO(fran): unnecessary parameter, can we take something from it or we just remove it?
 {
 	HRESULT hr;
 	DUPL_RETURN Ret;
@@ -475,15 +471,15 @@ DUPL_RETURN OUTPUTMANAGER::UpdateApplicationWindow(_In_ PTR_INFO* /*PointerInfo*
     // This routine is the part of the sample that displays the desktop image onto the display
 
 	//TODO(fran): should I put this inside DrawFrame??
-	if (needsClearing) {
-		needsClearing = false;
-#if 1 //TODO(fran): there is some problem here
-		Ret = ResetSecondaryTexture();
-		if (Ret != DUPL_RETURN_SUCCESS) {
-			return Ret;
-		}
-#endif
-	}
+//	if (needsClearing) {
+//		needsClearing = false;
+//#if 1 //TODO(fran): there is some problem here
+//		Ret = ResetSecondaryTexture();
+//		if (Ret != DUPL_RETURN_SUCCESS) {
+//			return Ret;
+//		}
+//#endif
+//	}
 
 	MakeRTV();
 
@@ -1034,16 +1030,16 @@ void OUTPUTMANAGER::CleanRefs()
         m_KeyMutex = nullptr;
     }
 
-    if (m_Factory)
-    {
-        if (m_OcclusionCookie)
-        {
-            m_Factory->UnregisterOcclusionStatus(m_OcclusionCookie);
-            m_OcclusionCookie = 0;
-        }
-        m_Factory->Release();
-        m_Factory = nullptr;
-    }
+    //if (m_Factory)
+    //{
+    //    //if (m_OcclusionCookie)
+    //    //{
+    //    //    m_Factory->UnregisterOcclusionStatus(m_OcclusionCookie);
+    //    //    m_OcclusionCookie = 0;
+    //    //}
+    //    m_Factory->Release();
+    //    m_Factory = nullptr;
+    //}
 #ifdef _DX_DEBUG_LAYER
 	//IDXGIDebug* m_d3dDebug;
 	ID3D11Debug* d;

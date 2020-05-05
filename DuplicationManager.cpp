@@ -121,78 +121,78 @@ DUPL_RETURN DUPLICATIONMANAGER::InitDupl(_In_ ID3D11Device* Device, UINT Output)
 //
 // Retrieves mouse info and write it into PtrInfo
 //
-DUPL_RETURN DUPLICATIONMANAGER::GetMouse(_Inout_ PTR_INFO* PtrInfo, _In_ DXGI_OUTDUPL_FRAME_INFO* FrameInfo, INT OffsetX, INT OffsetY)
-{
-    // A non-zero mouse update timestamp indicates that there is a mouse position update and optionally a shape change
-    if (FrameInfo->LastMouseUpdateTime.QuadPart == 0)
-    {
-        return DUPL_RETURN_SUCCESS;
-    }
-
-    bool UpdatePosition = true;
-
-    // Make sure we don't update pointer position wrongly
-    // If pointer is invisible, make sure we did not get an update from another output that the last time that said pointer
-    // was visible, if so, don't set it to invisible or update.
-    if (!FrameInfo->PointerPosition.Visible && (PtrInfo->WhoUpdatedPositionLast != m_OutputNumber))
-    {
-        UpdatePosition = false;
-    }
-
-    // If two outputs both say they have a visible, only update if new update has newer timestamp
-    if (FrameInfo->PointerPosition.Visible && PtrInfo->Visible && (PtrInfo->WhoUpdatedPositionLast != m_OutputNumber) && (PtrInfo->LastTimeStamp.QuadPart > FrameInfo->LastMouseUpdateTime.QuadPart))
-    {
-        UpdatePosition = false;
-    }
-
-    // Update position
-    if (UpdatePosition)
-    {
-        PtrInfo->Position.x = FrameInfo->PointerPosition.Position.x + m_OutputDesc.DesktopCoordinates.left - OffsetX;
-        PtrInfo->Position.y = FrameInfo->PointerPosition.Position.y + m_OutputDesc.DesktopCoordinates.top - OffsetY;
-        PtrInfo->WhoUpdatedPositionLast = m_OutputNumber;
-        PtrInfo->LastTimeStamp = FrameInfo->LastMouseUpdateTime;
-        PtrInfo->Visible = FrameInfo->PointerPosition.Visible != 0;
-    }
-
-    // No new shape
-    if (FrameInfo->PointerShapeBufferSize == 0)
-    {
-        return DUPL_RETURN_SUCCESS;
-    }
-
-    // Old buffer too small
-    if (FrameInfo->PointerShapeBufferSize > PtrInfo->BufferSize)
-    {
-        if (PtrInfo->PtrShapeBuffer)
-        {
-            delete [] PtrInfo->PtrShapeBuffer;
-            PtrInfo->PtrShapeBuffer = nullptr;
-        }
-        PtrInfo->PtrShapeBuffer = new (std::nothrow) BYTE[FrameInfo->PointerShapeBufferSize];
-        if (!PtrInfo->PtrShapeBuffer)
-        {
-            PtrInfo->BufferSize = 0;
-            return ProcessFailure(nullptr, L"Failed to allocate memory for pointer shape in DUPLICATIONMANAGER", L"Error", E_OUTOFMEMORY);
-        }
-
-        // Update buffer size
-        PtrInfo->BufferSize = FrameInfo->PointerShapeBufferSize;
-    }
-
-    // Get shape
-    UINT BufferSizeRequired;
-    HRESULT hr = m_DeskDupl->GetFramePointerShape(FrameInfo->PointerShapeBufferSize, reinterpret_cast<VOID*>(PtrInfo->PtrShapeBuffer), &BufferSizeRequired, &(PtrInfo->ShapeInfo));
-    if (FAILED(hr))
-    {
-        delete [] PtrInfo->PtrShapeBuffer;
-        PtrInfo->PtrShapeBuffer = nullptr;
-        PtrInfo->BufferSize = 0;
-        return ProcessFailure(m_Device, L"Failed to get frame pointer shape in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
-    }
-
-    return DUPL_RETURN_SUCCESS;
-}
+//DUPL_RETURN DUPLICATIONMANAGER::GetMouse(_Inout_ PTR_INFO* PtrInfo, _In_ DXGI_OUTDUPL_FRAME_INFO* FrameInfo, INT OffsetX, INT OffsetY)
+//{
+//    // A non-zero mouse update timestamp indicates that there is a mouse position update and optionally a shape change
+//    if (FrameInfo->LastMouseUpdateTime.QuadPart == 0)
+//    {
+//        return DUPL_RETURN_SUCCESS;
+//    }
+//
+//    bool UpdatePosition = true;
+//
+//    // Make sure we don't update pointer position wrongly
+//    // If pointer is invisible, make sure we did not get an update from another output that the last time that said pointer
+//    // was visible, if so, don't set it to invisible or update.
+//    if (!FrameInfo->PointerPosition.Visible && (PtrInfo->WhoUpdatedPositionLast != m_OutputNumber))
+//    {
+//        UpdatePosition = false;
+//    }
+//
+//    // If two outputs both say they have a visible, only update if new update has newer timestamp
+//    if (FrameInfo->PointerPosition.Visible && PtrInfo->Visible && (PtrInfo->WhoUpdatedPositionLast != m_OutputNumber) && (PtrInfo->LastTimeStamp.QuadPart > FrameInfo->LastMouseUpdateTime.QuadPart))
+//    {
+//        UpdatePosition = false;
+//    }
+//
+//    // Update position
+//    if (UpdatePosition)
+//    {
+//        PtrInfo->Position.x = FrameInfo->PointerPosition.Position.x + m_OutputDesc.DesktopCoordinates.left - OffsetX;
+//        PtrInfo->Position.y = FrameInfo->PointerPosition.Position.y + m_OutputDesc.DesktopCoordinates.top - OffsetY;
+//        PtrInfo->WhoUpdatedPositionLast = m_OutputNumber;
+//        PtrInfo->LastTimeStamp = FrameInfo->LastMouseUpdateTime;
+//        PtrInfo->Visible = FrameInfo->PointerPosition.Visible != 0;
+//    }
+//
+//    // No new shape
+//    if (FrameInfo->PointerShapeBufferSize == 0)
+//    {
+//        return DUPL_RETURN_SUCCESS;
+//    }
+//
+//    // Old buffer too small
+//    if (FrameInfo->PointerShapeBufferSize > PtrInfo->BufferSize)
+//    {
+//        if (PtrInfo->PtrShapeBuffer)
+//        {
+//            delete [] PtrInfo->PtrShapeBuffer;
+//            PtrInfo->PtrShapeBuffer = nullptr;
+//        }
+//        PtrInfo->PtrShapeBuffer = new (std::nothrow) BYTE[FrameInfo->PointerShapeBufferSize];
+//        if (!PtrInfo->PtrShapeBuffer)
+//        {
+//            PtrInfo->BufferSize = 0;
+//            return ProcessFailure(nullptr, L"Failed to allocate memory for pointer shape in DUPLICATIONMANAGER", L"Error", E_OUTOFMEMORY);
+//        }
+//
+//        // Update buffer size
+//        PtrInfo->BufferSize = FrameInfo->PointerShapeBufferSize;
+//    }
+//
+//    // Get shape
+//    UINT BufferSizeRequired;
+//    HRESULT hr = m_DeskDupl->GetFramePointerShape(FrameInfo->PointerShapeBufferSize, reinterpret_cast<VOID*>(PtrInfo->PtrShapeBuffer), &BufferSizeRequired, &(PtrInfo->ShapeInfo));
+//    if (FAILED(hr))
+//    {
+//        delete [] PtrInfo->PtrShapeBuffer;
+//        PtrInfo->PtrShapeBuffer = nullptr;
+//        PtrInfo->BufferSize = 0;
+//        return ProcessFailure(m_Device, L"Failed to get frame pointer shape in DUPLICATIONMANAGER", L"Error", hr, FrameInfoExpectedErrors);
+//    }
+//
+//    return DUPL_RETURN_SUCCESS;
+//}
 
 
 //

@@ -92,10 +92,10 @@ DUPL_RETURN DISPLAYMANAGER::ProcessFrame(_In_ FRAME_DATA* Data, _Inout_ ID3D11Te
 //
 // Returns D3D device being used
 //
-ID3D11Device* DISPLAYMANAGER::GetDevice()
-{
-    return m_Device;
-}
+//ID3D11Device* DISPLAYMANAGER::GetDevice()
+//{
+//    return m_Device;
+//}
 
 //
 // Set appropriate source and destination rects for move rects

@@ -166,7 +166,6 @@
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="CommonTypes.cpp" />
     <ClCompile Include="ControlProcedures.cpp" />
-    <ClCompile Include="DYNAMIC_WAIT.cpp" />
     <ClCompile Include="ImagePresentation.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Manager.cpp">

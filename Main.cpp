@@ -36,8 +36,7 @@ _KNOWN_WINDOWS KNOWN_WINDOWS; //DEFINITION OF STATIC VARIABLE
 //CREATE NAMESPACES
 //·Icons on buttons are not correctly centered
 //·Create one big square for the tooltips of threshold and opacity each one encompassing the area from the beginning of the text to the end of the slider?
-//·When sliders are pressed there is a white border around it, why?, also the thingy that moves the slider is now white when moved, why? looks better though
-//·When the veil gets turned on it starts slowly taking mem to around 11.5MB and then stops, what is happening there?
+//·When sliders are pressed there is a white border around it, why?, also the thingy that moves the slider is sometimes white when moved, why? looks better though
 //·When no language was found on settings file use the system default if we support it, otherwise english
 //·Need to manage erasebkgrnd on buttonproc, getting white backgrounds some times, probably there's some other bug too
 //·From what I read basic tooltips have an 80 character limit, what do we do? other langs could go over that
@@ -45,26 +44,21 @@ _KNOWN_WINDOWS KNOWN_WINDOWS; //DEFINITION OF STATIC VARIABLE
 //·Compile 64 bit ? 
 //·Change mouse icon to a hand for controls that arent entirely obvious the user can click on or use them
 //·Allow the user to decide the update rate of the veil, also useful to know it for testing
-//·Button press must only be accepted if when released mouse is inside button area, also we are doing the same thing wrong when we draw
 //·Sliders should go to 100%
-// and always put a % after the number
 //?·Add an information icon (that little circle with a i) next to threshold, so the user can click and better understand?
 //·Give the user the option to write the threshold/opacity value, if they click over the number ?
 //·Copyright? I want it open source though
 //·Painting the hotkey green and red isnt color blind helpful, ideas? - I could show a tooltip that says it failed or succeeded
-//·A simpler name instead of threshold for the text control
 //·Automatic opacity increase in a time interval? eg from 0:00 to 4:00
 //·Settings: save button greyed out until something is changed
-//·Find out why just the mouse movement is causing the highest of cpu and gpu usage, look into the other cpp files
+//·Find out why just the mouse movement is causing the highest of cpu and gpu usage
 //·IMPORTANT: the fact that we update our veil means there is a new frame that windows has to present, therefore we are always generating more
 // and more frames non stop, can we fix this somehow? ie skip one frame update each time
 //LOOKs:
-//·Make minimize animation go towards tray when tray icon is enabled
 //·When the user changes to another window we could slightly change the color to indicate that we are not the focused window anymore
 //·I like how the settings icon looks without the white border, we could also make light-blue only inside the icon
 //·Make the icon have a hidden design that can only be viewed in the tray when the threshold & opacity are at some point x
 //·Change mouse icon when manager is open, to one that only has white borders, and the inside transparent or black?
-//·Application icon, and assign it to both the veil and the manager, to the settings I dont know
 //·Flip the combobox button icon when displaying the list
 
 //INFO:

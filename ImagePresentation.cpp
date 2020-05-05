@@ -15,10 +15,16 @@
 #include "Common.h"
 #endif
 
-//TODO(fran): add system for letting caller know if the worker thread dies
+//TODOs:
+//add system for letting caller know if the worker thread dies
+//gpu usage spikes to 100% for one second when the thread closed
+
+
 DWORD WINAPI WorkerThread(void* Param) {
 	//TODO(fran): should I use it straight instead of copying it?
 	WORKER_THREAD_INIT* data = (WORKER_THREAD_INIT*)Param; //TODO(fran): check this copies everything right
+
+	THREADMANAGER thread_mgr;
 
 	//Error events
 	bool UnexpectedErrorEvent = false;
@@ -47,12 +53,11 @@ DWORD WINAPI WorkerThread(void* Param) {
 #ifdef _DEBUG
 		StartCounter(CounterStart);
 #endif
-		Ret = DUPL_RETURN_SUCCESS;
 		if (UnexpectedErrorEvent) // Unexpected error occurred so exit the application
 		{
 			TerminateThreadsEvent = true;
-			data->thread_mgr.WaitForThreadTermination();
-			data->thread_mgr.Clean();
+			thread_mgr.WaitForThreadTermination();
+			//data->thread_mgr.Clean();
 			data->output_mgr.CleanRefs();
 			ReleaseMutex(data->worker_finished_mutex);
 			ShowError(RS(SCV_LANG_ERROR_UNEXPECTED) + L"\n" + RS(SCV_LANG_ERROR_CLOSING_APP), RS(SCV_LANG_ERROR_SMARTVEIL));
@@ -64,12 +69,12 @@ DWORD WINAPI WorkerThread(void* Param) {
 			{
 				// Terminate other threads
 				TerminateThreadsEvent=true; //TODO(fran): this is the only place this gets set -> pointless to have mutex capability
-				data->thread_mgr.WaitForThreadTermination(); //also all the other threads are killed, so NO races
+				thread_mgr.WaitForThreadTermination(); //also all the other threads are killed, so NO races
 
 				TerminateThreadsEvent=false; //This is the only place that resets this two -> pointless to have mutex capability,
 				ExpectedErrorEvent = false;
 
-				data->thread_mgr.Clean();
+				thread_mgr.Clean();
 				data->output_mgr.CleanRefs();
 
 				// As we have encountered an error due to a system transition we wait before trying again, using this dynamic wait
@@ -87,10 +92,10 @@ DWORD WINAPI WorkerThread(void* Param) {
 			{
 				HANDLE SharedHandle = data->output_mgr.GetSharedHandle();
 				if (SharedHandle)
-					Ret = data->thread_mgr.Initialize(SingleOutput, OutputCount, &UnexpectedErrorEvent, &ExpectedErrorEvent,
+					thread_mgr.Initialize(SingleOutput, OutputCount, &UnexpectedErrorEvent, &ExpectedErrorEvent,
 														&TerminateThreadsEvent, SharedHandle, &DeskBounds);
 				else
-					Ret = ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_SHARED_SURF_HANDLE_GET), RCS(SCV_LANG_ERROR_SMARTVEIL), E_UNEXPECTED);
+					ProcessFailure(nullptr, RCS(SCV_LANG_ERROR_SHARED_SURF_HANDLE_GET), RCS(SCV_LANG_ERROR_SMARTVEIL), E_UNEXPECTED);
 			}
 		}
 
@@ -98,7 +103,7 @@ DWORD WINAPI WorkerThread(void* Param) {
 		// if that were happening then we would be presenting the one from two frames ago
 
 		// Draw to our window (veil)
-		Ret = data->output_mgr.UpdateApplicationWindow(data->thread_mgr.GetPointerInfo());
+		Ret = data->output_mgr.UpdateApplicationWindow();//data->thread_mgr.GetPointerInfo());
 
 #ifdef _DEBUG
 		CounterVal = GetCounter(CounterStart, PCFreq);
@@ -110,13 +115,14 @@ DWORD WINAPI WorkerThread(void* Param) {
 			if (Ret == DUPL_RETURN_ERROR_EXPECTED)
 			{
 				ExpectedErrorEvent=true; // Some type of system transition is occurring so retry
+				//OPTIMIZE(fran): we can probably join this with parts of the if from above, reducing at least one if
 			}
 			else
 			{
 				// Unexpected error so exit
 				TerminateThreadsEvent = true;
-				data->thread_mgr.WaitForThreadTermination();
-				data->thread_mgr.Clean();
+				thread_mgr.WaitForThreadTermination();
+				//data->thread_mgr.Clean();
 				data->output_mgr.CleanRefs();
 				ReleaseMutex(data->worker_finished_mutex);
 				ShowError(RS(SCV_LANG_ERROR_UNEXPECTED) + L"\n" + RS(SCV_LANG_ERROR_CLOSING_APP), RS(SCV_LANG_ERROR_SMARTVEIL)); //TODO(fran): closing app part
@@ -132,8 +138,8 @@ DWORD WINAPI WorkerThread(void* Param) {
 
 	//Cleanup before exiting
 	TerminateThreadsEvent = true;
-	data->thread_mgr.WaitForThreadTermination(); //TODO(fran): I dont know if all this that I put on every function exit are really necessary
-	data->thread_mgr.Clean();
+	thread_mgr.WaitForThreadTermination(); //TODO(fran): I dont know if all this that I put on every function exit are really necessary
+	//data->thread_mgr.Clean();
 	data->output_mgr.CleanRefs();
 	ReleaseMutex(data->worker_finished_mutex);
 

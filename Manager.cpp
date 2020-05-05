@@ -161,11 +161,11 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance,const CUSTOM_FRAME& frame, const MAN
 /// <summary>
 /// Used to notify on startup errors that need to close the program
 /// </summary>
-inline void ShowClosingAppError(UINT error_stringID) {
-	std::wstring error_msg = RS(error_stringID);
-	error_msg += L" " + std::to_wstring(GetLastError()) + L"\n" + RS(SCV_LANG_ERROR_CLOSING_APP);
-	MessageBoxW(NULL, error_msg.c_str(), RCS(SCV_LANG_ERROR_SMARTVEIL), MB_OK | MB_TOPMOST);
-}
+//inline void ShowClosingAppError(UINT error_stringID) {
+//	std::wstring error_msg = RS(error_stringID);
+//	error_msg += L" " + std::to_wstring(GetLastError()) + L"\n" + RS(SCV_LANG_ERROR_CLOSING_APP);
+//	MessageBoxW(NULL, error_msg.c_str(), RCS(SCV_LANG_ERROR_SMARTVEIL), MB_OK | MB_TOPMOST);
+//}
 
 struct gcbi { HWND child; int ID; };
 inline HWND get_child_by_id(HWND parent, int ID) { //TODO(fran): this is probably very inefficient, we need to store the guys we want in a struct, or something like that
@@ -225,52 +225,24 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		SetWindowSubclass(minimize_button, ControlProcedures::Instance().CaptionButtonProc, 0, (DWORD_PTR)&ControlProcedures::Instance());
 		TOOLTIP_REPO::Instance().CreateToolTip(minimize_button, SCV_LANG_MINIMIZE);
 
-		//
-
 		// Synchronization
-
-		// Initialize mutexes
-		//thread_data.output_wnd_ready_mutex = CreateMutex(NULL/*default security attributes*/,FALSE/*initially not owned*/,NULL/*unnamed*/);
-
-		//if (thread_data.output_wnd_ready_mutex == NULL)
-		//{
-		//	ShowClosingAppError(SCV_LANG_ERROR_CREATEMUTEX);
-		//	Assert(0); 
-		//}
 
 		//Load values for thread_data
 		Assert(KNOWN_WINDOWS.veil);
 		thread_data.output_wnd = KNOWN_WINDOWS.veil; //TODO(fran): check the veil exists, otherwise wait for it. We could also just say veil always starts before manager
 
-		//thread_data.next_frame_mutex = CreateMutex(NULL, FALSE, NULL);
-
-		//if (thread_data.next_frame_mutex == NULL)
-		//{
-		//	ShowClosingAppError(SCV_LANG_ERROR_CREATEMUTEX);
-		//	Assert(0);
-		//}
-
-		//if (!mgr_data->is_turned_on) {
-		//	DWORD mut_ret = WaitForSingleObject(thread_data.next_frame_mutex, INFINITE);
-		//	Assert(mut_ret == WAIT_OBJECT_0);
-		//}
-
 		thread_data.worker_finished_mutex = CreateMutex(NULL, FALSE, NULL);
 
 		if (thread_data.worker_finished_mutex == NULL)
 		{
-			ShowClosingAppError(SCV_LANG_ERROR_CREATEMUTEX);
+			ShowLastError(RS(SCV_LANG_ERROR_CREATEMUTEX), RS(SCV_LANG_ERROR_SMARTVEIL));
 			Assert(0);
 		}
 
 		//thread_data.events.UnexpectedErrorEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr); //INFO: NO error on implicit conversion from HANDLE to bool, bools are dangerous
 
-		//Create worker thread that will generate the image to display
-		//DWORD ThreadID;
-		//worker_thread_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WorkerThread, &thread_data, 0, &ThreadID);
-
-		//
 		//INFO: thread_data.events.UnexpectedErrorEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr); //REMEMBER: NO error on implicit conversion from HANDLE to bool, bools are dangerous
+		//Create worker thread that will generate the image to display
 		thread_data.terminate = false;
 		if (mgr_data->is_turned_on) {
 			worker_thread_handle = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)WorkerThread, &thread_data, 0, NULL);
