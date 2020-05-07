@@ -61,17 +61,18 @@ inline std::wstring serialize(HOTKEY v) {
 	return L"{"s + std::to_wstring(v.mods) + L","s + std::to_wstring(v.vk) + L"}"s;
 }
 inline void deserialize(HOTKEY& v, const std::wstring& s) { //TODO(fran): use regex?
-	size_t open = 0, comma = 0, close = 0;
-	open = s.find(L'{', open);
-	comma = s.find(L',', open + 1);
+	if (!s.size()) return; //TODO(fran): I do this to not check s[0] directly, is it guaranteed that strings dont throw/crash?
+	size_t comma = 0, close = 0;
+	if (s[0] != L'{') return;
+	comma = s.find(L',', 1);
 	close = s.find(L'}', comma + 1);
-	if (open == std::wstring::npos || comma == std::wstring::npos || close == std::wstring::npos)
-		return;
-	std::wstring mods = s.substr(open + 1, comma - open);
+	if (comma == std::wstring::npos || close == std::wstring::npos) return;
+	if (comma >= close) return;
+	std::wstring mods = s.substr(1, comma);
 	std::wstring vk = s.substr(comma + 1, close - comma);
-	HOTKEY temp;
 	try
 	{
+		HOTKEY temp;
 		temp.mods = stoul(mods);
 		temp.vk = stoul(vk);
 		v = temp;

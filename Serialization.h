@@ -53,9 +53,9 @@ inline void deserialize(SIZE& v, const std::wstring& s) { //TODO(fran): use rege
 	if (comma >= close) return;
 	std::wstring cx = s.substr(1, comma);
 	std::wstring cy = s.substr(comma + 1, close - comma);
-	SIZE temp;
 	try 
 	{ 
+		SIZE temp;
 		temp.cx = stol(cx);
 		temp.cy = stol(cy);
 		v = temp;
@@ -78,15 +78,14 @@ inline void deserialize(POINT& v, const std::wstring& s) { //TODO(fran): use reg
 	if (comma >= close) return;
 	std::wstring x = s.substr(1, comma);
 	std::wstring y = s.substr(comma + 1, close - comma);
-	POINT temp;
 	try
 	{
+		POINT temp;
 		temp.x = stol(x);
 		temp.y = stol(y);
 		v = temp;
 	}
 	catch (...) {}
-	//Allows anything that contains {number,number} somewhere in its string, eg: }}}}}{51,12}}{}{12,}{ is valid
 }
 
 
