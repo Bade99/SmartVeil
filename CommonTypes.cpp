@@ -1,33 +1,8 @@
 #include "CommonTypes.h"
+#include <wchar.h> //swprintf_s
 
-HRESULT SystemTransitionsExpectedErrors[] = {
-												DXGI_ERROR_DEVICE_REMOVED,
-												DXGI_ERROR_ACCESS_LOST,
-												static_cast<HRESULT>(WAIT_ABANDONED),
-												S_OK                                    // Terminate list with zero valued HRESULT
-};
 
-// These are the errors we expect from IDXGIOutput1::DuplicateOutput due to a transition
-HRESULT CreateDuplicationExpectedErrors[] = {
-												DXGI_ERROR_DEVICE_REMOVED,
-												static_cast<HRESULT>(E_ACCESSDENIED),
-												DXGI_ERROR_UNSUPPORTED,
-												DXGI_ERROR_SESSION_DISCONNECTED,
-												S_OK                                    // Terminate list with zero valued HRESULT
-};
-
-// These are the errors we expect from IDXGIOutputDuplication methods due to a transition
-HRESULT FrameInfoExpectedErrors[] = {
-										DXGI_ERROR_DEVICE_REMOVED,
-										DXGI_ERROR_ACCESS_LOST,
-										S_OK                                    // Terminate list with zero valued HRESULT
-};
-
-// These are the errors we expect from IDXGIAdapter::EnumOutputs methods due to outputs becoming stale during a transition
-HRESULT EnumOutputsExpectedErrors[] = {
-										  DXGI_ERROR_NOT_FOUND,
-										  S_OK                                    // Terminate list with zero valued HRESULT
-};
+//bool TEST_draw = true; //TODO(fran): REMOVE
 
 /// <summary>
 /// Displays a message
@@ -61,7 +36,7 @@ inline void DisplayMsg(_In_ LPCWSTR Str, _In_ LPCWSTR Title, HRESULT hr)
 }
 
 _Post_satisfies_(return != DUPL_RETURN_SUCCESS)
-DUPL_RETURN ProcessFailure(_In_opt_ ID3D11Device* Device, _In_ LPCWSTR Str, _In_ LPCWSTR Title, HRESULT hr, _In_opt_z_ HRESULT* ExpectedErrors)
+DUPL_RETURN ProcessFailure(_In_opt_ ID3D11Device* Device, _In_ LPCWSTR Str, _In_ LPCWSTR Title, HRESULT hr, _In_opt_z_ const HRESULT* ExpectedErrors)
 {
 	HRESULT TranslatedHr;
 
@@ -104,7 +79,7 @@ DUPL_RETURN ProcessFailure(_In_opt_ ID3D11Device* Device, _In_ LPCWSTR Str, _In_
 	// Check if this error was expected or not
 	if (ExpectedErrors)
 	{
-		HRESULT* CurrentResult = ExpectedErrors;
+		const HRESULT* CurrentResult = ExpectedErrors;
 
 		while (*CurrentResult != S_OK)
 		{

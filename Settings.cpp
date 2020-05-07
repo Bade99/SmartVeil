@@ -9,7 +9,7 @@
 #include "ControlProcedures.h"
 #include "TOOLTIP_REPO.h"
 
-#include "Manager.h" //TODO(fran): I need this just for one #define, lets move all those to a common file
+#include "Manager.h"
 
 //Definition of child control ids and internal messages
 #define SCV_SETTINGS_LANG_COMBO (SCV_SETTINGS_FIRST_INTERNAL_MESSAGE+1) //The combobox that contains the language selection
@@ -460,7 +460,7 @@ LRESULT CALLBACK SettingsProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		SetWindowTheme(hWnd, L"", L"");//INFO: to avoid top curved corners on frame
 		CREATESTRUCT* creation_info = (CREATESTRUCT*)lParam;
 		CurrentValidSettings = (SETTINGS*)creation_info->lpCreateParams;
-		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE);
+		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
 
 		//TODO(fran): initialize hotkey modif and vk in MAIN
 

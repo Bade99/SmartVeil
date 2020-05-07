@@ -6,6 +6,7 @@
 #include "CommonTypes.h"
 #include "DisplayManager.h"
 #include "DuplicationManager.h"
+#include "ThreadManager.h"
 
 #include "utils.cpp"
 #include "LANGUAGE_MANAGER.h"
@@ -269,7 +270,15 @@ DWORD WINAPI DDProc(_In_ void* Param)
 			break;
 		}
 #endif
-
+#ifdef _DEBUG
+		//INFO(fran): mouse movement alone does NOT increase any of this counts
+		/*char buf[50];
+		sprintf(buf, "Dirties: %u\t Moves: %u\n", CurrentData.DirtyCount, CurrentData.MoveCount);
+		OutputDebugStringA(buf);*/
+		//if (CurrentData.DirtyCount == 1) //TODO(fran): this dont work, we need more info
+		//	TEST_draw = false;
+		//else TEST_draw = true;
+#endif
 		// Process new frame
 		Ret = DispMgr.ProcessFrame(&CurrentData, SharedSurf, TData->OffsetX, TData->OffsetY, &DesktopDesc);
 		if (Ret != DUPL_RETURN_SUCCESS)

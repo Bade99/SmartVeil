@@ -1,6 +1,6 @@
 #include "ControlProcedures.h"
-
-#include <DirectXMath.h>
+#include "utils.cpp"
+//#include <DirectXMath.h>
 
 ControlProcedures::ControlProcedures()
 {
@@ -142,24 +142,23 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 			//SUPER TODO(fran): there is something wrong here, the icon is not being correctly centered :c
 
 			//SIZE icon_size; 
-			DirectX::XMFLOAT2 icon_size; //trying to reduce precision errors
-			icon_size.x = RECTWIDTH(rc)*.75f +1; //TODO(fran): should use the smaller of the two axis
+			float icon_size_x = RECTWIDTH(rc)*.75f +1.f; //TODO(fran): should use the smaller of the two axis
 			//TODO(fran): why does this +1 -1 work perfectly and aligns the icon correctly in every resolution???
-			icon_size.y = icon_size.x;
+			float icon_size_y = icon_size_x;
 
 			//LONG icon_id = GetWindowLongPtr(hWnd, GWL_USERDATA);
 			LONG icon_id = SendMessage(hWnd, BM_GETIMAGE, IMAGE_ICON, 0);
 			//TODO: should probably use inflaterect
 
 			//INFO: everybody MUST be on the same process for this hinstance to work
-			HICON icon = (HICON)LoadImage((HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE), MAKEINTRESOURCE(icon_id), IMAGE_ICON, (int)icon_size.x, (int)icon_size.y, LR_SHARED);
+			HICON icon = (HICON)LoadImage((HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE), MAKEINTRESOURCE(icon_id), IMAGE_ICON, (int)icon_size_x, (int)icon_size_y, LR_SHARED);
 
 			if (icon) {
 				//TODO(fran): icon position isnt perfectly centered, probably due to precision error + even versus odd rect and icon sizes
 
 #if 1
-				DrawIconEx(hdc, (int)(.5f*(RECTWIDTH(rc) - (icon_size.x-1.f))), (int)(.5f*(RECTHEIGHT(rc) - (icon_size.y-1.f))),
-					icon, (int)icon_size.x, (int)icon_size.y, 0, NULL, DI_NORMAL);//INFO: changing that NULL gives the option of "flicker free" icon drawing, if I need
+				DrawIconEx(hdc, (int)(.5f*(RECTWIDTH(rc) - (icon_size_x-1.f))), (int)(.5f*(RECTHEIGHT(rc) - (icon_size_y-1.f))),
+					icon, (int)icon_size_x, (int)icon_size_y, 0, NULL, DI_NORMAL);//INFO: changing that NULL gives the option of "flicker free" icon drawing, if I need
 				//INFO: using DI_MASK the button could have an interesting look
 #else
 				RECT icon_rc = rc;
@@ -168,7 +167,7 @@ LRESULT CALLBACK ControlProcedures::ButtonProc(HWND hWnd, UINT Msg, WPARAM wPara
 				icon_rc.right -= borderSize;
 				icon_rc.bottom -= borderSize;
 
-				DrawIconEx(hdc, icon_rc.left + RECTWIDTH(icon_rc) / 2 - icon_size.x / 2, icon_rc.top + RECTHEIGHT(icon_rc) / 2 - icon_size.y / 2, icon, icon_size.x, icon_size.y,
+				DrawIconEx(hdc, icon_rc.left + RECTWIDTH(icon_rc) / 2 - icon_size_x / 2, icon_rc.top + RECTHEIGHT(icon_rc) / 2 - icon_size_y / 2, icon, icon_size_x, icon_size_y,
 					0, NULL, DI_NORMAL);
 #endif
 
@@ -317,7 +316,7 @@ LRESULT CALLBACK ControlProcedures::ComboProc(HWND hWnd, UINT Msg, WPARAM wParam
 		icon_size.cy = (LONG)((r.bottom - r.top)*.6f);
 		icon_size.cx = icon_size.cy;
 
-		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE); 
+		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE); 
 		//LONG icon_id = GetWindowLongPtr(hWnd, GWL_USERDATA);
 		//TODO(fran): we could set the icon value on control creation, use GWL_USERDATA
 		HICON combo_dropdown_icon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(pthis->ComboIconID), IMAGE_ICON, icon_size.cx, icon_size.cy, LR_SHARED);
@@ -438,7 +437,7 @@ LRESULT CALLBACK ControlProcedures::CheckboxProc(HWND hWnd, UINT Msg, WPARAM wPa
 		//TODO
 		int deflation = (int)( -max(1, CheckboxWidth * .2f) );
 		InflateRect(&icon_rc, deflation, deflation);
-		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE); 
+		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE); 
 		//LONG icon_id = GetWindowLongPtr(hWnd, GWL_USERDATA); 
 		HICON checkbox_tick_icon = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(pthis->CheckboxIconID), IMAGE_ICON, RECTWIDTH(icon_rc), RECTHEIGHT(icon_rc), LR_SHARED);
 
@@ -572,7 +571,7 @@ LRESULT CALLBACK ControlProcedures::CaptionButtonProc(HWND hwnd, UINT message, W
 			icon_size.cx = (LONG)(RECTHEIGHT(rc)*.55f);
 			icon_size.cy = icon_size.cx;
 
-			HICON icon = (HICON)LoadImage((HINSTANCE)GetWindowLongPtr(hwnd, GWL_HINSTANCE), MAKEINTRESOURCE(icon_id), IMAGE_ICON, icon_size.cx, icon_size.cy, LR_SHARED);
+			HICON icon = (HICON)LoadImage((HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), MAKEINTRESOURCE(icon_id), IMAGE_ICON, icon_size.cx, icon_size.cy, LR_SHARED);
 
 			if (icon) {
 				DrawIconEx(hdc, (int)(.5f*(RECTWIDTH(rc) - icon_size.cx)), (int)(.5f*(RECTHEIGHT(rc) - icon_size.cy)),

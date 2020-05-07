@@ -2,7 +2,6 @@
 #include <Windows.h>
 #include "utils.cpp"
 
-
 #define SCV_CONTROLPROC_FIRST_MESSAGE (WM_USER+4000)
 
 #define SCV_HOTKEY_REG_FAILED (SCV_CONTROLPROC_FIRST_MESSAGE+1)

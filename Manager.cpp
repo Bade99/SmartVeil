@@ -2,11 +2,11 @@
 
 #include "resource.h"
 
-#include <string>
-#include <commctrl.h>
+//#include <string>
+//#include <commctrl.h>
 #include <uxtheme.h>// setwindowtheme
-#include <dwmapi.h>
-#include <Windowsx.h>
+//#include <dwmapi.h>
+//#include <Windowsx.h>
 //#include <vssym32.h>
 
 #include "ImagePresentation.h"
@@ -158,15 +158,6 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance,const CUSTOM_FRAME& frame, const MAN
 
 }
 
-/// <summary>
-/// Used to notify on startup errors that need to close the program
-/// </summary>
-//inline void ShowClosingAppError(UINT error_stringID) {
-//	std::wstring error_msg = RS(error_stringID);
-//	error_msg += L" " + std::to_wstring(GetLastError()) + L"\n" + RS(SCV_LANG_ERROR_CLOSING_APP);
-//	MessageBoxW(NULL, error_msg.c_str(), RCS(SCV_LANG_ERROR_SMARTVEIL), MB_OK | MB_TOPMOST);
-//}
-
 struct gcbi { HWND child; int ID; };
 inline HWND get_child_by_id(HWND parent, int ID) { //TODO(fran): this is probably very inefficient, we need to store the guys we want in a struct, or something like that
 	gcbi params{ NULL,ID };
@@ -196,7 +187,7 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		SetWindowTheme(hWnd, L"", L"");//INFO: to avoid top curved corners on frame
 		CREATESTRUCT* creation_info = (CREATESTRUCT*)lParam;
 		mgr_data = (MANAGER*)creation_info->lpCreateParams;
-		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE);
+		HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
 
 		SetupMgr(hWnd,hInstance,FRAME, *mgr_data, manager_font); //TODO(fran): resolve how to deal with font initialization
 
@@ -553,7 +544,7 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			MinimizeWndToTray(hWnd);
 		}
 		else
-			ShowWindow(hWnd, SW_HIDE);
+			ShowWindow(hWnd, SW_MINIMIZE);
 		break;
 	}
 #if 0
@@ -612,6 +603,8 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//CloseHandle(thread_data.next_frame_mutex);
 
 			//
+			TRAY_HANDLER::Instance().DestroyTrayIcon(hWnd, 1);
+			DeleteObject(manager_font);
 
 
 			if (GetWindow(hWnd, GW_OWNER) != NULL) { DestroyWindow(GetWindow(hWnd, GW_OWNER)); }
@@ -621,8 +614,6 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			//TODO(fran): can we solve this problem without the static BOOL?
 		}
 		
-		TRAY_HANDLER::Instance().DestroyTrayIcon(hWnd, 1);
-		DeleteObject(manager_font);
 		
 		PostQuitMessage(0);
 		break;

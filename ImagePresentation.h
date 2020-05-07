@@ -2,7 +2,6 @@
 
 #include <Windows.h>
 
-#include "ThreadManager.h"
 #include "OutputManager.h"
 
 //Limit veil "fps"

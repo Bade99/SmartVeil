@@ -463,6 +463,7 @@ DUPL_RETURN OUTPUTMANAGER::CreateSharedSurf(INT SingleOutput, _Out_ UINT* OutCou
 //
 DUPL_RETURN OUTPUTMANAGER::UpdateApplicationWindow(/*_In_ PTR_INFO* PointerInfo*/) //TODO(fran): unnecessary parameter, can we take something from it or we just remove it?
 {
+
 	HRESULT hr;
 	DUPL_RETURN Ret;
     // In a typical desktop duplication application there would be an application running on one system collecting the desktop images
@@ -516,85 +517,84 @@ DUPL_RETURN OUTPUTMANAGER::UpdateApplicationWindow(/*_In_ PTR_INFO* PointerInfo*
 
 
     // Present to window if all worked
-    if (Ret == DUPL_RETURN_SUCCESS)
-    {
-        // Present to window
+	if (Ret != DUPL_RETURN_SUCCESS) return Ret;
+    // Present to window
 #if 0
-        hr = m_SwapChain->Present(1, 0);
+    hr = m_SwapChain->Present(1, 0);
 #endif
 
-		IDXGISurface1* outputSurf = nullptr;
-		hr = manual_Backbuffer[0]->QueryInterface(__uuidof(IDXGISurface1), reinterpret_cast<void**>(&outputSurf));
-		if (FAILED(hr)) { 
-			ProcessFailure(nullptr, L"Failed to obtain the surface from the backbuffer", L"Error", hr);
-		}
+	IDXGISurface1* outputSurf = nullptr;
+	hr = manual_Backbuffer[0]->QueryInterface(__uuidof(IDXGISurface1), reinterpret_cast<void**>(&outputSurf));
+	if (FAILED(hr)) { 
+		ProcessFailure(nullptr, L"Failed to obtain the surface from the backbuffer", L"Error", hr);
+	}
 
-		HDC outputDC;
-		hr = outputSurf->GetDC(FALSE, &outputDC);
-		if (FAILED(hr)) { 
-			ProcessFailure(nullptr, L"Failed to obtain the DC from the surface of the backbuffer", L"Error", hr);
-		}
+	HDC outputDC;
+	hr = outputSurf->GetDC(FALSE, &outputDC);
+	if (FAILED(hr)) { 
+		ProcessFailure(nullptr, L"Failed to obtain the DC from the surface of the backbuffer", L"Error", hr);
+	}
 
 
 #if 1
-		HDC hdcScreen = GetDC(NULL); //TODO(fran): why can I use any dc????
+	HDC hdcScreen = GetDC(NULL); //TODO(fran): why can I use any dc????
 #else
-		HDC hdcScreen = GetDC(m_WindowHandle);
+	HDC hdcScreen = GetDC(m_WindowHandle);
 #endif
 
-		RECT rect;
-		GetClientRect(m_WindowHandle, &rect);
-		POINT origin;
-		origin.x = rect.left;
-		origin.y = rect.top;
-		SIZE size;
-		size.cx = rect.right;
-		size.cy = rect.bottom;
+	RECT rect;
+	GetClientRect(m_WindowHandle, &rect);
+	POINT origin;
+	origin.x = rect.left;
+	origin.y = rect.top;
+	SIZE size;
+	size.cx = rect.right;
+	size.cy = rect.bottom;
 
-		POINT source_origin;
-		source_origin.x = 0;
-		source_origin.y = 0;
+	POINT source_origin;
+	source_origin.x = 0;
+	source_origin.y = 0;
 
-		BLENDFUNCTION blend = { 0 };
-		blend.BlendOp = AC_SRC_OVER;
-		blend.SourceConstantAlpha = 255; //only want to use per pixel alpha
-		blend.AlphaFormat = AC_SRC_ALPHA; // bitmap has alpha channel (per pixel alpha)
+	BLENDFUNCTION blend = { 0 };
+	blend.BlendOp = AC_SRC_OVER;
+	blend.SourceConstantAlpha = 255; //only want to use per pixel alpha
+	blend.AlphaFormat = AC_SRC_ALPHA; // bitmap has alpha channel (per pixel alpha)
 
-		//TODO?(fran): I think that now the app never sleeps, cause I update the window, therefore there was a window update and a new acquired frame, and so on and on, the loop never stops
-		// POSSIBLE SOLUTION: I could update every other frame
+	//TODO?(fran): I think that now the app never sleeps, cause I update the window, therefore there was a window update and a new acquired frame, and so on and on, the loop never stops
+	// POSSIBLE SOLUTION: I could update every other frame
 
 #if 1
+	//if (TEST_draw) {
 		BOOL res = UpdateLayeredWindow(m_WindowHandle, hdcScreen, &origin, &size, outputDC, &source_origin, NULL,
-							&blend, ULW_ALPHA);
-		if (res == 0) { 
+			&blend, ULW_ALPHA);
+		if (res == 0) {
 			return ProcessFailure(nullptr, L"Failed to update the veil window with the new frame", L"Error", E_UNEXPECTED);
 		}
+	//}
 #endif
 
 #if 1
-		ReleaseDC(NULL, hdcScreen);
+	ReleaseDC(NULL, hdcScreen);
 #else
-		ReleaseDC(m_WindowHandle, hdcScreen);
+	ReleaseDC(m_WindowHandle, hdcScreen);
 #endif
 
-		RECT norect;
-		RtlZeroMemory(&norect, sizeof(norect));
-		hr = outputSurf->ReleaseDC(&norect);
-		//TODO(fran): should I release outputSurf?
-		if (FAILED(hr)) { 
-			return ProcessFailure(nullptr, L"Failed to release the DC of the surface of the backbuffer", L"Error", hr);
-		}
+	RECT norect;
+	RtlZeroMemory(&norect, sizeof(norect));
+	hr = outputSurf->ReleaseDC(&norect);
+	//TODO(fran): should I release outputSurf?
+	if (FAILED(hr)) { 
+		return ProcessFailure(nullptr, L"Failed to release the DC of the surface of the backbuffer", L"Error", hr);
+	}
 
 #if 0
-        if (FAILED(hr))
-        {
-            return ProcessFailure(m_Device, L"Failed to present", L"Error", hr, SystemTransitionsExpectedErrors);
-        }
+    if (FAILED(hr))
+    {
+        return ProcessFailure(m_Device, L"Failed to present", L"Error", hr, SystemTransitionsExpectedErrors);
+    }
 #endif
 
-		SwitchBuffers();
-
-    }
+	SwitchBuffers();
 
     return Ret;
 }

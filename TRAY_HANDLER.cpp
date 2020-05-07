@@ -6,7 +6,7 @@ BOOL TRAY_HANDLER::CreateTrayIcon(HWND hwnd, UINT uID, LONG iconID, UINT uCallba
 {
 
 	HICON tray_icon=NULL;
-	LoadIconMetric((HINSTANCE)GetWindowLongPtr(hwnd, GWL_HINSTANCE), MAKEINTRESOURCE(iconID), LIM_SMALL, &tray_icon);
+	LoadIconMetric((HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), MAKEINTRESOURCE(iconID), LIM_SMALL, &tray_icon);
 
 	if (!tray_icon) return FALSE;
 

@@ -1,6 +1,7 @@
 #include "Common.h"
 
 #include "utils.cpp"
+#include <vector>
 //#include <Windowsx.h> //GET_X_LPARAM, GET_Y_LPARAM //I created my own
 
 #ifndef GET_X_LPARAM
@@ -109,7 +110,7 @@ LRESULT PaintCaption(HWND hWnd, CUSTOM_FRAME frame) {
 	//TODO(fran): better to use getsystemmetric?
 	logo_size.cx = (LONG)(frame.caption_height*.6f);
 	logo_size.cy = logo_size.cx;
-	HICON logo_icon = (HICON)LoadImage((HINSTANCE)GetWindowLongPtr(hWnd, GWL_HINSTANCE), MAKEINTRESOURCE(frame.logo_icon), IMAGE_ICON
+	HICON logo_icon = (HICON)LoadImage((HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE), MAKEINTRESOURCE(frame.logo_icon), IMAGE_ICON
 		, logo_size.cx, logo_size.cy, LR_SHARED);
 
 	int logo_x_offset = GetSystemMetrics(SM_CXSMICON);

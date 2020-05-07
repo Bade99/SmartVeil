@@ -1,12 +1,9 @@
 #pragma once
 #include <Windows.h>
 
-//------------------------------------------------------------------------------------------------------------
-//This file defines functions and definitions that are specific to this application and are directly dependent
-//------------------------------------------------------------------------------------------------------------
-
-///First index from which windows messages will be sent
-#define SCV_COMMON_FIRST_MESSAGE (WM_USER+2000)
+//-------------------------------------------------------------------------------------------------------------------
+//This file declares functions and definitions that are specific to this application and are directly dependent to it
+//-------------------------------------------------------------------------------------------------------------------
 
 struct CUSTOM_FRAME { // Defines the sizes for the custom window frame
 	int caption_height;
@@ -32,10 +29,6 @@ struct _KNOWN_WINDOWS {//TODO(fran): look for a better solution
 	HWND settings;
 };
 extern _KNOWN_WINDOWS KNOWN_WINDOWS; //defined in Main.cpp
-
-//Messages that will come from custom frames
-#define SCV_CUSTOMFRAME_CLOSE (SCV_COMMON_FIRST_MESSAGE+1)
-#define SCV_CUSTOMFRAME_MINIMIZE (SCV_COMMON_FIRST_MESSAGE+2)
 
 /// <summary>
 /// Use instead of GetClientRect. Can and probably will return left and top values that are non zero since now we draw our own custom frame and the whole window rect is ours

@@ -1,7 +1,7 @@
 #include "resource.h"
 
 #include <Windows.h>
-#include <string>
+//#include <string>
 #include <Shlobj.h> //SHGetKnownFolderPath 
 //#include <Windowsx.h> //GetStockBrush
 
@@ -15,7 +15,7 @@
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"") 
 #pragma comment(lib,"comctl32.lib")
 #pragma comment(lib,"UxTheme.lib")// setwindowtheme
-#pragma comment (lib,"Dwmapi.lib")
+//#pragma comment (lib,"Dwmapi.lib")
 #pragma comment (lib,"Version.lib") //for VerQueryValue
 
 //TODO(fran): this with the extern are ugly, look for better solution, maybe passing a bigger struct to the windows
@@ -204,7 +204,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*
 
 	// Create Veil window
 	HWND veil_wnd = CreateWindowEx(WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
-		(LPCWSTR)MAKELONG(veil_class,0), VeilName,
+		(LPCWSTR)(LONG_PTR)MAKELONG(veil_class,0), VeilName,
 		WS_POPUP,
 		0, 0, 100, 100, //INFO: size and position don't matter since the veil is always maximized
 		nullptr, nullptr, hInstance, nullptr);
@@ -266,7 +266,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*
 	}
 
 	//Create Manager window
-	HWND mgr_wnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_APPWINDOW, (LPCWSTR)MAKELONG(manager_class,0), NULL,
+	HWND mgr_wnd = CreateWindowEx(WS_EX_TOPMOST | WS_EX_APPWINDOW, (LPCWSTR)(LONG_PTR)MAKELONG(manager_class,0), NULL,
 		WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MINIMIZEBOX ^ WS_MAXIMIZEBOX
 		, mgr_wnd_pos.x, mgr_wnd_pos.y, mgr_wnd_sz.cx, mgr_wnd_sz.cy, veil_wnd, NULL, hInstance, &startup_info.manager);
 	
@@ -290,7 +290,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*
 	settings_wnd_sz.cy = (LONG)(settings_wnd_sz.cx * 11.f / 9.f);
 
 	//Create Settings window
-	HWND settings_wnd = CreateWindowEx(WS_EX_TOPMOST, (LPCWSTR)MAKELONG(settings_class,0), NULL,
+	HWND settings_wnd = CreateWindowEx(WS_EX_TOPMOST, (LPCWSTR)(LONG_PTR)MAKELONG(settings_class,0), NULL,
 		WS_OVERLAPPEDWINDOW ^ WS_THICKFRAME ^ WS_MINIMIZEBOX ^ WS_MAXIMIZEBOX
 		, mgr_wnd_pos.x, mgr_wnd_pos.y,
 		settings_wnd_sz.cx, settings_wnd_sz.cy

@@ -1,7 +1,6 @@
 #pragma once
-#include <vector>
 #include <windows.h>
-#include <Shlobj.h>
+#include <Shlobj.h> // HOTKEYF_ALT HOTKEYF_CONTROL HOTKEYF_SHIFT
 #include <cwctype> // iswspace
 #include <algorithm> // remove_if
 #include <map>
@@ -194,14 +193,14 @@ inline std::wstring GetVersionInfo(HMODULE hLib, UINT versionID, WCHAR* csEntry)
 /// </summary>
 /// <param name="modifiers">This can be any combination of MOD_CONTROL, MOD_ALT, MOD_SHIFT</param>
 /// <returns>A vector of virtual keys for the corresponding modifiers</returns>
-inline std::vector<UINT> SeparateModifiersToVK(UINT modifiers) {
-	std::vector<UINT> mods;
-	if (modifiers & MOD_CONTROL) mods.push_back(VK_CONTROL);
-	if (modifiers & MOD_ALT) mods.push_back(VK_MENU); //WTF?
-	if (modifiers & MOD_SHIFT) mods.push_back(VK_SHIFT);
-	//MOD_WIN is reserved for the OS, MOD_NOREPEAT is a behavior change
-	return mods;
-}
+//inline std::vector<UINT> SeparateModifiersToVK(UINT modifiers) {
+//	std::vector<UINT> mods;
+//	if (modifiers & MOD_CONTROL) mods.push_back(VK_CONTROL);
+//	if (modifiers & MOD_ALT) mods.push_back(VK_MENU); //WTF?
+//	if (modifiers & MOD_SHIFT) mods.push_back(VK_SHIFT);
+//	//MOD_WIN is reserved for the OS, MOD_NOREPEAT is a behavior change
+//	return mods;
+//}
 
 /// <summary>
 /// Transforms hotkey modifiers of the form MOD_... to their hotkey control modifier counterpart HOTKEYF_...
@@ -301,7 +300,7 @@ inline void RemoveWhiteSpace(std::wstring &text) {
 /// <param name="s"></param>
 /// <param name="separator">Character that separates the Key from the Value</param>
 /// <returns></returns>
-inline std::map<const std::wstring, std::wstring> mappify(std::wstring const& s, wchar_t separator)
+inline std::map<const std::wstring, std::wstring> mappify(const WCHAR* s, wchar_t separator)
 {
 	std::map<const std::wstring, std::wstring> m;
 

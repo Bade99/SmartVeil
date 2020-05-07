@@ -7,10 +7,8 @@
 #include <dxgi1_2.h>
 #include <sal.h>
 #include <new>
-#include <warning.h>
+//#include <warning.h>
 #include <DirectXMath.h>
-
-#include <wchar.h> //swprintf_s
 
 #include "PixelShader.h"
 #include "VertexShader.h"
@@ -26,10 +24,12 @@
 
 #endif
 
+//extern bool TEST_draw; //TODO(fran): REMOVE (and from cpp)
+
 #define NUMVERTICES 6
 #define BPP         4
 
-#define OCCLUSION_STATUS_MSG (WM_USER+5000)
+//#define OCCLUSION_STATUS_MSG (WM_USER+5000)
 
 // Below are lists of errors expect from Dxgi API calls when a transition event like mode change, PnpStop, PnpStart
 // desktop switch, TDR or session disconnect/reconnect. In all these cases we want the application to clean up the threads that process
@@ -37,16 +37,35 @@
 // If we get an error that is not on the appropriate list then we exit the application
 
 // These are the errors we expect from general Dxgi API due to a transition
-extern HRESULT SystemTransitionsExpectedErrors[];
+constexpr HRESULT SystemTransitionsExpectedErrors[] = {
+												DXGI_ERROR_DEVICE_REMOVED,
+												DXGI_ERROR_ACCESS_LOST,
+												static_cast<HRESULT>(WAIT_ABANDONED),
+												S_OK                                    // Terminate list with zero valued HRESULT
+};
+
 
 // These are the errors we expect from IDXGIOutput1::DuplicateOutput due to a transition
-extern HRESULT CreateDuplicationExpectedErrors[];
+constexpr HRESULT CreateDuplicationExpectedErrors[] = {
+												DXGI_ERROR_DEVICE_REMOVED,
+												static_cast<HRESULT>(E_ACCESSDENIED),
+												DXGI_ERROR_UNSUPPORTED,
+												DXGI_ERROR_SESSION_DISCONNECTED,
+												S_OK                                    // Terminate list with zero valued HRESULT
+};
 
 // These are the errors we expect from IDXGIOutputDuplication methods due to a transition
-extern HRESULT FrameInfoExpectedErrors[];
+constexpr HRESULT FrameInfoExpectedErrors[] = {
+										DXGI_ERROR_DEVICE_REMOVED,
+										DXGI_ERROR_ACCESS_LOST,
+										S_OK                                    // Terminate list with zero valued HRESULT
+};
 
 // These are the errors we expect from IDXGIAdapter::EnumOutputs methods due to outputs becoming stale during a transition
-extern HRESULT EnumOutputsExpectedErrors[];
+constexpr HRESULT EnumOutputsExpectedErrors[] = {
+										  DXGI_ERROR_NOT_FOUND,
+										  S_OK                                    // Terminate list with zero valued HRESULT
+};
 
 typedef _Return_type_success_(return == DUPL_RETURN_SUCCESS) enum
 {
@@ -56,7 +75,7 @@ typedef _Return_type_success_(return == DUPL_RETURN_SUCCESS) enum
 }DUPL_RETURN;
 
 _Post_satisfies_(return != DUPL_RETURN_SUCCESS)
-DUPL_RETURN ProcessFailure(_In_opt_ ID3D11Device* Device, _In_ LPCWSTR Str, _In_ LPCWSTR Title, HRESULT hr, _In_opt_z_ HRESULT* ExpectedErrors = nullptr);
+DUPL_RETURN ProcessFailure(_In_opt_ ID3D11Device* Device, _In_ LPCWSTR Str, _In_ LPCWSTR Title, HRESULT hr, _In_opt_z_ const HRESULT* ExpectedErrors = nullptr);
 
 //
 // Holds info about the pointer/cursor

@@ -73,6 +73,12 @@
 #define SCV_SETTINGS_FIRST_MESSAGE (WM_USER+1000)
 #define SCV_SETTINGS_FIRST_INTERNAL_MESSAGE (WM_USER+1200)
 
+///First index from which windows messages will be sent
+#define SCV_CUSTOMFRAME_FIRST_MESSAGE (WM_USER+1500)
+//Messages that will come from custom frames
+#define SCV_CUSTOMFRAME_CLOSE (SCV_CUSTOMFRAME_FIRST_MESSAGE+1)
+#define SCV_CUSTOMFRAME_MINIMIZE (SCV_CUSTOMFRAME_FIRST_MESSAGE+2)
+
 //-----
 //Defer (usage: defer{block of code;};)
 //-----
