@@ -2,3 +2,7 @@
 [Dd]ebug/
 [Rr]elease/
 *.aps
+VTune Profiler Results/
+VertexShader.h
+PSVeil.h
+PixelShader.h

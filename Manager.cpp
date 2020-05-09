@@ -158,20 +158,6 @@ void SetupMgr(HWND hWnd,HINSTANCE hInstance,const CUSTOM_FRAME& frame, const MAN
 
 }
 
-struct gcbi { HWND child; int ID; };
-inline HWND get_child_by_id(HWND parent, int ID) { //TODO(fran): this is probably very inefficient, we need to store the guys we want in a struct, or something like that
-	gcbi params{ NULL,ID };
-	EnumChildWindows(parent, [](HWND child, LPARAM _gcbi) ->BOOL {
-		if (GetDlgCtrlID(child) == ((gcbi*)_gcbi)->ID) 
-			{ ((gcbi*)_gcbi)->child = child; return FALSE; }
-		return TRUE; 
-	}
-	, (LPARAM)&params);
-	return params.child;
-}
-
-
-
 LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static WORKER_THREAD_INIT thread_data;
@@ -306,13 +292,13 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	}
 	case SCV_MANAGER_UPDATE_THRESHOLD_OPACITY:
 	{
-		SendMessage(hWnd, WM_HSCROLL, MAKELONG(TB_PAGEDOWN, 0), (LPARAM)get_child_by_id(hWnd,SCV_MANAGER_TOOLTIP_THRESHOLD_SLIDER));
-		SendMessage(hWnd, WM_HSCROLL, MAKELONG(TB_PAGEDOWN, 0), (LPARAM)get_child_by_id(hWnd,SCV_MANAGER_TOOLTIP_OPACITY_SLIDER));
+		SendMessage(hWnd, WM_HSCROLL, MAKELONG(TB_PAGEDOWN, 0), (LPARAM)GetDlgItem(hWnd,SCV_MANAGER_TOOLTIP_THRESHOLD_SLIDER));
+		SendMessage(hWnd, WM_HSCROLL, MAKELONG(TB_PAGEDOWN, 0), (LPARAM)GetDlgItem(hWnd,SCV_MANAGER_TOOLTIP_OPACITY_SLIDER));
 		break;
 	}
 	case SCV_MANAGER_UPDATE_TEXT_TURN_ON_OFF:
 	{
-		HWND TurnOnOff = get_child_by_id(hWnd, SCV_MANAGER_TURN_ON_OFF);
+		HWND TurnOnOff = GetDlgItem(hWnd, SCV_MANAGER_TURN_ON_OFF);
 		//const WCHAR* turnedOnOffText;
 		if (mgr_data->is_turned_on) {
 			//turnedOnOffText = RST(SCV_LANG_MGR_TURN_OFF).c_str();
@@ -367,14 +353,14 @@ LRESULT CALLBACK MgrProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					//TODO(fran): doing enumchildwindows all the time is probably very expensive, we might need to keep a list of important hwnds
 					//static int last_thresh_pos = -1; //TODO(fran): I'm not sure this is even better, the problem must be somewhere else
 					//if(pos!= last_thresh_pos)
-						SetWindowTextW(get_child_by_id(hWnd,SCV_MANAGER_THRESHOLD_TITLE), fmt::format(RS(SCV_LANG_MGR_THRESHOLD), pos).c_str()); //TODO(fran): implement my own static text control
+					SetWindowTextW(GetDlgItem(hWnd, SCV_MANAGER_THRESHOLD_TITLE), fmt::format(RS(SCV_LANG_MGR_THRESHOLD), pos).c_str()); //TODO(fran): implement my own static text control
 					thread_data.output_mgr.SetThreshold(pos/100.f);
 					//last_thresh_pos = pos;
 				}
 				else if (GetDlgCtrlID(slider) == SCV_MANAGER_TOOLTIP_OPACITY_SLIDER) {
 					//static int last_opac_pos = -1;
 					//if (pos != last_opac_pos)
-						SetWindowTextW(get_child_by_id(hWnd, SCV_MANAGER_OPACITY_TITLE), fmt::format(RS(SCV_LANG_MGR_OPACITY), pos).c_str());
+						SetWindowTextW(GetDlgItem(hWnd, SCV_MANAGER_OPACITY_TITLE), fmt::format(RS(SCV_LANG_MGR_OPACITY), pos).c_str());
 					thread_data.output_mgr.SetOpacity((100-pos) / 100.f);
 					//last_opac_pos = pos;
 				}

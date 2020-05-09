@@ -463,7 +463,7 @@ inline void WindowToTray(HWND hWnd, POINT from, POINT to, int milliseconds) {
 	//AnimateWindow(hWnd, milliseconds, AW_BLEND | AW_HIDE); //Not even async support!
 
 	// Set WS_EX_LAYERED on this window 
-	SetWindowLong(hWnd,	GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+	SetWindowLongPtr(hWnd,	GWL_EXSTYLE, GetWindowLongPtr(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
 
 	for (int i = 1; i <= frames; i++) {
 		SetLayeredWindowAttributes(hWnd, NULL, (BYTE)((255 * (100 - alphaChange * i)) / 100), LWA_ALPHA);
@@ -474,7 +474,7 @@ inline void WindowToTray(HWND hWnd, POINT from, POINT to, int milliseconds) {
 	SetWindowPos(hWnd, NULL, from.x, from.y, 0, 0, SWP_NOZORDER | SWP_NOREDRAW | SWP_NOSIZE);
 	ShowWindow(hWnd, SW_HIDE);
 	SetLayeredWindowAttributes(hWnd, 0, 255, LWA_ALPHA);
-	SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) ^ WS_EX_LAYERED);
+	SetWindowLongPtr(hWnd, GWL_EXSTYLE, GetWindowLongPtr(hWnd, GWL_EXSTYLE) ^ WS_EX_LAYERED);
 
 }
 
@@ -499,7 +499,7 @@ inline void TrayToWindow(HWND hWnd, POINT from, POINT to, int milliseconds) {
 	float alphaChange = 100 / frames;
 
 	//We put the window at 0 alpha then we make the window visible 
-	SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+	SetWindowLongPtr(hWnd, GWL_EXSTYLE, GetWindowLongPtr(hWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
 	SetLayeredWindowAttributes(hWnd, 0, 0, LWA_ALPHA);
 	ShowWindow(hWnd, SW_SHOW);
 
@@ -509,7 +509,7 @@ inline void TrayToWindow(HWND hWnd, POINT from, POINT to, int milliseconds) {
 		Sleep((int)floor(frametime));//good enough
 	}
 	SetLayeredWindowAttributes(hWnd, 0, 255, LWA_ALPHA); //just to make sure
-	SetWindowLong(hWnd, GWL_EXSTYLE, GetWindowLong(hWnd, GWL_EXSTYLE) ^ WS_EX_LAYERED);
+	SetWindowLongPtr(hWnd, GWL_EXSTYLE, GetWindowLongPtr(hWnd, GWL_EXSTYLE) ^ WS_EX_LAYERED);
 	SetWindowPos(hWnd, NULL, to.x, to.y, 0, 0, SWP_NOZORDER | SWP_NOREDRAW | SWP_NOSIZE);//just to make sure, dont tell it to redraw cause it takes a long time to do it and looks bad
 
 	SetActiveWindow(hWnd);

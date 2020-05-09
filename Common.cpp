@@ -24,47 +24,55 @@ BOOL GetMyClientRect(HWND hwnd, const CUSTOM_FRAME& frame, RECT* rc) {
 	return res;
 }
 
-HFONT CreateMyFont(LONG height) {
+HFONT CreateMyFont(LONG height) { //TODO(fran): first of all the whole enumfontfamilies should be done ONLY ONCE, we should store the one font we're gonna use (static variable?) and then just use that
 	LOGFONTW lf;
-
 	memset(&lf, 0, sizeof(lf));
 	lf.lfQuality = CLEARTYPE_QUALITY;
+	//lf.lfCharSet = DEFAULT_CHARSET;
 	lf.lfHeight = height > 0 ? -height : height;
 
+	static uint8_t index = (uint8_t)-1;
+
+	//Possible fonts, in order of importance
+	const WCHAR* requested_fontname[] = { TEXT("Segoe UI"), TEXT("Arial Unicode MS"), TEXT("Microsoft YaHei"), TEXT("Microsoft YaHei UI")
+									, TEXT("Microsoft JhengHei"), TEXT("Microsoft JhengHei UI") };
+
 	/// Decides which font FaceName is appropiate for the current system
-	auto GetFontFaceName = []() {
-		//Font guidelines: https://docs.microsoft.com/en-us/windows/win32/uxguide/vis-fonts
-		//Stock fonts: https://docs.microsoft.com/en-us/windows/win32/gdi/using-a-stock-font-to-draw-text
+	//GetFontFaceName 
+	//Font guidelines: https://docs.microsoft.com/en-us/windows/win32/uxguide/vis-fonts
+	//Stock fonts: https://docs.microsoft.com/en-us/windows/win32/gdi/using-a-stock-font-to-draw-text
 
-		//TODO(fran): can we take the best codepage from each font and create our own? (look at font linking & font fallback)
+	//TODO(fran): can we take the best codepage from each font and create our own? (look at font linking & font fallback)
 
-		//We looked at 2195 fonts, this is what's left
-		//Options:
-		//Segoe UI (good txt, jp ok) (10 codepages) (supported on most versions of windows)
-		//-Arial Unicode MS (good text; good jp) (33 codepages) (doesnt come with windows)
-		//-Microsoft YaHei or UI (look the same,good txt,good jp) (6 codepages) (supported on most versions of windows)
-		//-Microsoft JhengHei or UI (look the same,good txt,ok jp) (3 codepages) (supported on most versions of windows)
-
+	//We looked at 2195 fonts, this is what's left
+	//Options:
+	//Segoe UI (good txt, jp ok) (10 codepages) (supported on most versions of windows)
+	//-Arial Unicode MS (good text; good jp) (33 codepages) (doesnt come with windows)
+	//-Microsoft YaHei or UI (look the same,good txt,good jp) (6 codepages) (supported on most versions of windows)
+	//-Microsoft JhengHei or UI (look the same,good txt,ok jp) (3 codepages) (supported on most versions of windows)
+	if (index == (uint8_t)-1) {
 		HDC hdc = GetDC(GetDesktopWindow()); //You can use any hdc, but not NULL
-		std::vector<std::wstring> fontnames;
-		EnumFontFamiliesEx(hdc, NULL
-			, [](const LOGFONT *lpelfe, const TEXTMETRIC * /*lpntme*/, DWORD /*FontType*/, LPARAM lParam)->int {((std::vector<std::wstring>*)lParam)->push_back(lpelfe->lfFaceName); return TRUE; }
-		, (LPARAM)&fontnames, NULL);
-
-		const WCHAR* requested_fontname[] = { TEXT("Segoe UI"), TEXT("Arial Unicode MS"), TEXT("Microsoft YaHei"), TEXT("Microsoft YaHei UI")
-											, TEXT("Microsoft JhengHei"), TEXT("Microsoft JhengHei UI") };
-
-		for (int i = 0; i < ARRAYSIZE(requested_fontname); i++)
-			if (std::any_of(fontnames.begin(), fontnames.end(), [f = requested_fontname[i]](std::wstring s) {return !s.compare(f); })) return requested_fontname[i];
-
-		return L"";
-	};
+		struct _EFFE { const WCHAR* font; bool found=false; } _effe; 
+		uint8_t i = 0;
+		for (; i < ARRAYSIZE(requested_fontname); i++) {
+			_effe.font= requested_fontname[i];
+			wcsncpy_s(lf.lfFaceName, requested_fontname[i], ARRAYSIZE(lf.lfFaceName) - 1); //try to make the search faster and shorter, EnumFontFamiliesEx checks for lfFaceName and if valid only iterates over fonts of that family
+			EnumFontFamiliesEx(hdc, &lf
+				, [](const LOGFONT *lpelfe, const TEXTMETRIC * /*lpntme*/, DWORD /*FontType*/, LPARAM lParam)->int { if (!wcscmp(((_EFFE*)lParam)->font, lpelfe->lfFaceName)) { ((_EFFE*)lParam)->found = true; return FALSE; } return TRUE; }
+			, (LPARAM)&_effe, NULL);
+			if (_effe.found) break;
+		}
+		if (_effe.found) index = i;
+		else index = (uint8_t)-2;
+	}
 
 	//INFO: by default if I dont set faceName it uses "Modern", looks good but it lacks some charsets
-	//wcsncpy(lf.lfFaceName, GetFontFaceName(), ARRAYSIZE(lf.lfFaceName));
-	wcsncpy_s(lf.lfFaceName, GetFontFaceName(), ARRAYSIZE(lf.lfFaceName));
+	if(index==(uint8_t)-2)
+		wcsncpy_s(lf.lfFaceName, L"", 1);
+	else 
+		wcsncpy_s(lf.lfFaceName, requested_fontname[index], ARRAYSIZE(lf.lfFaceName)-1);
+	
 	return CreateFontIndirectW(&lf);
-
 }
 
 LRESULT PaintCaption(HWND hWnd, CUSTOM_FRAME frame) {
