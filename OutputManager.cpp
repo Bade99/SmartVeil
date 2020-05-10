@@ -482,7 +482,7 @@ DUPL_RETURN OUTPUTMANAGER::UpdateApplicationWindow(/*_In_ PTR_INFO* PointerInfo*
 //#endif
 //	}
 
-	MakeRTV();
+	MakeRTV(); //TODO(fran): this can probably be removed or reduced to not have to call it every time, also is called in some other places in this cpp where it's probably not necessary since it was though for only one rtv
 
     // Try and acquire sync on common display buffer
     hr = m_KeyMutex->AcquireSync(1, 100);

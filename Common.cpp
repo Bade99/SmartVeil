@@ -1,7 +1,6 @@
 #include "Common.h"
 
 #include "utils.cpp"
-#include <vector>
 //#include <Windowsx.h> //GET_X_LPARAM, GET_Y_LPARAM //I created my own
 
 #ifndef GET_X_LPARAM
@@ -58,7 +57,13 @@ HFONT CreateMyFont(LONG height) { //TODO(fran): first of all the whole enumfontf
 			_effe.font= requested_fontname[i];
 			wcsncpy_s(lf.lfFaceName, requested_fontname[i], ARRAYSIZE(lf.lfFaceName) - 1); //try to make the search faster and shorter, EnumFontFamiliesEx checks for lfFaceName and if valid only iterates over fonts of that family
 			EnumFontFamiliesEx(hdc, &lf
-				, [](const LOGFONT *lpelfe, const TEXTMETRIC * /*lpntme*/, DWORD /*FontType*/, LPARAM lParam)->int { if (!wcscmp(((_EFFE*)lParam)->font, lpelfe->lfFaceName)) { ((_EFFE*)lParam)->found = true; return FALSE; } return TRUE; }
+				, [](const LOGFONT *lpelfe, const TEXTMETRIC * /*lpntme*/, DWORD /*FontType*/, LPARAM lParam)->int { 
+						if (!wcscmp(((_EFFE*)lParam)->font, lpelfe->lfFaceName)) {
+							((_EFFE*)lParam)->found = true; 
+							return FALSE; 
+						} 
+						return TRUE;
+					}
 			, (LPARAM)&_effe, NULL);
 			if (_effe.found) break;
 		}

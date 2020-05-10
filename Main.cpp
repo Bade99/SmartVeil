@@ -215,7 +215,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*
 	}
 	KNOWN_WINDOWS.veil = veil_wnd;
 	ShowWindow(veil_wnd, SW_MAXIMIZE);
-	UpdateWindow(veil_wnd);
+	//UpdateWindow(veil_wnd);
 
 
 #define SETTINGS_NUMBER_OF_CHECKBOXES 30.f //This scales both mgr and settings windows
@@ -304,7 +304,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE /*hPrevInstance*
 	KNOWN_WINDOWS.settings = settings_wnd;
 	AWT(settings_wnd, SCV_LANG_SETTINGS);
 	ShowWindow(settings_wnd, SW_HIDE);
-	UpdateWindow(settings_wnd);
+	//UpdateWindow(settings_wnd);
 
 
 	// Message loop
